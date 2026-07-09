@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* =============================================
+   P-HRIS Design System — BNI Color Palette
+   ============================================= */
+
+@theme {
+  /* Primary Brand Colors */
+  --color-teal-50: #e6f2f4;
+  --color-teal-100: #b3d9de;
+  --color-teal-200: #80c0c8;
+  --color-teal-300: #4da7b2;
+  --color-teal-400: #268e9c;
+  --color-teal-500: #006677;
+  --color-teal-600: #005a69;
+  --color-teal-700: #004d5a;
+  --color-teal-800: #003f4b;
+  --color-teal-900: #00323c;
+
+  --color-orange-50: #fef0eb;
+  --color-orange-100: #fbd4c4;
+  --color-orange-200: #f8b89d;
+  --color-orange-300: #f59c76;
+  --color-orange-400: #f3804f;
+  --color-orange-500: #f15a24;
+  --color-orange-600: #d9501f;
+  --color-orange-700: #c1461a;
+  --color-orange-800: #a93c15;
+  --color-orange-900: #913210;
+
+  /* Neutral / Typography */
+  --color-app-bg: #F4F7F6;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #2B3440;
+  --color-text-secondary: #64748B;
+
+  /* Font */
+  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* =============================================
+   Global Reset & Base Styles
+   ============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F4F7F6;
+  color: #2B3440;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================
+   Custom Scrollbar
+   ============================================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F7F6;
+}
+::-webkit-scrollbar-thumb {
+  background: #006677;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #005a69;
+}
+
+/* =============================================
+   React DatePicker Overrides
+   ============================================= */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+.react-datepicker__header {
+  background-color: #006677 !important;
+  border-bottom: none !important;
+}
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: #fff !important;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: #fff !important;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range,
+.react-datepicker__day--keyboard-selected {
+  background-color: #006677 !important;
+  color: #fff !important;
+}
+.react-datepicker__day--in-selecting-range {
+  background-color: #4da7b2 !important;
+}
+.react-datepicker__day:hover {
+  background-color: #b3d9de !important;
+}
+.react-datepicker__today-button {
+  background-color: #006677 !important;
+  color: white !important;
+}
+.react-datepicker {
+  border: 1px solid #b3d9de !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,102,119,0.15) !important;
+  overflow: hidden;
+}
+
+/* =============================================
+   Animations
+   ============================================= */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes pulse-teal {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,102,119,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(0,102,119,0); }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.35s ease both; }
+.animate-fade-in    { animation: fadeIn 0.25s ease both; }
+.animate-slide-in   { animation: slideInLeft 0.3s ease both; }

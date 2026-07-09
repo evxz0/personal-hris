@@ -1,0 +1,356 @@
+import { useState } from 'react'
+import { Plus, Search, Trash2, CalendarOff, AlertCircle, FileSpreadsheet, FileDown, FileText, Edit2 } from 'lucide-react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import { useAbsensi, useAddAbsensi, useDeleteAbsensi, useBulkInsertAbsensi, useUpdateAbsensi, type AbsensiInsert } from '../hooks/useAbsensi'
+import { useKaryawan, useKaryawanByNPP } from '../hooks/useKaryawan'
+import { useBina, useBinaByNPP } from '../hooks/useBina'
+import { ImportModal } from '../components/ui/ImportModal'
+import { exportToXLSX, exportToPDF } from '../lib/importExport'
+import { DataTable } from '../components/ui/DataTable'
+import { Button } from '../components/ui/Button'
+import { Input, Select, Textarea } from '../components/ui/Input'
+import { Modal } from '../components/ui/Modal'
+import { formatDate, calculateDays } from '../lib/utils'
+
+const EMPTY: AbsensiInsert = {
+  npp: '', jenis: 'SAKIT', tanggal_mulai: '', tanggal_selesai: '', keterangan: ''
+}
+
+const ABSENSI_FIELD_MAPPING: Record<string, string> = {
+  'NPP': 'npp', 'Jenis': 'jenis', 'Tgl Mulai': 'tanggal_mulai', 
+  'Tgl Selesai': 'tanggal_selesai', 'Keterangan': 'keterangan'
+}
+const TEMPLATE_HEADERS = ['NPP', 'Jenis', 'Tgl Mulai', 'Tgl Selesai', 'Keterangan']
+
+function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jabatan: string) => void }) {
+  const { data: karyawan } = useKaryawanByNPP(npp)
+  const { data: bina } = useBinaByNPP(npp)
+  const found = karyawan ?? bina
+
+  if (!found || !npp || npp.length < 3) return null
+  return (
+    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-teal-50 border border-teal-100 text-sm animate-fade-in">
+      <AlertCircle size={14} className="text-teal-600 shrink-0" />
+      <div className="flex-1">
+        <span className="font-bold text-teal-700">{found.nama}</span>
+        <span className="text-teal-600 ml-2 text-xs">
+          {'jabatan' in found ? found.jabatan : ''}
+          {'jenjang' in found && found.jenjang ? ` · ${found.jenjang}` : ''}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => onFill(found.nama, 'jabatan' in found ? found.jabatan : '')}
+        className="text-xs px-2.5 py-1 rounded-lg bg-teal-600 text-white font-semibold"
+      >
+        Gunakan
+      </button>
+    </div>
+  )
+}
+
+export default function AbsensiPage() {
+  const [search, setSearch] = useState('')
+  const [filterJenis, setFilterJenis] = useState<'ALL'|'SAKIT'|'CUTI'>('ALL')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [form, setForm] = useState<AbsensiInsert>(EMPTY)
+  const [editId, setEditId] = useState<string | null>(null)
+
+  const { data: rawData = [], isLoading } = useAbsensi(search)
+  const { data: allKaryawan = [] } = useKaryawan()
+  const { data: allBina = [] } = useBina()
+  const addMutation    = useAddAbsensi()
+  const updateMutation = useUpdateAbsensi()
+  const deleteMutation = useDeleteAbsensi()
+  const bulkInsert     = useBulkInsertAbsensi()
+
+  const data = filterJenis === 'ALL' ? rawData : rawData.filter(a => a.jenis === filterJenis)
+
+  const openAdd = () => { setForm(EMPTY); setEditId(null); setModalOpen(true) }
+  
+  const openEdit = (abs: any) => {
+    setForm({
+      npp: abs.npp,
+      jenis: abs.jenis,
+      tanggal_mulai: abs.tanggal_mulai,
+      tanggal_selesai: abs.tanggal_selesai,
+      keterangan: abs.keterangan || ''
+    })
+    setEditId(abs.id)
+    setModalOpen(true)
+  }
+
+  const handleSave = async () => {
+    if (editId) {
+      await updateMutation.mutateAsync({ id: editId, payload: form })
+    } else {
+      await addMutation.mutateAsync(form)
+    }
+    setModalOpen(false)
+    setForm(EMPTY)
+    setEditId(null)
+  }
+
+  const handleDelete = async () => {
+    if (deleteId) { await deleteMutation.mutateAsync(deleteId); setDeleteId(null) }
+  }
+
+  const handleImport = async (rows: Record<string, unknown>[]) => {
+    const mapped = rows.map(r => ({
+      ...EMPTY,
+      npp: String(r.npp ?? ''),
+      jenis: (String(r.jenis ?? 'SAKIT').toUpperCase() === 'CUTI' ? 'CUTI' : 'SAKIT') as 'SAKIT'|'CUTI',
+      tanggal_mulai: r.tanggal_mulai ? String(r.tanggal_mulai) : null,
+      tanggal_selesai: r.tanggal_selesai ? String(r.tanggal_selesai) : null,
+      keterangan: String(r.keterangan ?? ''),
+    }))
+    // filter out null dates so we don't crash Supabase
+    const validMapped = mapped.filter(m => m.tanggal_mulai && m.tanggal_selesai)
+    await bulkInsert.mutateAsync(validMapped as any)
+  }
+
+  const handleExportXLSX = () => {
+    exportToXLSX(data.map(a => ({
+      NPP: a.npp, Nama: getNama(a.npp), Jenis: a.jenis, 
+      'Tgl Mulai': formatDate(a.tanggal_mulai), 'Tgl Selesai': formatDate(a.tanggal_selesai),
+      'Durasi': calculateDays(a.tanggal_mulai, a.tanggal_selesai),
+      'Sisa Cuti': a.jenis === 'CUTI' ? getSisaCuti(a.npp) : '-',
+      Keterangan: a.keterangan || '-'
+    })), 'Data_Absensi')
+  }
+
+  const handleExportPDF = () => {
+    exportToPDF(
+      data.map(a => ({
+        ...a,
+        tanggal_mulai: formatDate(a.tanggal_mulai),
+        tanggal_selesai: formatDate(a.tanggal_selesai),
+        nama: getNama(a.npp),
+        sisa_cuti: a.jenis === 'CUTI' ? getSisaCuti(a.npp) : '-'
+      })) as unknown as Record<string, unknown>[],
+      [
+        { header: 'NPP', dataKey: 'npp' },
+        { header: 'Nama', dataKey: 'nama' },
+        { header: 'Jenis', dataKey: 'jenis' },
+        { header: 'Mulai', dataKey: 'tanggal_mulai' },
+        { header: 'Selesai', dataKey: 'tanggal_selesai' },
+        { header: 'Sisa Cuti', dataKey: 'sisa_cuti' },
+        { header: 'Keterangan', dataKey: 'keterangan' }
+      ],
+      'Laporan Absensi Karyawan',
+      'Data_Absensi'
+    )
+  }
+
+  const getNama = (npp: string) => {
+    const k = allKaryawan.find(x => x.npp === npp)
+    if (k) return k.nama
+    const b = allBina.find(x => x.npp === npp)
+    if (b) return b.nama
+    return '-'
+  }
+
+  const getSisaCuti = (npp: string) => {
+    const k = allKaryawan.find(x => x.npp === npp)
+    if (k) return k.sisa_cuti ?? 18
+    const b = allBina.find(x => x.npp === npp)
+    if (b) return b.sisa_cuti ?? 18
+    return '-'
+  }
+
+  const jumlahHari = calculateDays(form.tanggal_mulai, form.tanggal_selesai)
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[#2B3440] flex items-center gap-2">
+            <CalendarOff size={24} className="text-red-500" /> Absensi
+          </h1>
+          <p className="text-sm text-[#64748B] mt-1">Pencatatan izin sakit & cuti karyawan</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" icon={<FileSpreadsheet size={15} />} onClick={() => setImportOpen(true)}>
+            Import
+          </Button>
+          <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
+            Excel
+          </Button>
+          <Button variant="outline" size="sm" icon={<FileText size={15} />} onClick={handleExportPDF}>
+            PDF
+          </Button>
+          <Button variant="secondary" size="sm" icon={<Plus size={15} />} onClick={openAdd}>
+            Tambah
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
+          <input
+            type="text"
+            placeholder="Cari NPP, keterangan..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-all"
+          />
+        </div>
+        <div className="flex gap-2">
+          {(['ALL','SAKIT','CUTI'] as const).map(j => (
+            <button
+              key={j}
+              onClick={() => setFilterJenis(j)}
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${filterJenis === j ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-[#64748B] border border-gray-200 hover:border-teal-400'}`}
+            >
+              {j === 'ALL' ? 'Semua' : j}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-[#64748B] self-center px-3 py-1.5 bg-white rounded-xl border border-gray-200 font-medium whitespace-nowrap">
+          {data.length} catatan
+        </div>
+      </div>
+
+      <DataTable
+        data={data as unknown as Record<string, unknown>[]}
+        loading={isLoading}
+        emptyMessage="Belum ada catatan absensi"
+        emptyIcon={<CalendarOff size={40} className="text-gray-200" />}
+        columns={[
+          { key: 'npp', header: 'NPP', width: 'w-24' },
+          { key: 'nama', header: 'Nama', render: r => <span className="font-semibold text-[#2B3440]">{getNama(String(r.npp))}</span> },
+          { key: 'jenis', header: 'Jenis', render: r => (
+            <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${r.jenis === 'SAKIT' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              {String(r.jenis)}
+            </span>
+          )},
+          { key: 'tanggal_mulai', header: 'Tgl Mulai', render: r => formatDate(String(r.tanggal_mulai)) },
+          { key: 'tanggal_selesai', header: 'Tgl Selesai', render: r => formatDate(String(r.tanggal_selesai)) },
+          { key: 'durasi', header: 'Durasi', render: r => {
+            const d = calculateDays(String(r.tanggal_mulai), String(r.tanggal_selesai))
+            return <span className="font-bold text-teal-700">{d} hari</span>
+          }},
+          { key: 'sisa_cuti', header: 'Sisa Cuti', render: r => {
+            if (r.jenis !== 'CUTI') return <span className="text-[#94A3B8]">-</span>
+            const sisa = getSisaCuti(String(r.npp))
+            return <span className="font-bold text-orange-600">{sisa} hari</span>
+          }},
+          { key: 'keterangan', header: 'Keterangan', render: r => (
+            <span className="text-[#64748B] text-xs">{String(r.keterangan) || '-'}</span>
+          )},
+        ]}
+        actions={row => (
+          <div className="flex items-center gap-1">
+            <button onClick={() => openEdit(row)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors">
+              <Edit2 size={14} />
+            </button>
+            <button onClick={() => setDeleteId(String(row.id))} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
+      />
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => { setModalOpen(false); setForm(EMPTY); setEditId(null) }}
+        title={editId ? "Ubah Catatan Absensi" : "Catat Absensi Karyawan"}
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setModalOpen(false)}>Batal</Button>
+            <Button variant="primary" loading={addMutation.isPending || updateMutation.isPending} onClick={handleSave}>
+              Simpan Absensi
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Input
+              label="NPP Karyawan"
+              value={form.npp}
+              onChange={e => setForm(f => ({ ...f, npp: e.target.value }))}
+              placeholder="Ketik NPP untuk auto-fill nama..."
+            />
+            <AutoFillNPP npp={form.npp} onFill={() => {}} />
+          </div>
+
+          <Select
+            label="Jenis Absensi"
+            value={form.jenis}
+            onChange={e => setForm(f => ({ ...f, jenis: e.target.value as 'SAKIT'|'CUTI' }))}
+            options={[{ value: 'SAKIT', label: 'Izin Sakit' }, { value: 'CUTI', label: 'Izin Cuti' }]}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#2B3440] uppercase tracking-wide">Tanggal Mulai</label>
+              <DatePicker
+                selected={form.tanggal_mulai ? new Date(form.tanggal_mulai) : null}
+                onChange={(date: Date | null) => setForm(f => ({ ...f, tanggal_mulai: date ? date.toISOString().split('T')[0] : '' }))}
+                dateFormat="dd MMMM yyyy"
+                placeholderText="Pilih tanggal mulai"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#2B3440] uppercase tracking-wide">Tanggal Selesai</label>
+              <DatePicker
+                selected={form.tanggal_selesai ? new Date(form.tanggal_selesai) : null}
+                onChange={(date: Date | null) => setForm(f => ({ ...f, tanggal_selesai: date ? date.toISOString().split('T')[0] : '' }))}
+                dateFormat="dd MMMM yyyy"
+                minDate={form.tanggal_mulai ? new Date(form.tanggal_mulai) : undefined}
+                placeholderText="Pilih tanggal selesai"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+          </div>
+
+          {jumlahHari > 0 && (
+            <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-[#F4F7F6]">
+              <CalendarOff size={16} className="text-teal-600 shrink-0" />
+              <span className="text-sm text-[#64748B]">Durasi: <strong className="text-teal-700">{jumlahHari} hari</strong>
+                {form.jenis === 'CUTI' && <span className="text-xs text-orange-600 ml-2">· Sisa cuti akan otomatis berkurang</span>}
+              </span>
+            </div>
+          )}
+
+          <Textarea
+            label="Keterangan (opsional)"
+            value={form.keterangan}
+            onChange={e => setForm(f => ({ ...f, keterangan: e.target.value }))}
+            placeholder="Tambahkan catatan atau keterangan..."
+          />
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Hapus Catatan Absensi" size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Batal</Button>
+            <Button variant="danger" loading={deleteMutation.isPending} onClick={handleDelete}>Hapus</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[#64748B]">Hapus catatan absensi ini? Sisa cuti tidak akan dipulihkan secara otomatis.</p>
+      </Modal>
+
+      <ImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImport={handleImport}
+        title="Import Data Absensi"
+        templateHeaders={TEMPLATE_HEADERS}
+        templateFilename="Template_Absensi"
+        fieldMapping={ABSENSI_FIELD_MAPPING}
+        requiredFields={['npp', 'jenis', 'tanggal_mulai', 'tanggal_selesai']}
+      />
+    </div>
+  )
+}

@@ -1,0 +1,182 @@
+import { useState, useEffect } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import {
+  LayoutDashboard, Users, UserCheck, GraduationCap,
+  CalendarOff, ArrowUpCircle, Fingerprint, Settings,
+  ChevronLeft, LogOut, Bell, Menu, X, User
+} from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+
+const navItems = [
+  { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { to: '/karyawan', icon: <Users size={18} />, label: 'Master Karyawan' },
+  { to: '/bina', icon: <UserCheck size={18} />, label: 'Master Bina' },
+  { to: '/magang', icon: <GraduationCap size={18} />, label: 'Master Magang' },
+  { to: '/absensi', icon: <CalendarOff size={18} />, label: 'Absensi' },
+  { to: '/request/naik-level', icon: <ArrowUpCircle size={18} />, label: 'Naik Level' },
+  { to: '/request/pinpad', icon: <Fingerprint size={18} />, label: 'Pinpad' },
+  { to: '/settings', icon: <Settings size={18} />, label: 'Pengaturan' },
+]
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
+      if (authUser) {
+        const npp = authUser.email?.split('@')[0] || ''
+        const uid = authUser.id || ''
+        let nama = 'User'
+        
+        if (npp) {
+          const { data } = await supabase.from('karyawan').select('nama').eq('npp', npp).single()
+          if (data?.nama) {
+            nama = data.nama
+          } else {
+            const { data: bData } = await supabase.from('bina').select('nama').eq('npp', npp).single()
+            if (bData?.nama) nama = bData.nama
+          }
+        }
+        
+        setUser({ npp, nama, uid })
+      }
+    })
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  return (
+    <>
+      {/* Mobile Toggle */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-teal-600 text-white rounded-xl shadow-lg"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed top-0 left-0 h-full z-50 flex flex-col
+        bg-gradient-to-b from-teal-700 to-teal-900 text-white
+        transition-all duration-300 ease-in-out shadow-2xl
+        ${collapsed ? 'w-16' : 'w-64'}
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Logo Area */}
+        <div className="flex items-center justify-between px-4 py-5 border-b border-teal-600/50">
+          {!collapsed && (
+            <div className="flex items-center gap-3 animate-fade-in">
+              <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-md shrink-0">
+                <span className="text-white font-extrabold text-sm">P</span>
+              </div>
+              <div>
+                <p className="text-sm font-extrabold tracking-wide leading-none">P-HRIS</p>
+                <p className="text-[10px] text-teal-300 mt-0.5 leading-none">SDM System</p>
+              </div>
+            </div>
+          )}
+          {collapsed && (
+            <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center mx-auto">
+              <span className="text-white font-extrabold text-sm">P</span>
+            </div>
+          )}
+          {/* Collapse button desktop */}
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="hidden lg:flex p-1 rounded-lg hover:bg-teal-600/50 transition-colors text-teal-300 hover:text-white"
+          >
+            <ChevronLeft size={16} className={`transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
+          </button>
+          {/* Close button mobile */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-1 rounded-lg hover:bg-teal-600/50 text-teal-300"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Nav Items */}
+        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+          {navItems.map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) => `
+                flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+                transition-all duration-200 group relative
+                ${isActive
+                  ? 'bg-white/15 text-white shadow-sm'
+                  : 'text-teal-200 hover:bg-white/10 hover:text-white'
+                }
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-400 rounded-r-full" />
+                  )}
+                  <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
+                    {item.icon}
+                  </span>
+                  {!collapsed && <span className="truncate animate-fade-in">{item.label}</span>}
+                  {collapsed && (
+                    <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
+                                    opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Bottom */}
+        <div className="px-2 py-4 border-t border-teal-600/50 space-y-1">
+          <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 transition-all duration-200 text-sm font-medium relative group">
+            <User size={18} className="shrink-0 text-teal-300" />
+            {!collapsed && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-bold text-white truncate leading-none">{user?.nama || 'User'}</span>
+                <span className="text-[9px] text-teal-300 font-mono truncate mt-1">{user?.uid || 'Loading...'}</span>
+              </div>
+            )}
+            {collapsed && (
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
+                              opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                <p className="font-bold">{user?.nama || 'User'}</p>
+                <p className="text-[10px] font-mono mt-0.5">{user?.uid || 'Loading...'}</p>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium"
+          >
+            <LogOut size={18} className="shrink-0" />
+            {!collapsed && <span>Keluar</span>}
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
