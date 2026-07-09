@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Search, Trash2, FileSpreadsheet, FileDown, FileText, ArrowRightLeft } from 'lucide-react'
-import { useMutasi, useDeleteMutasi, type Mutasi } from '../hooks/useMutasi'
+import { Search, Trash2, FileDown, FileText, ArrowRightLeft } from 'lucide-react'
+import { useMutasi, useDeleteMutasi } from '../hooks/useMutasi'
 import { useReferensi } from '../hooks/useReferensi'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'

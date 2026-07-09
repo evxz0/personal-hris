@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, UserCheck, GraduationCap,
   CalendarOff, ArrowUpCircle, Fingerprint, Settings,
-  ChevronLeft, LogOut, Bell, Menu, X, User, ArrowRightLeft
+  ChevronLeft, LogOut, Menu, X, User, ArrowRightLeft
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 

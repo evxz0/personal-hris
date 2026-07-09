@@ -41,7 +41,7 @@ function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jaba
       </div>
       <button
         type="button"
-        onClick={() => onFill(found.nama, 'jabatan' in found ? found.jabatan : '')}
+        onClick={() => onFill(found.nama, ('jabatan' in found ? found.jabatan : '') || '')}
         className="text-xs px-2.5 py-1 rounded-lg bg-teal-600 text-white font-semibold"
       >
         Gunakan
