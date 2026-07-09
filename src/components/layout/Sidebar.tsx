@@ -3,13 +3,14 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, UserCheck, GraduationCap,
   CalendarOff, ArrowUpCircle, Fingerprint, Settings,
-  ChevronLeft, LogOut, Bell, Menu, X, User
+  ChevronLeft, LogOut, Bell, Menu, X, User, ArrowRightLeft
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 const navItems = [
   { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { to: '/karyawan', icon: <Users size={18} />, label: 'Master Karyawan' },
+  { to: '/mutasi', icon: <ArrowRightLeft size={18} />, label: 'Mutasi' },
   { to: '/bina', icon: <UserCheck size={18} />, label: 'Master Bina' },
   { to: '/magang', icon: <GraduationCap size={18} />, label: 'Master Magang' },
   { to: '/absensi', icon: <CalendarOff size={18} />, label: 'Absensi' },

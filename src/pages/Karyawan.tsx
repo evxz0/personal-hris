@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { Plus, Search, Edit2, Trash2, Users, FileSpreadsheet, FileDown, FileText } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Users, FileSpreadsheet, FileDown, FileText, ArrowRightLeft } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useKaryawan, useAddKaryawan, useUpdateKaryawan, useDeleteKaryawan, useBulkInsertKaryawan, type Karyawan, type KaryawanInsert } from '../hooks/useKaryawan'
+import { useAddMutasi } from '../hooks/useMutasi'
 import { useReferensi } from '../hooks/useReferensi'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
-import { Input, Select } from '../components/ui/Input'
+import { Input, Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { ImportModal } from '../components/ui/ImportModal'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
@@ -28,6 +28,8 @@ const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
 
 const TEMPLATE_HEADERS = ['NPP','Nama','Kategori','Outlet','Tanggal Lahir','Posisi Saat Ini','Jabatan','Grade','NIK','No Rekening','No HP']
 
+import { useState } from 'react'
+
 export default function KaryawanPage() {
   const [search, setSearch] = useState('')
   const [filterKategori, setFilterKategori] = useState<'ALL'|'FTE'|'TAD'>('ALL')
@@ -39,6 +41,13 @@ export default function KaryawanPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<KaryawanInsert>(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
+  
+  const [mutasiOpen, setMutasiOpen] = useState(false)
+  const [mutasiForm, setMutasiForm] = useState({
+    npp: '', nama: '', kategori: 'FTE', outlet: '', posisi_saat_ini: '',
+    jabatan: '', grade: 1, tanggal_lahir: '', nik: '', no_rek: '', no_hp: '',
+    sisa_cuti: 18, keterangan: ''
+  })
 
   const { data: rawData = [], isLoading } = useKaryawan(search)
   const { data: outlets = [] } = useReferensi('OUTLET')
@@ -48,6 +57,7 @@ export default function KaryawanPage() {
   const updateMutation   = useUpdateKaryawan()
   const deleteMutation   = useDeleteKaryawan()
   const bulkInsert       = useBulkInsertKaryawan()
+  const mutasiMutation   = useAddMutasi()
 
   const data = rawData.filter(k => {
     if (filterKategori !== 'ALL' && k.kategori !== filterKategori) return false
@@ -64,6 +74,25 @@ export default function KaryawanPage() {
     setModalOpen(true)
   }
 
+  const openMutasi = (k: Karyawan) => {
+    setMutasiForm({
+      npp: k.npp,
+      nama: k.nama,
+      kategori: k.kategori,
+      outlet: k.outlet || '',
+      posisi_saat_ini: k.posisi_saat_ini || '',
+      jabatan: k.jabatan || '',
+      grade: k.grade || 1,
+      tanggal_lahir: k.tanggal_lahir || '',
+      nik: k.nik || '',
+      no_rek: k.no_rek || '',
+      no_hp: k.no_hp || '',
+      sisa_cuti: k.sisa_cuti || 18,
+      keterangan: ''
+    })
+    setMutasiOpen(true)
+  }
+
   const handleSave = async () => {
     if (editId) {
       await updateMutation.mutateAsync({ id: editId, payload: form })
@@ -71,6 +100,16 @@ export default function KaryawanPage() {
       await addMutation.mutateAsync(form)
     }
     setModalOpen(false)
+  }
+
+  const handleSaveMutasi = async () => {
+    try {
+      await mutasiMutation.mutateAsync(mutasiForm)
+      setMutasiOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert('Gagal memproses mutasi. Pastikan Anda sudah menjalankan query SQL pembuatan tabel "mutasi" di editor SQL Supabase Anda.')
+    }
   }
 
   const handleDelete = async () => {
@@ -214,7 +253,14 @@ export default function KaryawanPage() {
           { key: 'no_hp', header: 'No HP' },
         ]}
         actions={(row) => (
-          <>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => openMutasi(row as unknown as Karyawan)}
+              title="Mutasi Karyawan"
+              className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              <ArrowRightLeft size={14} />
+            </button>
             <button
               onClick={() => openEdit(row as unknown as Karyawan)}
               className="p-1.5 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
@@ -227,7 +273,7 @@ export default function KaryawanPage() {
             >
               <Trash2 size={14} />
             </button>
-          </>
+          </div>
         )}
       />
 
@@ -323,6 +369,72 @@ export default function KaryawanPage() {
         fieldMapping={KARYAWAN_FIELD_MAPPING}
         requiredFields={['npp', 'nama']}
       />
+
+      {/* Mutasi Modal */}
+      <Modal
+        isOpen={mutasiOpen}
+        onClose={() => setMutasiOpen(false)}
+        title="Mutasi Karyawan"
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setMutasiOpen(false)}>Batal</Button>
+            <Button variant="primary" loading={mutasiMutation.isPending} onClick={handleSaveMutasi}>
+              Proses Mutasi
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200 text-sm">
+            <div>
+              <span className="text-gray-500">NPP:</span> <span className="font-bold text-[#2B3440]">{mutasiForm.npp}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Nama:</span> <span className="font-bold text-[#2B3440]">{mutasiForm.nama}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Select
+              label="Outlet Baru"
+              value={mutasiForm.outlet}
+              onChange={e => setMutasiForm(f => ({ ...f, outlet: e.target.value }))}
+              options={outlets.map(o => ({ value: o.nama_referensi, label: o.nama_referensi }))}
+              placeholder="-- Pilih Outlet Baru --"
+            />
+            <Select
+              label="Jabatan Baru"
+              value={mutasiForm.jabatan}
+              onChange={e => setMutasiForm(f => ({ ...f, jabatan: e.target.value }))}
+              options={jabatans.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+              placeholder="-- Pilih Jabatan Baru --"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Posisi Baru"
+              value={mutasiForm.posisi_saat_ini}
+              onChange={e => setMutasiForm(f => ({ ...f, posisi_saat_ini: e.target.value }))}
+              placeholder="Jabatan/posisi baru"
+            />
+            <Select
+              label="Grade Baru"
+              value={mutasiForm.grade}
+              onChange={e => setMutasiForm(f => ({ ...f, grade: Number(e.target.value) }))}
+              options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Grade ${i + 1}` }))}
+            />
+          </div>
+
+          <Textarea
+            label="Keterangan Mutasi"
+            value={mutasiForm.keterangan}
+            onChange={e => setMutasiForm(f => ({ ...f, keterangan: e.target.value }))}
+            placeholder="Alasan mutasi/keterangan tambahan..."
+          />
+        </div>
+      </Modal>
     </div>
   )
 }

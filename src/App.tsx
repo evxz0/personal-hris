@@ -11,6 +11,7 @@ import MagangPage from './pages/Magang'
 import AbsensiPage from './pages/Absensi'
 import { RequestNaikLevelPage, RequestPinpadPage } from './pages/Request'
 import SettingsPage from './pages/Settings'
+import MutasiPage from './pages/Mutasi'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="/absensi" element={<ProtectedRoute session={session}><AbsensiPage /></ProtectedRoute>} />
         <Route path="/request/naik-level" element={<ProtectedRoute session={session}><RequestNaikLevelPage /></ProtectedRoute>} />
         <Route path="/request/pinpad" element={<ProtectedRoute session={session}><RequestPinpadPage /></ProtectedRoute>} />
+        <Route path="/mutasi" element={<ProtectedRoute session={session}><MutasiPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
 
         {/* Fallback */}
