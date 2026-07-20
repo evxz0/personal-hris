@@ -39,7 +39,7 @@ export async function extractDocumentScan(file: File): Promise<OcrResponse> {
     console.error('Gagal mengekstrak berkas di server Vercel:', error)
     let errMessage = 'Terjadi kendala keamanan atau server saat membaca dokumen.'
     if (axios.isAxiosError(error) && error.response?.data) {
-      errMessage = error.response.data.error || error.response.data.message || errMessage
+      errMessage = error.response.data.detail || error.response.data.error || error.response.data.message || errMessage
     } else if (error instanceof Error) {
       errMessage = error.message
     }
