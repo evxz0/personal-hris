@@ -1,27 +1,32 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, UserCheck, GraduationCap,
+  LayoutDashboard, Users, GraduationCap,
   CalendarOff, ArrowUpCircle, Fingerprint, Settings,
-  ChevronLeft, LogOut, Menu, X, User, ArrowRightLeft
+  ChevronLeft, LogOut, X, User, ArrowRightLeft, UserCheck
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 const navItems = [
   { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { to: '/karyawan', icon: <Users size={18} />, label: 'Master Karyawan' },
-  { to: '/mutasi', icon: <ArrowRightLeft size={18} />, label: 'Mutasi' },
   { to: '/bina', icon: <UserCheck size={18} />, label: 'Master Bina' },
   { to: '/magang', icon: <GraduationCap size={18} />, label: 'Master Magang' },
   { to: '/absensi', icon: <CalendarOff size={18} />, label: 'Absensi' },
   { to: '/request/naik-level', icon: <ArrowUpCircle size={18} />, label: 'Naik Level' },
   { to: '/request/pinpad', icon: <Fingerprint size={18} />, label: 'Pinpad' },
+  { to: '/riwayat', icon: <ArrowRightLeft size={18} />, label: 'Riwayat' },
   { to: '/settings', icon: <Settings size={18} />, label: 'Pengaturan' },
 ]
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
+interface SidebarProps {
+  collapsed: boolean
+  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
+  mobileOpen: boolean
+  setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: SidebarProps) {
   const navigate = useNavigate()
 
   const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
@@ -37,9 +42,6 @@ export function Sidebar() {
           const { data } = await supabase.from('karyawan').select('nama').eq('npp', npp).single()
           if (data?.nama) {
             nama = data.nama
-          } else {
-            const { data: bData } = await supabase.from('bina').select('nama').eq('npp', npp).single()
-            if (bData?.nama) nama = bData.nama
           }
         }
         
@@ -55,14 +57,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Toggle */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-teal-600 text-white rounded-xl shadow-lg"
-      >
-        <Menu size={20} />
-      </button>
-
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div

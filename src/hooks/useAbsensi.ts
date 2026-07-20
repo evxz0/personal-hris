@@ -40,13 +40,9 @@ export function useAddAbsensi() {
         const start = new Date(payload.tanggal_mulai)
         const end   = new Date(payload.tanggal_selesai)
         const days  = Math.ceil((end.getTime() - start.getTime()) / (1000*60*60*24)) + 1
-        // Try karyawan first, then bina
         const { data: k } = await supabase.from('karyawan').select('id, sisa_cuti').eq('npp', payload.npp).maybeSingle()
         if (k) {
           await supabase.from('karyawan').update({ sisa_cuti: Math.max(0, (k.sisa_cuti ?? 18) - days) }).eq('id', k.id)
-        } else {
-          const { data: b } = await supabase.from('bina').select('id, sisa_cuti').eq('npp', payload.npp).maybeSingle()
-          if (b) await supabase.from('bina').update({ sisa_cuti: Math.max(0, (b.sisa_cuti ?? 18) - days) }).eq('id', b.id)
         }
       }
       await logAudit('TAMBAH_ABSENSI', JSON.stringify({ npp: payload.npp, jenis: payload.jenis }))
@@ -55,7 +51,6 @@ export function useAddAbsensi() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['absensi'] })
       qc.invalidateQueries({ queryKey: ['karyawan'] })
-      qc.invalidateQueries({ queryKey: ['bina'] })
     },
   })
 }
@@ -90,11 +85,6 @@ export function useUpdateAbsensi() {
         const { data: k } = await supabase.from('karyawan').select('id, sisa_cuti').eq('npp', original.npp).maybeSingle()
         if (k) {
           await supabase.from('karyawan').update({ sisa_cuti: (k.sisa_cuti ?? 18) + days }).eq('id', k.id)
-        } else {
-          const { data: b } = await supabase.from('bina').select('id, sisa_cuti').eq('npp', original.npp).maybeSingle()
-          if (b) {
-            await supabase.from('bina').update({ sisa_cuti: (b.sisa_cuti ?? 18) + days }).eq('id', b.id)
-          }
         }
       }
 
@@ -107,11 +97,6 @@ export function useUpdateAbsensi() {
         const { data: k } = await supabase.from('karyawan').select('id, sisa_cuti').eq('npp', payload.npp).maybeSingle()
         if (k) {
           await supabase.from('karyawan').update({ sisa_cuti: Math.max(0, (k.sisa_cuti ?? 18) - days) }).eq('id', k.id)
-        } else {
-          const { data: b } = await supabase.from('bina').select('id, sisa_cuti').eq('npp', payload.npp).maybeSingle()
-          if (b) {
-            await supabase.from('bina').update({ sisa_cuti: Math.max(0, (b.sisa_cuti ?? 18) - days) }).eq('id', b.id)
-          }
         }
       }
 
@@ -121,7 +106,6 @@ export function useUpdateAbsensi() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['absensi'] })
       qc.invalidateQueries({ queryKey: ['karyawan'] })
-      qc.invalidateQueries({ queryKey: ['bina'] })
     },
   })
 }
@@ -156,9 +140,6 @@ export function useBulkInsertAbsensi() {
         const { data: k } = await supabase.from('karyawan').select('id, sisa_cuti').eq('npp', row.npp).maybeSingle()
         if (k) {
           await supabase.from('karyawan').update({ sisa_cuti: Math.max(0, (k.sisa_cuti ?? 18) - days) }).eq('id', k.id)
-        } else {
-          const { data: b } = await supabase.from('bina').select('id, sisa_cuti').eq('npp', row.npp).maybeSingle()
-          if (b) await supabase.from('bina').update({ sisa_cuti: Math.max(0, (b.sisa_cuti ?? 18) - days) }).eq('id', b.id)
         }
       }
 
@@ -168,7 +149,6 @@ export function useBulkInsertAbsensi() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['absensi'] })
       qc.invalidateQueries({ queryKey: ['karyawan'] })
-      qc.invalidateQueries({ queryKey: ['bina'] })
     },
   })
 }

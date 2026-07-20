@@ -1,4 +1,4 @@
-import { Plus, Search, Edit2, Trash2, GraduationCap, FileSpreadsheet, FileDown, FileText } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, GraduationCap, FileDown, FileText } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useMagang, useAddMagang, useUpdateMagang, useDeleteMagang, useBulkInsertMagang, type Magang } from '../hooks/useMagang'
@@ -8,6 +8,7 @@ import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { formatDate, calculateDays } from '../lib/utils'
 import { ImportModal } from '../components/ui/ImportModal'
+import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 
 const MAGANG_FIELD_MAPPING: Record<string, string> = {
@@ -27,6 +28,7 @@ export default function MagangPage() {
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
@@ -115,9 +117,10 @@ export default function MagangPage() {
           <p className="text-sm text-[#64748B] mt-1">Kelola data mahasiswa/siswa magang</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={<FileSpreadsheet size={15} />} onClick={() => setImportOpen(true)}>
-            Import
-          </Button>
+          <ImportDropdown
+            onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
+            onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
+          />
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>
@@ -256,6 +259,7 @@ export default function MagangPage() {
         templateFilename="Template_Magang"
         fieldMapping={MAGANG_FIELD_MAPPING}
         requiredFields={['nama', 'universitas']}
+        initialMode={importMode}
       />
     </div>
   )

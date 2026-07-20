@@ -6,7 +6,7 @@ export interface Karyawan {
   id: string
   npp: string
   nama: string
-  kategori: 'FTE' | 'TAD'
+  kategori: 'FTE' | 'TAD' | 'BINA'
   outlet: string | null
   tanggal_lahir: string | null
   posisi_saat_ini: string | null
@@ -14,6 +14,13 @@ export interface Karyawan {
   jabatan: string | null
   grade: number | null
   nik: string | null
+  npp_digi_hc: string | null
+  npp_webmail: string | null
+  jenis_kelamin: string | null
+  tanggal_mulai: string | null
+  tanggal_berakhir: string | null
+  kd_wil: string | null
+  batch: string | null
   no_rek: string | null
   no_hp: string | null
   sisa_cuti: number | null
@@ -80,11 +87,79 @@ export function useDeleteKaryawan() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: emp, error: fetchError } = await supabase.from('karyawan').select('*').eq('id', id).single()
+      if (fetchError) throw fetchError
+
+      if (emp) {
+        const prepared = {
+          npp: emp.npp,
+          nama: emp.nama,
+          kategori: emp.kategori || null,
+          outlet: emp.outlet || null,
+          jenjang: emp.jenjang || null,
+          jabatan: emp.jabatan || null,
+          grade: emp.grade ? Number(emp.grade) : null,
+          tanggal_lahir: emp.tanggal_lahir || null,
+          nik: emp.nik || null,
+          no_rek: emp.no_rek || null,
+          no_hp: emp.no_hp || null,
+          sisa_cuti: emp.sisa_cuti !== null && emp.sisa_cuti !== undefined ? Number(emp.sisa_cuti) : 18,
+          keterangan: 'Karyawan Dihapus dari Master',
+          tanggal_aktif: null,
+          jenis_aksi: 'HAPUS'
+        }
+        const { error: mutasiError } = await supabase.from('mutasi').insert(prepared)
+        if (mutasiError) throw mutasiError
+      }
+
       const { error } = await supabase.from('karyawan').delete().eq('id', id)
       if (error) throw error
-      await logAudit('HAPUS_KARYAWAN', id)
+      await logAudit('HAPUS_KARYAWAN', JSON.stringify({ id, npp: emp?.npp, nama: emp?.nama }))
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['karyawan'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['karyawan'] })
+      qc.invalidateQueries({ queryKey: ['mutasi'] })
+    },
+  })
+}
+
+export function useBulkDeleteKaryawan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data: emps, error: fetchError } = await supabase.from('karyawan').select('*').in('id', ids)
+      if (fetchError) throw fetchError
+
+      if (emps && emps.length > 0) {
+        const prepared = emps.map(emp => ({
+          npp: emp.npp,
+          nama: emp.nama,
+          kategori: emp.kategori || null,
+          outlet: emp.outlet || null,
+          jenjang: emp.jenjang || null,
+          jabatan: emp.jabatan || null,
+          grade: emp.grade ? Number(emp.grade) : null,
+          tanggal_lahir: emp.tanggal_lahir || null,
+          nik: emp.nik || null,
+          no_rek: emp.no_rek || null,
+          no_hp: emp.no_hp || null,
+          sisa_cuti: emp.sisa_cuti !== null && emp.sisa_cuti !== undefined ? Number(emp.sisa_cuti) : 18,
+          keterangan: 'Karyawan Dihapus dari Master (Massal)',
+          tanggal_aktif: null,
+          jenis_aksi: 'HAPUS'
+        }))
+        const { error: mutasiError } = await supabase.from('mutasi').insert(prepared)
+        if (mutasiError) throw mutasiError
+      }
+
+      const { error } = await supabase.from('karyawan').delete().in('id', ids)
+      if (error) throw error
+      await logAudit('BULK_DELETE_KARYAWAN', `${ids.length} data karyawan dihapus`)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['karyawan'] })
+      qc.invalidateQueries({ queryKey: ['mutasi'] })
+    },
   })
 }
 

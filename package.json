@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "npm run build && wrangler dev",
-    "deploy": "npm run build && wrangler deploy"
+    "preview": "npm run build && wrangler pages dev ./dist",
+    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=preview"
   },
   "dependencies": {
     "@emnapi/core": "^1.11.2",
@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.110.1",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "jspdf": "^4.2.1",

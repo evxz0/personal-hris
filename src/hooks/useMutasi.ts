@@ -8,7 +8,7 @@ export interface Mutasi {
   nama: string
   kategori: string
   outlet: string
-  posisi_saat_ini: string
+  jenjang: string
   jabatan: string
   grade: number
   tanggal_lahir?: string
@@ -17,6 +17,8 @@ export interface Mutasi {
   no_hp?: string
   sisa_cuti?: number
   keterangan?: string
+  tanggal_aktif?: string | null
+  jenis_aksi?: string
   created_at: string
 }
 
@@ -44,7 +46,7 @@ export function useAddMutasi() {
         nama: payload.nama,
         kategori: payload.kategori || null,
         outlet: payload.outlet || null,
-        posisi_saat_ini: payload.posisi_saat_ini || null,
+        jenjang: payload.jenjang || null,
         jabatan: payload.jabatan || null,
         grade: payload.grade ? Number(payload.grade) : null,
         tanggal_lahir: payload.tanggal_lahir || null,
@@ -52,7 +54,9 @@ export function useAddMutasi() {
         no_rek: payload.no_rek || null,
         no_hp: payload.no_hp || null,
         sisa_cuti: payload.sisa_cuti !== undefined ? Number(payload.sisa_cuti) : 18,
-        keterangan: payload.keterangan || null
+        keterangan: payload.keterangan || null,
+        tanggal_aktif: payload.tanggal_aktif || null,
+        jenis_aksi: payload.jenis_aksi || 'MUTASI'
       }
       const { data, error } = await supabase.from('mutasi').insert(prepared).select().single()
       if (error) throw error

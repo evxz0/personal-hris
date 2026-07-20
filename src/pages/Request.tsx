@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, Trash2, ArrowUpCircle, Fingerprint, FileSpreadsheet, FileDown, FileText, Edit2 } from 'lucide-react'
+import { Plus, Search, Trash2, ArrowUpCircle, Fingerprint, FileDown, FileText, Edit2 } from 'lucide-react'
 import {
   useRequestNaikLevel, useAddRequestNaikLevel, useDeleteRequestNaikLevel, useBulkInsertRequestNaikLevel, useUpdateRequestNaikLevel,
   useRequestPinpad, useAddRequestPinpad, useDeleteRequestPinpad, useBulkInsertRequestPinpad, useUpdateRequestPinpad,
@@ -10,6 +10,7 @@ import { Input, Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { formatDate } from '../lib/utils'
 import { ImportModal } from '../components/ui/ImportModal'
+import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 
 const NAIK_LEVEL_FIELD_MAPPING: Record<string, string> = {
@@ -31,6 +32,7 @@ export function RequestNaikLevelPage() {
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState({ npp: '', nama: '', level_diajukan: '', waktu_mulai: '', waktu_selesai: '', keterangan: '' })
   const [editId, setEditId] = useState<string | null>(null)
@@ -118,9 +120,10 @@ export function RequestNaikLevelPage() {
           <p className="text-sm text-[#64748B] mt-1">Pengajuan kenaikan level karyawan</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={<FileSpreadsheet size={15} />} onClick={() => setImportOpen(true)}>
-            Import
-          </Button>
+          <ImportDropdown
+            onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
+            onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
+          />
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>
@@ -248,6 +251,7 @@ export function RequestNaikLevelPage() {
         templateFilename="Template_Request_Naik_Level"
         fieldMapping={NAIK_LEVEL_FIELD_MAPPING}
         requiredFields={['npp', 'nama', 'level_diajukan']}
+        initialMode={importMode}
       />
     </div>
   )
@@ -258,6 +262,7 @@ export function RequestPinpadPage() {
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState({ keperluan: 'OPEN PINPAD' as 'OPEN PINPAD'|'FR', npp_user: '', nama: '', waktu_mulai: '', waktu_selesai: '', keterangan: '' })
   const [editId, setEditId] = useState<string | null>(null)
@@ -345,9 +350,10 @@ export function RequestPinpadPage() {
           <p className="text-sm text-[#64748B] mt-1">Pengajuan Open Pinpad & FR</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={<FileSpreadsheet size={15} />} onClick={() => setImportOpen(true)}>
-            Import
-          </Button>
+          <ImportDropdown
+            onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
+            onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
+          />
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>
@@ -482,6 +488,7 @@ export function RequestPinpadPage() {
         templateFilename="Template_Request_Pinpad"
         fieldMapping={PINPAD_FIELD_MAPPING}
         requiredFields={['keperluan', 'npp_user']}
+        initialMode={importMode}
       />
     </div>
   )

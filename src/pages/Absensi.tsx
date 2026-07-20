@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Plus, Search, Trash2, CalendarOff, AlertCircle, FileSpreadsheet, FileDown, FileText, Edit2 } from 'lucide-react'
+import { Plus, Search, Trash2, CalendarOff, AlertCircle, FileDown, FileText, Edit2 } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useAbsensi, useAddAbsensi, useDeleteAbsensi, useBulkInsertAbsensi, useUpdateAbsensi, type AbsensiInsert } from '../hooks/useAbsensi'
 import { useKaryawan, useKaryawanByNPP } from '../hooks/useKaryawan'
-import { useBina, useBinaByNPP } from '../hooks/useBina'
 import { ImportModal } from '../components/ui/ImportModal'
+import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
@@ -25,8 +25,7 @@ const TEMPLATE_HEADERS = ['NPP', 'Jenis', 'Tgl Mulai', 'Tgl Selesai', 'Keteranga
 
 function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jabatan: string) => void }) {
   const { data: karyawan } = useKaryawanByNPP(npp)
-  const { data: bina } = useBinaByNPP(npp)
-  const found = karyawan ?? bina
+  const found = karyawan
 
   if (!found || !npp || npp.length < 3) return null
   return (
@@ -35,13 +34,13 @@ function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jaba
       <div className="flex-1">
         <span className="font-bold text-teal-700">{found.nama}</span>
         <span className="text-teal-600 ml-2 text-xs">
-          {'jabatan' in found ? found.jabatan : ''}
-          {'jenjang' in found && found.jenjang ? ` · ${found.jenjang}` : ''}
+          {found.jabatan || ''}
+          {found.kategori ? ` · ${found.kategori}` : ''}
         </span>
       </div>
       <button
         type="button"
-        onClick={() => onFill(found.nama, ('jabatan' in found ? found.jabatan : '') || '')}
+        onClick={() => onFill(found.nama, found.jabatan || '')}
         className="text-xs px-2.5 py-1 rounded-lg bg-teal-600 text-white font-semibold"
       >
         Gunakan
@@ -55,13 +54,13 @@ export default function AbsensiPage() {
   const [filterJenis, setFilterJenis] = useState<'ALL'|'SAKIT'|'CUTI'>('ALL')
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<AbsensiInsert>(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
 
   const { data: rawData = [], isLoading } = useAbsensi(search)
   const { data: allKaryawan = [] } = useKaryawan()
-  const { data: allBina = [] } = useBina()
   const addMutation    = useAddAbsensi()
   const updateMutation = useUpdateAbsensi()
   const deleteMutation = useDeleteAbsensi()
@@ -148,16 +147,12 @@ export default function AbsensiPage() {
   const getNama = (npp: string) => {
     const k = allKaryawan.find(x => x.npp === npp)
     if (k) return k.nama
-    const b = allBina.find(x => x.npp === npp)
-    if (b) return b.nama
     return '-'
   }
 
   const getSisaCuti = (npp: string) => {
     const k = allKaryawan.find(x => x.npp === npp)
     if (k) return k.sisa_cuti ?? 18
-    const b = allBina.find(x => x.npp === npp)
-    if (b) return b.sisa_cuti ?? 18
     return '-'
   }
 
@@ -172,10 +167,11 @@ export default function AbsensiPage() {
           </h1>
           <p className="text-sm text-[#64748B] mt-1">Pencatatan izin sakit & cuti karyawan</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={<FileSpreadsheet size={15} />} onClick={() => setImportOpen(true)}>
-            Import
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ImportDropdown
+            onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
+            onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
+          />
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>
@@ -350,6 +346,7 @@ export default function AbsensiPage() {
         templateFilename="Template_Absensi"
         fieldMapping={ABSENSI_FIELD_MAPPING}
         requiredFields={['npp', 'jenis', 'tanggal_mulai', 'tanggal_selesai']}
+        initialMode={importMode}
       />
     </div>
   )

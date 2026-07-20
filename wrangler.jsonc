@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "personal-hris-github-io",
+  "name": "private-hris",
   "compatibility_date": "2026-07-09",
   "observability": {
     "enabled": true

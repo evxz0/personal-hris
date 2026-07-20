@@ -16,6 +16,9 @@ interface DataTableProps<T extends Record<string, unknown>> {
   emptyIcon?: React.ReactNode
   pageSize?: number
   actions?: (row: T) => React.ReactNode
+  selectable?: boolean
+  selectedIds?: string[]
+  onSelectionChange?: (ids: string[]) => void
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -26,10 +29,35 @@ export function DataTable<T extends Record<string, unknown>>({
   emptyIcon,
   pageSize = 15,
   actions,
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
 }: DataTableProps<T>) {
   const [page, setPage] = React.useState(1)
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize))
   const paged = data.slice((page - 1) * pageSize, page * pageSize)
+
+  const allIds = data.map(d => String(d.id || ''))
+  const isAllSelected = data.length > 0 && allIds.every(id => selectedIds.includes(id))
+  const isSomeSelected = data.length > 0 && allIds.some(id => selectedIds.includes(id)) && !isAllSelected
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!onSelectionChange) return
+    if (e.target.checked) {
+      onSelectionChange(allIds)
+    } else {
+      onSelectionChange([])
+    }
+  }
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    if (!onSelectionChange) return
+    if (checked) {
+      onSelectionChange([...selectedIds, id])
+    } else {
+      onSelectionChange(selectedIds.filter(x => x !== id))
+    }
+  }
 
   // Reset page when data changes
   React.useEffect(() => { setPage(1) }, [data.length])
@@ -39,7 +67,7 @@ export function DataTable<T extends Record<string, unknown>>({
       <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex gap-4 px-5 py-4 border-b border-gray-100 animate-pulse">
-            {[...Array(columns.length + (actions ? 1 : 0))].map((_, j) => (
+            {[...Array(columns.length + (actions ? 1 : 0) + (selectable ? 1 : 0))].map((_, j) => (
               <div key={j} className="h-4 bg-gray-100 rounded flex-1" />
             ))}
           </div>
@@ -48,57 +76,86 @@ export function DataTable<T extends Record<string, unknown>>({
     )
   }
 
+  const totalCols = columns.length + 1 + (selectable ? 1 : 0) + (actions ? 1 : 0)
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs">
           <thead>
             <tr className="bg-teal-600 text-white">
-              <th className="px-4 py-3 text-center text-xs font-semibold w-12">#</th>
+              {selectable && (
+                <th className="px-3 py-2 text-center text-[11px] font-semibold w-10">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={el => {
+                      if (el) el.indeterminate = isSomeSelected
+                    }}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer"
+                  />
+                </th>
+              )}
+              <th className="px-3 py-2 text-center text-[11px] font-semibold w-12">#</th>
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${col.width ?? ''}`}
+                  className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap ${col.width ?? ''}`}
                 >
                   {col.header}
                 </th>
               ))}
-              {actions && <th className="px-4 py-3 text-center text-xs font-semibold w-32">Aksi</th>}
+              {actions && <th className="px-3 py-2 text-center text-[11px] font-semibold w-32">Aksi</th>}
             </tr>
           </thead>
           <tbody>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 2} className="py-16 text-center">
+                <td colSpan={totalCols} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-[#64748B]">
                     {emptyIcon}
-                    <p className="text-sm">{emptyMessage}</p>
+                    <p className="text-xs">{emptyMessage}</p>
                   </div>
                 </td>
               </tr>
             ) : (
-              paged.map((row, i) => (
-                <tr
-                  key={String(row.id ?? i)}
-                  className="border-b border-gray-50 hover:bg-teal-50/40 transition-colors duration-150"
-                >
-                  <td className="px-4 py-3 text-center text-xs text-[#64748B] font-medium">
-                    {(page - 1) * pageSize + i + 1}
-                  </td>
-                  {columns.map(col => (
-                    <td key={col.key} className="px-4 py-3 text-[#2B3440]">
-                      {col.render ? col.render(row) : String(row[col.key] ?? '-')}
+              paged.map((row, i) => {
+                const rowId = String(row.id || '')
+                const isSelected = selectedIds.includes(rowId)
+                return (
+                  <tr
+                    key={rowId || i}
+                    className={`border-b border-gray-50 hover:bg-teal-50/40 transition-colors duration-150 ${isSelected ? 'bg-teal-50/20' : ''}`}
+                  >
+                    {selectable && (
+                      <td className="px-3 py-1.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleSelectRow(rowId, e.target.checked)}
+                          className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                      </td>
+                    )}
+                    <td className="px-3 py-1.5 text-center text-[11px] text-[#64748B] font-medium">
+                      {(page - 1) * pageSize + i + 1}
                     </td>
-                  ))}
-                  {actions && (
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {actions(row)}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
+                    {columns.map(col => (
+                      <td key={col.key} className="px-3 py-1.5 text-[#2B3440]">
+                        {col.render ? col.render(row) : String(row[col.key] ?? '-')}
+                      </td>
+                    ))}
+                    {actions && (
+                      <td className="px-3 py-1.5">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {actions(row)}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

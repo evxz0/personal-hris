@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS karyawan (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   npp VARCHAR(20) UNIQUE NOT NULL,
   nama VARCHAR(200) NOT NULL,
-  kategori TEXT NOT NULL CHECK (kategori IN ('FTE','TAD')),
+  kategori TEXT NOT NULL CHECK (kategori IN ('FTE','TAD','BINA')),
   outlet VARCHAR(100),
   tanggal_lahir DATE,
   posisi_saat_ini VARCHAR(100),
@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS karyawan (
   jabatan VARCHAR(50),
   grade INTEGER CHECK (grade BETWEEN 1 AND 12),
   nik VARCHAR(20),
+  npp_digi_hc VARCHAR(50),
+  npp_webmail VARCHAR(50),
+  jenis_kelamin VARCHAR(10),
+  tanggal_mulai DATE,
+  tanggal_berakhir DATE,
+  kd_wil VARCHAR(20),
+  batch VARCHAR(10),
   no_rek VARCHAR(30),
   no_hp VARCHAR(20),
   sisa_cuti INTEGER DEFAULT 18,
@@ -33,20 +40,30 @@ CREATE TABLE IF NOT EXISTS karyawan (
 );
 CREATE INDEX IF NOT EXISTS idx_karyawan_npp ON karyawan(npp);
 
--- 3. BINA
-CREATE TABLE IF NOT EXISTS bina (
+-- 3. MUTASI
+CREATE TABLE IF NOT EXISTS mutasi (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  npp VARCHAR(20) UNIQUE NOT NULL,
+  npp VARCHAR(20) NOT NULL,
   nama VARCHAR(200) NOT NULL,
+  kategori VARCHAR(50),
   outlet VARCHAR(100),
-  jabatan VARCHAR(50),
+  jenjang VARCHAR(50),
+  jabatan VARCHAR(100),
+  grade INTEGER,
   tanggal_lahir DATE,
+  nik VARCHAR(20),
   no_rek VARCHAR(30),
   no_hp VARCHAR(20),
-  sisa_cuti INTEGER DEFAULT 18,
+  sisa_cuti INTEGER,
+  keterangan TEXT,
+  tanggal_aktif DATE,
+  jenis_aksi VARCHAR(50) DEFAULT 'MUTASI',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_bina_npp ON bina(npp);
+CREATE INDEX IF NOT EXISTS idx_mutasi_npp ON mutasi(npp);
+
+ALTER TABLE mutasi ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "auth_all_mutasi" ON mutasi FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- 4. MAGANG
 CREATE TABLE IF NOT EXISTS magang (
@@ -114,7 +131,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- ============================================================
 ALTER TABLE master_referensi ENABLE ROW LEVEL SECURITY;
 ALTER TABLE karyawan ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bina ENABLE ROW LEVEL SECURITY;
 ALTER TABLE magang ENABLE ROW LEVEL SECURITY;
 ALTER TABLE absensi ENABLE ROW LEVEL SECURITY;
 ALTER TABLE request_naik_level ENABLE ROW LEVEL SECURITY;
@@ -124,7 +140,6 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 -- Policy: authenticated users can do everything
 CREATE POLICY "auth_all_referensi" ON master_referensi FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth_all_karyawan" ON karyawan FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "auth_all_bina" ON bina FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth_all_magang" ON magang FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth_all_absensi" ON absensi FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth_all_naik_level" ON request_naik_level FOR ALL TO authenticated USING (true) WITH CHECK (true);

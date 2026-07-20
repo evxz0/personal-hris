@@ -87,10 +87,6 @@ export default function Dashboard() {
     queryKey: ['karyawan'],
     queryFn: async () => { const { data } = await supabase.from('karyawan').select('id, kategori'); return data ?? [] },
   })
-  const { data: bina = [] } = useQuery({
-    queryKey: ['bina-count'],
-    queryFn: async () => { const { data } = await supabase.from('bina').select('id'); return data ?? [] },
-  })
   const { data: magang = [] } = useQuery({
     queryKey: ['magang-count'],
     queryFn: async () => { const { data } = await supabase.from('magang').select('id'); return data ?? [] },
@@ -138,6 +134,7 @@ export default function Dashboard() {
 
   const fte = karyawan.filter((k: { kategori: string }) => k.kategori === 'FTE').length
   const tad = karyawan.filter((k: { kategori: string }) => k.kategori === 'TAD').length
+  const bina = karyawan.filter((k: { kategori: string }) => k.kategori === 'BINA').length
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -152,8 +149,8 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <StatCard icon={<Users size={22} className="text-teal-600" />} label="Total Karyawan" value={karyawan.length}
-          color="bg-teal-50" sub={`FTE: ${fte} | TAD: ${tad}`} />
-        <StatCard icon={<UserCheck size={22} className="text-orange-500" />} label="Data Bina" value={bina.length}
+          color="bg-teal-50" sub={`FTE: ${fte} | TAD: ${tad} | BINA: ${bina}`} />
+        <StatCard icon={<UserCheck size={22} className="text-orange-500" />} label="Data Bina" value={bina}
           color="bg-orange-50" />
         <StatCard icon={<GraduationCap size={22} className="text-purple-600" />} label="Magang Aktif" value={magang.length}
           color="bg-purple-50" />
