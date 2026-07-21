@@ -65,18 +65,19 @@ const parseDateStringToISO = (val: any): string | null => {
 }
 
 const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
-  'NPP': 'npp', 'Nama': 'nama', 'Kategori': 'kategori',
-  'Outlet': 'outlet', 'Tanggal Lahir': 'tanggal_lahir',
-  'Posisi Saat Ini': 'posisi_saat_ini',
-  'Jenjang': 'jenjang',
-  'Jabatan': 'jabatan', 'Grade': 'grade', 'NIK': 'nik',
+  'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
+  'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
+  'Kategori': 'kategori', 'Outlet': 'outlet', 'Tanggal Lahir': 'tanggal_lahir',
+  'Posisi Saat Ini': 'posisi_saat_ini', 'Jenjang': 'jenjang',
+  'Jabatan': 'jabatan', 'Grade': 'grade',
   'NPP DIGI HC': 'npp_digi_hc', 'NPP WEBMAIL': 'npp_webmail',
-  'Jenis Kelamin': 'jenis_kelamin', 'Tanggal Mulai': 'tanggal_mulai', 'Tanggal Berakhir': 'tanggal_berakhir',
+  'Tanggal Mulai': 'tanggal_mulai', 'Tanggal Berakhir': 'tanggal_berakhir',
   'KD Wil': 'kd_wil', 'Batch': 'batch',
   'No Rekening': 'no_rek', 'No HP': 'no_hp',
 }
 
-const TEMPLATE_HEADERS = ['NPP','Nama','Kategori','Outlet','Tanggal Lahir','Posisi Saat Ini','Jenjang','Jabatan','Grade','NIK','NPP DIGI HC','NPP WEBMAIL','Jenis Kelamin','Tanggal Mulai','Tanggal Berakhir','KD Wil','Batch','No Rekening','No HP']
+const TEMPLATE_HEADERS = ['NPP','Nama','NIK','TTL','Jenis Kelamin','Alamat','Agama','Kategori','Outlet','Tanggal Lahir','Posisi Saat Ini','Jenjang','Jabatan','Grade','NPP DIGI HC','NPP WEBMAIL','Tanggal Mulai','Tanggal Berakhir','KD Wil','Batch','No Rekening','No HP']
 
 import { useState, useEffect } from 'react'
 

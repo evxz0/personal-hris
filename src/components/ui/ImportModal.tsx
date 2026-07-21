@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Upload, FileSpreadsheet, FileText, File, X, CheckCircle, AlertCircle, Download, ScanLine, Sparkles, Code, Edit3 } from 'lucide-react'
 import { parseXLSX, parseWord, downloadTemplate } from '../../lib/importExport'
 import { extractDocumentScan } from '../../lib/ocrService'
-import { parseOcrText } from '../../lib/ocrParser'
+import { parseOcrText, cleanMarkdownText } from '../../lib/ocrParser'
 import { Button } from './Button'
 
 export type ImportMode = 'excel' | 'ocr'
@@ -109,7 +109,7 @@ export function ImportModal({
       return
     }
 
-    const rawText = res.extracted_text
+    const rawText = cleanMarkdownText(res.extracted_text)
     setOcrRawText(rawText)
 
     // Parse extracted text to fields mapping
@@ -118,7 +118,7 @@ export function ImportModal({
     // Prepare form fields for editing
     const formValues: Record<string, string> = {}
     for (const key of Object.values(fieldMapping)) {
-      formValues[key] = String(parsed.parsedRow[key] ?? '')
+      formValues[key] = cleanMarkdownText(String(parsed.parsedRow[key] ?? ''))
     }
     
     setOcrParsedForm(formValues)

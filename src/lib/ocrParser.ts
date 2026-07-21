@@ -9,63 +9,97 @@ export interface ParsedOcrResult {
 }
 
 /**
+ * Remove markdown symbols (*, **, #, bullet points) to leave only clean text and numbers
+ */
+export function cleanMarkdownText(text: string): string {
+  if (!text) return ''
+  return text
+    .replace(/\*\*/g, '')           // Remove bold **
+    .replace(/\*/g, '')             // Remove asterisks *
+    .replace(/^[\s\-\•\*\#]+/gm, '') // Remove leading bullets, dashes, hashes
+    .replace(/[\*\#]+/g, '')        // Remove any remaining asterisks or hashes
+    .trim()
+}
+
+/**
  * Parse OCR raw text based on field mappings or standard HRIS fields
  */
 export function parseOcrText(
   rawText: string,
   fieldMapping?: Record<string, string>
 ): ParsedOcrResult {
+  const cleanedRawText = cleanMarkdownText(rawText)
   const resultRow: Record<string, unknown> = {}
   const detectedFields: { label: string; key: string; value: string }[] = []
 
-  if (!rawText) {
+  if (!cleanedRawText) {
     return { rawText: '', parsedRow: {}, detectedFields: [] }
   }
 
   // Split lines
-  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+  const lines = cleanedRawText
+    .split(/\r?\n/)
+    .map(l => cleanMarkdownText(l))
+    .filter(Boolean)
 
-  // Standard regex helpers
-  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/i
-  const phoneRegex = /\b(08\d{8,11}|\+62\d{9,12})\b/
-  const nikRegex = /\b\d{16}\b/
-  const dateRegex = /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})\b/
+  let mainAddress = ''
+  let rtRw = ''
+  let kelDesa = ''
+  let kecamatan = ''
 
-  // Check email
-  const emailMatch = rawText.match(emailRegex)
-  if (emailMatch) {
-    resultRow['email'] = emailMatch[0]
-  }
-
-  // Check phone
-  const phoneMatch = rawText.match(phoneRegex)
-  if (phoneMatch) {
-    resultRow['no_hp'] = phoneMatch[0]
-    resultRow['telepon'] = phoneMatch[0]
-  }
-
-  // Check NIK
-  const nikMatch = rawText.match(nikRegex)
-  if (nikMatch) {
-    resultRow['nik'] = nikMatch[0]
-  }
-
-  // Check date
-  const dateMatch = rawText.match(dateRegex)
-  if (dateMatch && !resultRow['tanggal']) {
-    resultRow['tanggal'] = dateMatch[0]
-  }
-
-  // Parse line by line for key: value or key = value pattern
   lines.forEach(line => {
     // Look for separator like :, =, or multiple spaces
     const parts = line.split(/[:=]/)
     if (parts.length >= 2) {
-      const rawKey = parts[0].trim()
-      const rawVal = parts.slice(1).join(':').trim()
+      const rawKey = cleanMarkdownText(parts[0])
+      const rawVal = cleanMarkdownText(parts.slice(1).join(':'))
 
       if (rawKey && rawVal) {
         const cleanKey = rawKey.toLowerCase()
+
+        // TTL (Tempat Tanggal Lahir)
+        if (
+          cleanKey.includes('ttl') ||
+          (cleanKey.includes('tempat') && (cleanKey.includes('lahir') || cleanKey.includes('tgl')))
+        ) {
+          resultRow['ttl'] = rawVal
+          resultRow['tempat_tanggal_lahir'] = rawVal
+
+          // Split tempat & tanggal if comma exists
+          if (rawVal.includes(',')) {
+            const [tempat, tgl] = rawVal.split(',').map(s => s.trim())
+            if (tempat) resultRow['tempat_lahir'] = tempat
+            if (tgl) {
+              resultRow['tanggal_lahir'] = tgl
+              resultRow['tanggal'] = tgl
+            }
+          }
+        }
+
+        // Jenis Kelamin
+        if (cleanKey.includes('jenis kelamin') || cleanKey === 'jk' || cleanKey.includes('sex')) {
+          resultRow['jenis_kelamin'] = rawVal
+        }
+
+        // Agama
+        if (cleanKey.includes('agama') || cleanKey.includes('religion')) {
+          resultRow['agama'] = rawVal
+        }
+
+        // Address components
+        if (cleanKey === 'alamat' || cleanKey.includes('alamat')) {
+          mainAddress = rawVal
+          resultRow['alamat_utama'] = rawVal
+        } else if (cleanKey.includes('rt') || cleanKey.includes('rw')) {
+          rtRw = rawVal
+          resultRow['rt_rw'] = rawVal
+        } else if (cleanKey.includes('kel') || cleanKey.includes('desa') || cleanKey.includes('kelurahan')) {
+          kelDesa = rawVal
+          resultRow['kel_desa'] = rawVal
+        } else if (cleanKey.includes('kecamatan') || cleanKey === 'kec') {
+          kecamatan = rawVal
+          resultRow['kecamatan'] = rawVal
+        }
 
         // Match against fieldMapping if provided
         if (fieldMapping) {
@@ -73,7 +107,7 @@ export function parseOcrText(
             if (cleanKey.includes(header.toLowerCase()) || header.toLowerCase().includes(cleanKey)) {
               resultRow[mappedKey] = rawVal
               detectedFields.push({ label: header, key: mappedKey, value: rawVal })
-              return
+              break
             }
           }
         }
@@ -85,27 +119,97 @@ export function parseOcrText(
         else if (cleanKey.includes('jabatan')) resultRow['jabatan'] = rawVal
         else if (cleanKey.includes('unit') || cleanKey.includes('departemen')) resultRow['unit'] = rawVal
         else if (cleanKey.includes('kategori')) resultRow['kategori'] = rawVal
-        else if (cleanKey.includes('tgl') || cleanKey.includes('tanggal')) resultRow['tanggal'] = rawVal
         else if (cleanKey.includes('alasan') || cleanKey.includes('keterangan')) resultRow['keterangan'] = rawVal
-        else {
-          const snakeKey = cleanKey.replace(/\s+/g, '_')
-          resultRow[snakeKey] = rawVal
-        }
 
         detectedFields.push({ label: rawKey, key: cleanKey.replace(/\s+/g, '_'), value: rawVal })
       }
     }
   })
 
-  // If nama wasn't found in key-value, try to detect lines without colons
+  // Assemble combined Alamat field if address components exist
+  const addressParts: string[] = []
+  if (mainAddress) addressParts.push(mainAddress)
+  if (rtRw) addressParts.push(`RT/RW: ${rtRw}`)
+  if (kelDesa) addressParts.push(`Kel/Desa: ${kelDesa}`)
+  if (kecamatan) addressParts.push(`Kecamatan: ${kecamatan}`)
+
+  if (addressParts.length > 0) {
+    const combinedAddress = addressParts.join(', ')
+    resultRow['alamat'] = combinedAddress
+    resultRow['rumah'] = combinedAddress
+
+    if (fieldMapping) {
+      for (const [header, mappedKey] of Object.entries(fieldMapping)) {
+        if (header.toLowerCase().includes('alamat') || header.toLowerCase().includes('rumah')) {
+          resultRow[mappedKey] = combinedAddress
+        }
+      }
+    }
+  }
+
+  // Map TTL into mapped fields if fieldMapping provided
+  if (resultRow['ttl'] && fieldMapping) {
+    for (const [header, mappedKey] of Object.entries(fieldMapping)) {
+      if (
+        header.toLowerCase().includes('ttl') ||
+        header.toLowerCase().includes('tempat tanggal') ||
+        header.toLowerCase().includes('tanggal lahir')
+      ) {
+        if (!resultRow[mappedKey]) {
+          resultRow[mappedKey] = resultRow['ttl']
+        }
+      }
+    }
+  }
+
+  // Map Agama into mapped fields
+  if (resultRow['agama'] && fieldMapping) {
+    for (const [header, mappedKey] of Object.entries(fieldMapping)) {
+      if (header.toLowerCase().includes('agama')) {
+        resultRow[mappedKey] = resultRow['agama']
+      }
+    }
+  }
+
+  // Map Jenis Kelamin into mapped fields
+  if (resultRow['jenis_kelamin'] && fieldMapping) {
+    for (const [header, mappedKey] of Object.entries(fieldMapping)) {
+      if (header.toLowerCase().includes('jenis kelamin') || header.toLowerCase().includes('jk')) {
+        resultRow[mappedKey] = resultRow['jenis_kelamin']
+      }
+    }
+  }
+
+  // Fallback for nama if not detected in key-value
   if (!resultRow['nama']) {
     for (const line of lines) {
-      if (!line.includes(':') && !line.includes('=') && /^[A-Z\s\.\,\']{3,40}$/i.test(line) && !/http|www|sk|surat|keputusan/i.test(line)) {
+      if (!line.includes(':') && !line.includes('=') && /^[A-Z\s\.\,\']{3,40}$/i.test(line) && !/provinsi|kabupaten|kota|http|www|sk|surat/i.test(line)) {
         resultRow['nama'] = line
         detectedFields.push({ label: 'Nama (Detected)', key: 'nama', value: line })
         break
       }
     }
+  }
+
+  // Standard regex helpers for email, phone, nik
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/i
+  const phoneRegex = /\b(08\d{8,11}|\+62\d{9,12})\b/
+  const nikRegex = /\b\d{16}\b/
+
+  if (!resultRow['email']) {
+    const emailMatch = cleanedRawText.match(emailRegex)
+    if (emailMatch) resultRow['email'] = emailMatch[0]
+  }
+  if (!resultRow['no_hp']) {
+    const phoneMatch = cleanedRawText.match(phoneRegex)
+    if (phoneMatch) {
+      resultRow['no_hp'] = phoneMatch[0]
+      resultRow['telepon'] = phoneMatch[0]
+    }
+  }
+  if (!resultRow['nik']) {
+    const nikMatch = cleanedRawText.match(nikRegex)
+    if (nikMatch) resultRow['nik'] = nikMatch[0]
   }
 
   // Ensure default field values if fieldMapping is provided
@@ -118,7 +222,7 @@ export function parseOcrText(
   }
 
   return {
-    rawText,
+    rawText: cleanedRawText,
     parsedRow: resultRow,
     detectedFields
   }

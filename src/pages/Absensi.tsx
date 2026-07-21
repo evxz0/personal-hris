@@ -18,10 +18,13 @@ const EMPTY: AbsensiInsert = {
 }
 
 const ABSENSI_FIELD_MAPPING: Record<string, string> = {
-  'NPP': 'npp', 'Jenis': 'jenis', 'Tgl Mulai': 'tanggal_mulai', 
+  'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
+  'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
+  'Jenis': 'jenis', 'Tgl Mulai': 'tanggal_mulai', 
   'Tgl Selesai': 'tanggal_selesai', 'Keterangan': 'keterangan'
 }
-const TEMPLATE_HEADERS = ['NPP', 'Jenis', 'Tgl Mulai', 'Tgl Selesai', 'Keterangan']
+const TEMPLATE_HEADERS = ['NPP', 'Nama', 'NIK', 'TTL', 'Jenis Kelamin', 'Alamat', 'Agama', 'Jenis', 'Tgl Mulai', 'Tgl Selesai', 'Keterangan']
 
 function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jabatan: string) => void }) {
   const { data: karyawan } = useKaryawanByNPP(npp)

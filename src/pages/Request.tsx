@@ -14,16 +14,21 @@ import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 
 const NAIK_LEVEL_FIELD_MAPPING: Record<string, string> = {
-  'NPP': 'npp', 'Nama': 'nama', 'Level Diajukan': 'level_diajukan',
+  'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
+  'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
+  'Level Diajukan': 'level_diajukan',
   'Waktu Mulai': 'waktu_mulai', 'Waktu Selesai': 'waktu_selesai', 'Keterangan': 'keterangan'
 }
-const NAIK_LEVEL_TEMPLATE_HEADERS = ['NPP', 'Nama', 'Level Diajukan', 'Waktu Mulai', 'Waktu Selesai', 'Keterangan']
+const NAIK_LEVEL_TEMPLATE_HEADERS = ['NPP', 'Nama', 'NIK', 'TTL', 'Jenis Kelamin', 'Alamat', 'Agama', 'Level Diajukan', 'Waktu Mulai', 'Waktu Selesai', 'Keterangan']
 
 const PINPAD_FIELD_MAPPING: Record<string, string> = {
-  'Keperluan': 'keperluan', 'NPP User': 'npp_user', 'Nama': 'nama',
+  'Keperluan': 'keperluan', 'NPP User': 'npp_user', 'Nama': 'nama', 'NIK': 'nik',
+  'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
   'Waktu Mulai': 'waktu_mulai', 'Waktu Selesai': 'waktu_selesai', 'Keterangan': 'keterangan'
 }
-const PINPAD_TEMPLATE_HEADERS = ['Keperluan', 'NPP User', 'Nama', 'Waktu Mulai', 'Waktu Selesai', 'Keterangan']
+const PINPAD_TEMPLATE_HEADERS = ['Keperluan', 'NPP User', 'Nama', 'NIK', 'TTL', 'Jenis Kelamin', 'Alamat', 'Agama', 'Waktu Mulai', 'Waktu Selesai', 'Keterangan']
 
 // ─── Naik Level ───────────────────────────────────────────────────────────────
 // Removed NPPAutoFillRow and resolveNama as inputs are now manual

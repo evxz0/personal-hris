@@ -12,10 +12,12 @@ import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 
 const MAGANG_FIELD_MAPPING: Record<string, string> = {
-  'Nama': 'nama', 'Fakultas': 'fakultas', 'Jurusan': 'jurusan', 'Universitas': 'universitas',
-  'Rumah': 'rumah', 'Penempatan': 'penempatan', 'Tgl Mulai': 'tanggal_mulai', 'Tgl Selesai': 'tanggal_selesai'
+  'Nama': 'nama', 'NIK': 'nik', 'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'rumah', 'Rumah': 'rumah', 'Agama': 'agama',
+  'Fakultas': 'fakultas', 'Jurusan': 'jurusan', 'Universitas': 'universitas',
+  'Penempatan': 'penempatan', 'Tgl Mulai': 'tanggal_mulai', 'Tgl Selesai': 'tanggal_selesai'
 }
-const MAGANG_TEMPLATE_HEADERS = ['Nama', 'Fakultas', 'Jurusan', 'Universitas', 'Rumah', 'Penempatan', 'Tgl Mulai', 'Tgl Selesai']
+const MAGANG_TEMPLATE_HEADERS = ['Nama', 'NIK', 'TTL', 'Jenis Kelamin', 'Alamat', 'Agama', 'Fakultas', 'Jurusan', 'Universitas', 'Penempatan', 'Tgl Mulai', 'Tgl Selesai']
 
 const EMPTY = {
   nama: '', fakultas: '', jurusan: '', universitas: '', rumah: '',

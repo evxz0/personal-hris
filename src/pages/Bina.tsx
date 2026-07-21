@@ -61,13 +61,14 @@ const parseDateStringToISO = (val: any): string | null => {
 }
 
 const BINA_FIELD_MAPPING: Record<string, string> = {
-  'NPP': 'npp', 'Nama': 'nama',
-  'Outlet': 'outlet', 'Jenis Kelamin': 'jenis_kelamin',
-  'Tanggal Mulai': 'tanggal_mulai', 'Tanggal Berakhir': 'tanggal_berakhir',
+  'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
+  'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
+  'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
+  'Outlet': 'outlet', 'Tanggal Mulai': 'tanggal_mulai', 'Tanggal Berakhir': 'tanggal_berakhir',
   'KD Wil': 'kd_wil', 'Batch': 'batch',
 }
 
-const TEMPLATE_HEADERS = ['NPP','Nama','Outlet','Jenis Kelamin','Tanggal Mulai','Tanggal Berakhir','KD Wil','Batch']
+const TEMPLATE_HEADERS = ['NPP','Nama','NIK','TTL','Jenis Kelamin','Alamat','Agama','Outlet','Tanggal Mulai','Tanggal Berakhir','KD Wil','Batch']
 
 export default function BinaPage() {
   const [search, setSearch] = useState('')

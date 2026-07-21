@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const OCR_SERVICE_URL = import.meta.env.VITE_OCR_SERVICE_URL || 'https://hris-ocr-service-pkp-1.vercel.app/extract-document'
-const OCR_SECRET_TOKEN = import.meta.env.VITE_OCR_SECRET_TOKEN || 'TokenHrisSabian2026!'
+const OCR_SECRET_TOKEN = import.meta.env.VITE_OCR_SECRET_TOKEN || '8e82e84046a7a55c80a03838612f21d6'
 
 export interface OcrResponse {
   success: boolean
