@@ -153,6 +153,7 @@ export function RequestNaikLevelPage() {
       </div>
 
       <DataTable
+        tableId="request_naik_level"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada request naik level"
@@ -383,6 +384,7 @@ export function RequestPinpadPage() {
       </div>
 
       <DataTable
+        tableId="request_pinpad"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada request pinpad"

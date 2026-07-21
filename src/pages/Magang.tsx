@@ -152,6 +152,7 @@ export default function MagangPage() {
       </div>
 
       <DataTable
+        tableId="master_magang"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada data magang"

@@ -216,6 +216,7 @@ export default function AbsensiPage() {
       </div>
 
       <DataTable
+        tableId="master_absensi"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada catatan absensi"

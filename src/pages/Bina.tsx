@@ -347,6 +347,7 @@ export default function BinaPage() {
 
       {/* Table */}
       <DataTable
+        tableId="master_bina"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada data karyawan Bina"

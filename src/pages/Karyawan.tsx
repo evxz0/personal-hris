@@ -558,6 +558,7 @@ export default function KaryawanPage() {
 
       {/* Table */}
       <DataTable
+        tableId="master_karyawan"
         data={data as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada data karyawan"

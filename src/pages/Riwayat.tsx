@@ -142,6 +142,7 @@ export default function RiwayatPage() {
 
       {/* Table */}
       <DataTable
+        tableId="riwayat_mutasi"
         data={filtered as unknown as Record<string, unknown>[]}
         loading={isLoading}
         emptyMessage="Belum ada riwayat"
