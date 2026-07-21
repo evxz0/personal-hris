@@ -222,14 +222,24 @@ export default function AbsensiPage() {
         emptyIcon={<CalendarOff size={40} className="text-gray-200" />}
         columns={[
           { key: 'npp', header: 'NPP', width: 'w-24' },
-          { key: 'nama', header: 'Nama', render: r => <span className="font-semibold text-[#2B3440]">{getNama(String(r.npp))}</span> },
+          { key: 'nama', header: 'Nama', render: r => {
+            const str = getNama(String(r.npp))
+            const words = str.trim().split(/\s+/).filter(Boolean)
+            const isNoWrap = words.length <= 3
+            return (
+              <span className={`font-semibold text-[#2B3440] ${isNoWrap ? 'whitespace-nowrap' : 'break-words max-w-[200px]'}`}>
+                {str}
+              </span>
+            )
+          }},
           { key: 'jenis', header: 'Jenis', render: r => (
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${r.jenis === 'SAKIT' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
               {String(r.jenis)}
             </span>
           )},
-          { key: 'tanggal_mulai', header: 'Tgl Mulai', render: r => formatDate(String(r.tanggal_mulai)) },
-          { key: 'tanggal_selesai', header: 'Tgl Selesai', render: r => formatDate(String(r.tanggal_selesai)) },
+          { key: 'alamat', header: 'Alamat', render: r => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.alamat || r.rumah || '-')}>{String(r.alamat || r.rumah || '-')}</span> },
+          { key: 'tanggal_mulai', header: 'Tgl Mulai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_mulai))}</span> },
+          { key: 'tanggal_selesai', header: 'Tgl Selesai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_selesai))}</span> },
           { key: 'durasi', header: 'Durasi', render: r => {
             const d = calculateDays(String(r.tanggal_mulai), String(r.tanggal_selesai))
             return <span className="font-bold text-teal-700">{d} hari</span>

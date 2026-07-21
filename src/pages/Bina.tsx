@@ -353,12 +353,23 @@ export default function BinaPage() {
         emptyIcon={<UserCheck size={40} className="text-gray-200" />}
         columns={[
           { key: 'npp', header: 'NPP', width: 'w-28' },
-          { key: 'nama', header: 'Nama', render: (r: any) => <span className="font-semibold">{String(r.nama)}</span> },
+          { key: 'nama', header: 'Nama', render: (r: any) => {
+            const str = String(r.nama || '')
+            if (!str) return '-'
+            const words = str.trim().split(/\s+/).filter(Boolean)
+            const isNoWrap = words.length <= 3
+            return (
+              <span className={`font-semibold ${isNoWrap ? 'whitespace-nowrap' : 'break-words max-w-[200px]'}`}>
+                {str}
+              </span>
+            )
+          }},
           { key: 'jenis_kelamin', header: 'Jenis Kelamin', render: (r: any) => <span>{String(r.jenis_kelamin || '-')}</span> },
           { key: 'outlet', header: 'Outlet' },
+          { key: 'alamat', header: 'Alamat', render: (r: any) => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.alamat || r.rumah || '-')}>{String(r.alamat || r.rumah || '-')}</span> },
           { key: 'jabatan', header: 'Jabatan' },
-          { key: 'tanggal_mulai', header: 'Tgl Mulai', render: (r: any) => <span>{r.tanggal_mulai ? formatDate(r.tanggal_mulai) : '-'}</span> },
-          { key: 'tanggal_berakhir', header: 'Tgl Berakhir', render: (r: any) => <span>{r.tanggal_berakhir ? formatDate(r.tanggal_berakhir) : '-'}</span> },
+          { key: 'tanggal_mulai', header: 'Tgl Mulai', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_mulai ? formatDate(r.tanggal_mulai) : '-'}</span> },
+          { key: 'tanggal_berakhir', header: 'Tgl Berakhir', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_berakhir ? formatDate(r.tanggal_berakhir) : '-'}</span> },
           { key: 'kd_wil', header: 'Kd Wil', render: (r: any) => <span>{String(r.kd_wil || '-')}</span> },
           { key: 'batch', header: 'Batch', render: (r: any) => <span>{r.batch ? `Batch ${r.batch}` : '-'}</span> },
         ]}

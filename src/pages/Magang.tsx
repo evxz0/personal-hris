@@ -157,15 +157,26 @@ export default function MagangPage() {
         emptyMessage="Belum ada data magang"
         emptyIcon={<GraduationCap size={40} className="text-gray-200" />}
         columns={[
-          { key: 'nama', header: 'Nama', render: r => <span className="font-semibold">{String(r.nama)}</span> },
+          { key: 'nama', header: 'Nama', render: r => {
+            const str = String(r.nama || '')
+            if (!str) return '-'
+            const words = str.trim().split(/\s+/).filter(Boolean)
+            const isNoWrap = words.length <= 3
+            return (
+              <span className={`font-semibold ${isNoWrap ? 'whitespace-nowrap' : 'break-words max-w-[200px]'}`}>
+                {str}
+              </span>
+            )
+          }},
           { key: 'universitas', header: 'Universitas' },
           { key: 'fakultas', header: 'Fakultas' },
           { key: 'jurusan', header: 'Jurusan' },
           { key: 'penempatan', header: 'Penempatan', render: r => (
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">{String(r.penempatan)}</span>
           )},
-          { key: 'tanggal_mulai', header: 'Mulai', render: r => formatDate(String(r.tanggal_mulai)) },
-          { key: 'tanggal_selesai', header: 'Selesai', render: r => formatDate(String(r.tanggal_selesai)) },
+          { key: 'rumah', header: 'Alamat', render: r => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.rumah || r.alamat || '-')}>{String(r.rumah || r.alamat || '-')}</span> },
+          { key: 'tanggal_mulai', header: 'Mulai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_mulai))}</span> },
+          { key: 'tanggal_selesai', header: 'Selesai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_selesai))}</span> },
           { key: 'total_lama_hari', header: 'Durasi', render: r => (
             <span className="font-bold text-teal-700">{String(r.total_lama_hari)} hari</span>
           )},

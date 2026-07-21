@@ -330,6 +330,18 @@ export default function KaryawanPage() {
     )
   }
 
+  const renderNameCell = (val: unknown) => {
+    const str = String(val || '')
+    if (!str) return '-'
+    const words = str.trim().split(/\s+/).filter(Boolean)
+    const isNoWrap = words.length <= 3
+    return (
+      <span className={`font-semibold ${isNoWrap ? 'whitespace-nowrap' : 'break-words max-w-[200px]'}`}>
+        {str}
+      </span>
+    )
+  }
+
   const getColumns = () => {
     const isTad = filterKategori.length === 1 && filterKategori.includes('TAD')
     const isFte = filterKategori.length === 1 && filterKategori.includes('FTE')
@@ -339,7 +351,7 @@ export default function KaryawanPage() {
       npp: { key: 'npp', header: 'NPP', width: 'w-28' },
       npp_digi_hc: { key: 'npp_digi_hc', header: 'NPP DIGI HC', render: (r: any) => <span>{String(r.npp_digi_hc || '-')}</span> },
       npp_webmail: { key: 'npp_webmail', header: 'NPP WEBMAIL', render: (r: any) => <span>{String(r.npp_webmail || '-')}</span> },
-      nama: { key: 'nama', header: 'Nama', render: (r: any) => <span className="font-semibold">{String(r.nama)}</span> },
+      nama: { key: 'nama', header: 'Nama', render: (r: any) => renderNameCell(r.nama) },
       kategori: { key: 'kategori', header: 'Tipe', render: (r: any) => {
         let bg = 'bg-teal-100 text-teal-700'
         if (r.kategori === 'TAD') bg = 'bg-orange-100 text-orange-700'
@@ -350,13 +362,14 @@ export default function KaryawanPage() {
           </span>
         )
       }},
-      tanggal_lahir: { key: 'tanggal_lahir', header: 'Tgl Lahir', render: (r: any) => <span>{r.tanggal_lahir ? formatDate(r.tanggal_lahir) : '-'}</span> },
+      tanggal_lahir: { key: 'tanggal_lahir', header: 'Tgl Lahir', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_lahir ? formatDate(r.tanggal_lahir) : '-'}</span> },
       outlet: { key: 'outlet', header: 'Outlet' },
       jenis_kelamin: { key: 'jenis_kelamin', header: 'Jenis Kelamin', render: (r: any) => <span>{String(r.jenis_kelamin || '-')}</span> },
+      alamat: { key: 'alamat', header: 'Alamat', render: (r: any) => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.alamat || r.rumah || '-')}>{String(r.alamat || r.rumah || '-')}</span> },
       jenjang: { key: 'jenjang', header: 'Jenjang' },
       jabatan: { key: 'jabatan', header: 'Jabatan' },
-      tanggal_mulai: { key: 'tanggal_mulai', header: 'Tgl Mulai', render: (r: any) => <span>{r.tanggal_mulai ? formatDate(r.tanggal_mulai) : '-'}</span> },
-      tanggal_berakhir: { key: 'tanggal_berakhir', header: 'Tgl Berakhir', render: (r: any) => <span>{r.tanggal_berakhir ? formatDate(r.tanggal_berakhir) : '-'}</span> },
+      tanggal_mulai: { key: 'tanggal_mulai', header: 'Tgl Mulai', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_mulai ? formatDate(r.tanggal_mulai) : '-'}</span> },
+      tanggal_berakhir: { key: 'tanggal_berakhir', header: 'Tgl Berakhir', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_berakhir ? formatDate(r.tanggal_berakhir) : '-'}</span> },
       kd_wil: { key: 'kd_wil', header: 'Kd Wil', render: (r: any) => <span>{String(r.kd_wil || '-')}</span> },
       grade: { key: 'grade', header: 'Grade', render: (r: any) => (
         <span className="font-bold text-teal-700">{r.grade !== null && r.grade !== undefined ? String(r.grade) : '-'}</span>
@@ -373,6 +386,7 @@ export default function KaryawanPage() {
         colMap.nama,
         colMap.kategori,
         colMap.outlet,
+        colMap.alamat,
         colMap.jabatan,
         colMap.nik,
         colMap.no_hp,
@@ -386,6 +400,7 @@ export default function KaryawanPage() {
         colMap.tanggal_lahir,
         colMap.kategori,
         colMap.outlet,
+        colMap.alamat,
         colMap.jenjang,
         colMap.jabatan,
         colMap.grade,
@@ -401,6 +416,7 @@ export default function KaryawanPage() {
         colMap.jenis_kelamin,
         colMap.kategori,
         colMap.outlet,
+        colMap.alamat,
         colMap.jabatan,
         colMap.tanggal_mulai,
         colMap.tanggal_berakhir,
@@ -419,6 +435,7 @@ export default function KaryawanPage() {
       colMap.tanggal_lahir,
       colMap.kategori,
       colMap.outlet,
+      colMap.alamat,
       colMap.jenis_kelamin,
       colMap.jenjang,
       colMap.jabatan,
