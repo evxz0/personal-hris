@@ -41,13 +41,20 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     return '';
   };
 
+  // Helper to get title without bolding the 'PGS' prefix
+  const getPgsTitle = () => {
+    const raw = data.penugasan.jabatanPgs || '';
+    const cleanTitle = raw.replace(/^PGS\s+/i, '').trim();
+    return cleanTitle;
+  };
+
   return (
     <div ref={ref} className="sk-pgs-paper">
       <style>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 15mm 20mm 12mm 20mm;
+            margin: 12.5mm 25.4mm 12.5mm 25.4mm;
           }
           html, body {
             height: 100%;
@@ -78,7 +85,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .sk-pgs-paper {
           width: 210mm;
           min-height: 297mm;
-          padding: 15mm 20mm 12mm 20mm;
+          padding: 12.5mm 25.4mm 12.5mm 25.4mm;
           background: white;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 10pt;
@@ -91,29 +98,29 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .table-meta td, .table-diktum td { vertical-align: top; padding: 1.5px 0; }
       `}</style>
 
-      {/* Header: Meta Table on Left, BNI Logo on Right (Aligned to Top-Right Header) */}
+      {/* Header: Meta Table on Left (Unbolded), BNI Logo on Right */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
         <table className="table-meta" style={{ width: '60%' }}>
           <tbody>
             <tr>
               <td style={{ width: '85px' }}>Putusan</td>
               <td style={{ width: '15px' }}>:</td>
-              <td><b>REGIONAL OFFICE 09</b></td>
+              <td>REGIONAL OFFICE 09</td>
             </tr>
             <tr>
               <td>Nomor</td>
               <td>:</td>
-              <td><b>{data.nomorSurat || 'KP/.../...'}</b></td>
+              <td>{data.nomorSurat || 'KP/.../...'}</td>
             </tr>
             <tr>
               <td>Tanggal</td>
               <td>:</td>
-              <td><b>{data.tanggalSurat || '-'}</b></td>
+              <td>{data.tanggalSurat || '-'}</td>
             </tr>
             <tr>
               <td>Hal</td>
               <td>:</td>
-              <td><b>Pengganti Sementara</b></td>
+              <td>Pengganti Sementara</td>
             </tr>
           </tbody>
         </table>
@@ -223,7 +230,9 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
                     <tr>
                       <td style={{ width: '70px' }}>Sebagai</td>
                       <td style={{ width: '15px' }}>:</td>
-                      <td><b>{data.penugasan.jabatanPgs} {formatGrade(data.penugasan.jenjangPgs, data.penugasan.gradePgs)} {data.penugasan.lokasiPgs}</b></td>
+                      <td>
+                        PGS <b>{getPgsTitle()} {formatGrade(data.penugasan.jenjangPgs, data.penugasan.gradePgs)} {data.penugasan.lokasiPgs}</b>
+                      </td>
                     </tr>
                     <tr>
                       <td>Unit</td>
@@ -245,7 +254,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             <td style={{ paddingTop: '6px' }}>Kedua</td>
             <td style={{ paddingTop: '6px' }}>:</td>
             <td style={{ paddingTop: '6px', textAlign: 'justify' }}>
-              Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal <b>{data.penugasan.tanggalMulai || '...'} – {data.penugasan.tanggalSelesai || '...'}</b>.
+              Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal {data.penugasan.tanggalMulai || '...'} – {data.penugasan.tanggalSelesai || '...'}.
             </td>
           </tr>
 
@@ -253,7 +262,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             <td style={{ paddingTop: '6px' }}>Ketiga</td>
             <td style={{ paddingTop: '6px' }}>:</td>
             <td style={{ paddingTop: '6px', textAlign: 'justify' }}>
-              Selama penunjukkan pengganti sementara tersebut kepada Sdr. <u><b>{data.pegawai.nama || '[NAMA]'} - NPP.{data.pegawai.npp || '[NPP]'}</b></u> diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan dengan pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
+              Selama penunjukkan pengganti sementara tersebut kepada Sdr. {data.pegawai.nama || '[NAMA]'} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan dengan pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
             </td>
           </tr>
 
