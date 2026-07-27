@@ -383,7 +383,7 @@ export function DataTable<T extends Record<string, unknown>>({
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl border border-teal-200 shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <SlidersHorizontal size={14} className="text-teal-600" />
-            Kelola & Urutkan Kolom
+            Kelola Kolom
             <span className="ml-1 px-1.5 py-0.2 bg-teal-200 text-teal-800 text-[10px] rounded-full font-extrabold">
               {activeColumns.length}
             </span>
@@ -395,7 +395,7 @@ export function DataTable<T extends Record<string, unknown>>({
               <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                 <div>
                   <h4 className="text-xs font-extrabold text-[#2B3440] flex items-center gap-1.5">
-                    <SlidersHorizontal size={14} className="text-teal-600" /> Atur & Urutkan Kolom
+                    <SlidersHorizontal size={14} className="text-teal-600" /> Kelola Kolom
                   </h4>
                   <p className="text-[10px] text-[#64748B]">Geser (drag) atau panah ↑↓ untuk merubah urutan</p>
                 </div>
@@ -577,39 +577,23 @@ export function DataTable<T extends Record<string, unknown>>({
                   return (
                     <th
                       key={col.key}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, col.key)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, col.key)}
+                      onClick={() => handleSort(col.key)}
                       className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap hover:bg-teal-700 transition-colors group cursor-pointer ${col.width ?? ''}`}
-                      title={`${sortTooltip} Tarik (drag) untuk menggeser posisi kolom.`}
+                      title={sortTooltip}
                     >
                       <div className="flex items-center justify-between gap-1.5">
-                        <div
-                          className="flex items-center gap-1.5 flex-1 cursor-pointer"
-                          onClick={() => handleSort(col.key)}
-                        >
-                          <span className={isSorted ? 'text-yellow-300 font-bold' : ''}>{col.header}</span>
+                        <span className={isSorted ? 'text-yellow-300 font-bold' : ''}>{col.header}</span>
 
-                          {/* Interactive Sort Icon on the right side */}
-                          <span className="shrink-0 transition-all">
-                            {isAsc ? (
-                              <ArrowUp size={13} className="text-yellow-300 font-bold animate-bounce-short" />
-                            ) : isDesc ? (
-                              <ArrowDown size={13} className="text-yellow-300 font-bold animate-bounce-short" />
-                            ) : (
-                              <ArrowUpDown size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </span>
-                        </div>
-
-                        {/* Drag handle icon */}
-                        <div
-                          className="cursor-grab active:cursor-grabbing p-0.5 opacity-30 group-hover:opacity-100 transition-opacity shrink-0"
-                          title="Tarik untuk menggeser posisi kolom ini"
-                        >
-                          <GripVertical size={11} />
-                        </div>
+                        {/* Interactive Sort Icon on the right side */}
+                        <span className="shrink-0 transition-all">
+                          {isAsc ? (
+                            <ArrowUp size={13} className="text-yellow-300 font-bold animate-bounce-short" />
+                          ) : isDesc ? (
+                            <ArrowDown size={13} className="text-yellow-300 font-bold animate-bounce-short" />
+                          ) : (
+                            <ArrowUpDown size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </span>
                       </div>
                     </th>
                   )
