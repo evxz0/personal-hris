@@ -12,7 +12,10 @@ import {
   EyeOff,
   GripVertical,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 
 export interface Column<T> {
@@ -54,6 +57,11 @@ export function DataTable<T extends Record<string, unknown>>({
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
   const [draggedKey, setDraggedKey] = useState<string | null>(null)
+  
+  // Sort State
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null)
+
   const popoverRef = useRef<HTMLDivElement>(null)
 
   // Load custom columns from localStorage
@@ -157,6 +165,59 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }, [popoverOpen])
 
+  // Sort Handler (Ascending -> Descending -> Reset)
+  const handleSort = (key: string) => {
+    if (sortKey !== key) {
+      setSortKey(key)
+      setSortDirection('asc')
+    } else if (sortDirection === 'asc') {
+      setSortDirection('desc')
+    } else {
+      setSortKey(null)
+      setSortDirection(null)
+    }
+  }
+
+  // Sorted Data Computation
+  const sortedData = React.useMemo(() => {
+    if (!sortKey || !sortDirection) return data
+
+    return [...data].sort((a, b) => {
+      let valA = a[sortKey]
+      let valB = b[sortKey]
+
+      // Empty / Null / Undefined sent to end
+      if (valA === null || valA === undefined || valA === '') return 1
+      if (valB === null || valB === undefined || valB === '') return -1
+
+      // Direct Numbers
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDirection === 'asc' ? valA - valB : valB - valA
+      }
+
+      // Try numeric strings (e.g. "12", "1", "100")
+      const strA = String(valA).trim()
+      const strB = String(valB).trim()
+
+      const numA = Number(strA)
+      const numB = Number(strB)
+      if (!isNaN(numA) && !isNaN(numB) && strA !== '' && strB !== '' && !strA.startsWith('0x')) {
+        return sortDirection === 'asc' ? numA - numB : numB - numA
+      }
+
+      // Try Date parsing
+      const dateA = Date.parse(strA)
+      const dateB = Date.parse(strB)
+      if (!isNaN(dateA) && !isNaN(dateB) && strA.length >= 8 && strB.length >= 8 && /\d/.test(strA)) {
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA
+      }
+
+      // String comparison (A-Z / Z-A)
+      const comp = strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' })
+      return sortDirection === 'asc' ? comp : -comp
+    })
+  }, [data, sortKey, sortDirection])
+
   // Map of columns for fast lookup
   const colMap = new Map(allAvailableColumns.map(c => [c.key, c]))
 
@@ -171,12 +232,12 @@ export function DataTable<T extends Record<string, unknown>>({
   // Fallback to all if user hides all
   const activeColumns = displayedColumns.length > 0 ? displayedColumns : orderedAvailableColumns
 
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize))
-  const paged = data.slice((page - 1) * pageSize, page * pageSize)
+  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize))
+  const paged = sortedData.slice((page - 1) * pageSize, page * pageSize)
 
-  const allIds = data.map(d => String(d.id || ''))
-  const isAllSelected = data.length > 0 && allIds.every(id => selectedIds.includes(id))
-  const isSomeSelected = data.length > 0 && allIds.some(id => selectedIds.includes(id)) && !isAllSelected
+  const allIds = sortedData.map(d => String(d.id || ''))
+  const isAllSelected = sortedData.length > 0 && allIds.every(id => selectedIds.includes(id))
+  const isSomeSelected = sortedData.length > 0 && allIds.some(id => selectedIds.includes(id)) && !isAllSelected
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!onSelectionChange) return
@@ -264,6 +325,8 @@ export function DataTable<T extends Record<string, unknown>>({
     setHiddenKeys([])
     setCustomColumns([])
     setColumnOrder(columns.map(c => c.key))
+    setSortKey(null)
+    setSortDirection(null)
     try {
       localStorage.removeItem(`table_custom_cols_${tableId}`)
       localStorage.removeItem(`table_hidden_cols_${tableId}`)
@@ -294,10 +357,23 @@ export function DataTable<T extends Record<string, unknown>>({
 
   return (
     <div className="space-y-3">
-      {/* Top Toolbar: Column Control */}
+      {/* Top Toolbar: Column Control & Active Sort Indicator */}
       <div className="flex items-center justify-between gap-3 px-1">
-        <div className="text-xs text-[#64748B] font-medium">
-          Menampilkan <span className="font-bold text-teal-700">{activeColumns.length}</span> dari {orderedAvailableColumns.length} kolom
+        <div className="flex items-center gap-2 text-xs text-[#64748B] font-medium">
+          <span>Menampilkan <span className="font-bold text-teal-700">{activeColumns.length}</span> dari {orderedAvailableColumns.length} kolom</span>
+          {sortKey && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-800 border border-yellow-200 text-[11px] font-semibold animate-fade-in">
+              Sorting: <span className="font-bold">{colMap.get(sortKey)?.header || sortKey}</span> ({sortDirection === 'asc' ? 'A-Z / Kecil→Besar' : 'Z-A / Besar→Kecil'})
+              <button
+                type="button"
+                onClick={() => { setSortKey(null); setSortDirection(null); }}
+                className="ml-1 text-yellow-600 hover:text-yellow-900 font-bold"
+                title="Batal urutkan"
+              >
+                ×
+              </button>
+            </span>
+          )}
         </div>
 
         <div className="relative" ref={popoverRef}>
@@ -488,22 +564,56 @@ export function DataTable<T extends Record<string, unknown>>({
                   </th>
                 )}
                 <th className="px-3 py-2 text-center text-[11px] font-semibold w-12">#</th>
-                {activeColumns.map(col => (
-                  <th
-                    key={col.key}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, col.key)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, col.key)}
-                    className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-grab active:cursor-grabbing hover:bg-teal-700 transition-colors ${col.width ?? ''}`}
-                    title="Klik dan tarik (drag) untuk menggeser posisi kolom ini"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{col.header}</span>
-                      <GripVertical size={11} className="opacity-40 hover:opacity-100 shrink-0" />
-                    </div>
-                  </th>
-                ))}
+                {activeColumns.map(col => {
+                  const isSorted = sortKey === col.key
+                  const isAsc = isSorted && sortDirection === 'asc'
+                  const isDesc = isSorted && sortDirection === 'desc'
+                  const sortTooltip = isAsc
+                    ? `Urutan: A-Z / Kecil ke Besar. Klik lagi untuk Z-A / Besar ke Kecil.`
+                    : isDesc
+                    ? `Urutan: Z-A / Besar ke Kecil. Klik lagi untuk batal urutkan.`
+                    : `Klik untuk mengurutkan A-Z / Angka kecil ke besar.`
+
+                  return (
+                    <th
+                      key={col.key}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, col.key)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, col.key)}
+                      className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap hover:bg-teal-700 transition-colors group cursor-pointer ${col.width ?? ''}`}
+                      title={`${sortTooltip} Tarik (drag) untuk menggeser posisi kolom.`}
+                    >
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div
+                          className="flex items-center gap-1.5 flex-1 cursor-pointer"
+                          onClick={() => handleSort(col.key)}
+                        >
+                          <span className={isSorted ? 'text-yellow-300 font-bold' : ''}>{col.header}</span>
+
+                          {/* Interactive Sort Icon on the right side */}
+                          <span className="shrink-0 transition-all">
+                            {isAsc ? (
+                              <ArrowUp size={13} className="text-yellow-300 font-bold animate-bounce-short" />
+                            ) : isDesc ? (
+                              <ArrowDown size={13} className="text-yellow-300 font-bold animate-bounce-short" />
+                            ) : (
+                              <ArrowUpDown size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Drag handle icon */}
+                        <div
+                          className="cursor-grab active:cursor-grabbing p-0.5 opacity-30 group-hover:opacity-100 transition-opacity shrink-0"
+                          title="Tarik untuk menggeser posisi kolom ini"
+                        >
+                          <GripVertical size={11} />
+                        </div>
+                      </div>
+                    </th>
+                  )
+                })}
                 {actions && <th className="px-3 py-2 text-center text-[11px] font-semibold w-32">Aksi</th>}
               </tr>
             </thead>
@@ -563,7 +673,7 @@ export function DataTable<T extends Record<string, unknown>>({
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-[#F4F7F6]/60">
             <p className="text-xs text-[#64748B]">
-              Menampilkan {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, data.length)} dari {data.length} data
+              Menampilkan {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sortedData.length)} dari {sortedData.length} data
             </p>
             <div className="flex items-center gap-1">
               <PageBtn onClick={() => setPage(1)} disabled={page === 1}><ChevronsLeft size={14}/></PageBtn>
