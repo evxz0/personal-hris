@@ -9,7 +9,6 @@ import KaryawanPage from './pages/Karyawan'
 import BinaPage from './pages/Bina'
 import MagangPage from './pages/Magang'
 import AbsensiPage from './pages/Absensi'
-import { RequestNaikLevelPage, RequestPinpadPage } from './pages/Request'
 import SettingsPage from './pages/Settings'
 import RiwayatPage from './pages/Riwayat'
 
@@ -59,8 +58,6 @@ export default function App() {
         <Route path="/bina" element={<ProtectedRoute session={session}><BinaPage /></ProtectedRoute>} />
         <Route path="/magang" element={<ProtectedRoute session={session}><MagangPage /></ProtectedRoute>} />
         <Route path="/absensi" element={<ProtectedRoute session={session}><AbsensiPage /></ProtectedRoute>} />
-        <Route path="/request/naik-level" element={<ProtectedRoute session={session}><RequestNaikLevelPage /></ProtectedRoute>} />
-        <Route path="/request/pinpad" element={<ProtectedRoute session={session}><RequestPinpadPage /></ProtectedRoute>} />
         <Route path="/riwayat" element={<ProtectedRoute session={session}><RiwayatPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
 

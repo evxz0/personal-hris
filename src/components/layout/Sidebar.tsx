@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, GraduationCap,
-  CalendarOff, ArrowUpCircle, Fingerprint, Settings,
+  CalendarOff, Settings,
   ChevronLeft, LogOut, X, User, ArrowRightLeft, UserCheck
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -13,8 +13,6 @@ const navItems = [
   { to: '/bina', icon: <UserCheck size={18} />, label: 'Master Bina' },
   { to: '/magang', icon: <GraduationCap size={18} />, label: 'Master Magang' },
   { to: '/absensi', icon: <CalendarOff size={18} />, label: 'Absensi' },
-  { to: '/request/naik-level', icon: <ArrowUpCircle size={18} />, label: 'Naik Level' },
-  { to: '/request/pinpad', icon: <Fingerprint size={18} />, label: 'Pinpad' },
   { to: '/riwayat', icon: <ArrowRightLeft size={18} />, label: 'Riwayat' },
   { to: '/settings', icon: <Settings size={18} />, label: 'Pengaturan' },
 ]

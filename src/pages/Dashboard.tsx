@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Users, UserCheck, GraduationCap, CalendarOff, ArrowUpCircle, Fingerprint, Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
+import { Users, UserCheck, GraduationCap, CalendarOff, Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { formatDate } from '../lib/utils'
@@ -99,14 +99,6 @@ export default function Dashboard() {
       return data ?? []
     },
   })
-  const { data: requests = { naikLevel: [], pinpad: [] } } = useQuery({
-    queryKey: ['requests-recent'],
-    queryFn: async () => {
-      const { data: nl } = await supabase.from('request_naik_level').select('*').order('created_at', { ascending: false }).limit(5)
-      const { data: pp } = await supabase.from('request_pinpad').select('*').order('created_at', { ascending: false }).limit(5)
-      return { naikLevel: nl ?? [], pinpad: pp ?? [] }
-    },
-  })
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['audit-logs'],
     queryFn: async () => {
@@ -156,64 +148,6 @@ export default function Dashboard() {
           color="bg-purple-50" />
         <StatCard icon={<CalendarOff size={22} className="text-red-500" />} label="Absensi Hari Ini" value={absensi.length}
           color="bg-red-50" sub="Sakit & Cuti" />
-      </div>
-
-      {/* Two column */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Naik Level */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-teal-50">
-              <ArrowUpCircle size={16} className="text-teal-600" />
-            </div>
-            <h2 className="font-bold text-sm text-[#2B3440]">Request Naik Level Terbaru</h2>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {(requests as { naikLevel: { id: string; npp: string; nama: string; level_diajukan: string; tanggal_buat: string }[]; pinpad: { id: string; npp_user: string; nama: string; keperluan: string; created_at: string }[] }).naikLevel.length === 0 ? (
-              <div className="py-8 text-center text-sm text-[#64748B]">Belum ada request</div>
-            ) : (
-              (requests as { naikLevel: { id: string; npp: string; nama: string; level_diajukan: string; tanggal_buat: string }[]; pinpad: unknown[] }).naikLevel.map((r) => (
-                <div key={r.id} className="px-5 py-3 flex items-center justify-between hover:bg-[#F4F7F6] transition-colors">
-                  <div>
-                    <p className="text-sm font-semibold text-[#2B3440]">{r.nama}</p>
-                    <p className="text-xs text-[#64748B]">NPP: {r.npp} · Level: {r.level_diajukan}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-[#64748B]">
-                    <Clock size={12} />
-                    {formatDate(r.tanggal_buat)}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Recent Pinpad */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-orange-50">
-              <Fingerprint size={16} className="text-orange-500" />
-            </div>
-            <h2 className="font-bold text-sm text-[#2B3440]">Request Pinpad Terbaru</h2>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {(requests as { naikLevel: unknown[]; pinpad: { id: string; npp_user: string; nama: string; keperluan: string; created_at: string }[] }).pinpad.length === 0 ? (
-              <div className="py-8 text-center text-sm text-[#64748B]">Belum ada request</div>
-            ) : (
-              (requests as { naikLevel: unknown[]; pinpad: { id: string; npp_user: string; nama: string; keperluan: string; created_at: string }[] }).pinpad.map((r) => (
-                <div key={r.id} className="px-5 py-3 flex items-center justify-between hover:bg-[#F4F7F6] transition-colors">
-                  <div>
-                    <p className="text-sm font-semibold text-[#2B3440]">{r.nama}</p>
-                    <p className="text-xs text-[#64748B]">NPP: {r.npp_user}</p>
-                  </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${r.keperluan === 'FR' ? 'bg-purple-100 text-purple-700' : 'bg-teal-100 text-teal-700'}`}>
-                    {r.keperluan}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Activity Log */}
