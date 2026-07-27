@@ -11,6 +11,10 @@ import MagangPage from './pages/Magang'
 import AbsensiPage from './pages/Absensi'
 import SettingsPage from './pages/Settings'
 import RiwayatPage from './pages/Riwayat'
+import SuratPgsPage from './pages/surat/SuratPgs'
+import SuratMatakuliahPage from './pages/surat/SuratMatakuliah'
+import SuratPenelitianPage from './pages/surat/SuratPenelitian'
+import SuratMagangPage from './pages/surat/SuratMagang'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -58,6 +62,13 @@ export default function App() {
         <Route path="/bina" element={<ProtectedRoute session={session}><BinaPage /></ProtectedRoute>} />
         <Route path="/magang" element={<ProtectedRoute session={session}><MagangPage /></ProtectedRoute>} />
         <Route path="/absensi" element={<ProtectedRoute session={session}><AbsensiPage /></ProtectedRoute>} />
+        
+        {/* Surat Keterangan Routes */}
+        <Route path="/surat/pgs" element={<ProtectedRoute session={session}><SuratPgsPage /></ProtectedRoute>} />
+        <Route path="/surat/matakuliah" element={<ProtectedRoute session={session}><SuratMatakuliahPage /></ProtectedRoute>} />
+        <Route path="/surat/penelitian" element={<ProtectedRoute session={session}><SuratPenelitianPage /></ProtectedRoute>} />
+        <Route path="/surat/magang" element={<ProtectedRoute session={session}><SuratMagangPage /></ProtectedRoute>} />
+
         <Route path="/riwayat" element={<ProtectedRoute session={session}><RiwayatPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
 

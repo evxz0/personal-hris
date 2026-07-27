@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Users, GraduationCap,
-  CalendarOff, Settings,
+  CalendarOff, Settings, FileText, ChevronDown,
   ChevronLeft, LogOut, X, User, ArrowRightLeft, UserCheck
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -17,6 +17,13 @@ const navItems = [
   { to: '/settings', icon: <Settings size={18} />, label: 'Pengaturan' },
 ]
 
+const suratSubItems = [
+  { to: '/surat/pgs', label: 'Untuk Pengganti Sementara' },
+  { to: '/surat/matakuliah', label: 'Untuk Matakuliah' },
+  { to: '/surat/penelitian', label: 'Untuk Penelitian' },
+  { to: '/surat/magang', label: 'Untuk Kerja Praktek/Magang' },
+]
+
 interface SidebarProps {
   collapsed: boolean
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
@@ -26,8 +33,12 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: SidebarProps) {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
+  const [suratOpen, setSuratOpen] = useState(true)
+
+  const isSuratActive = location.pathname.startsWith('/surat')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
@@ -107,7 +118,95 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {navItems.map(item => (
+          {navItems.slice(0, 5).map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) => `
+                flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+                transition-all duration-200 group relative
+                ${isActive
+                  ? 'bg-white/15 text-white shadow-sm'
+                  : 'text-teal-200 hover:bg-white/10 hover:text-white'
+                }
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-400 rounded-r-full" />
+                  )}
+                  <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
+                    {item.icon}
+                  </span>
+                  {!collapsed && <span className="truncate animate-fade-in">{item.label}</span>}
+                  {collapsed && (
+                    <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
+                                    opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+
+          {/* Dropdown Surat Keterangan */}
+          <div className="space-y-1 pt-1">
+            <button
+              type="button"
+              onClick={() => setSuratOpen(!suratOpen)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
+                isSuratActive ? 'bg-white/15 text-white shadow-sm' : 'text-teal-200 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <FileText size={18} className="shrink-0 text-red-400 group-hover:text-red-300" />
+                {!collapsed && (
+                  <span className="font-bold text-red-300 group-hover:text-red-200 flex items-center gap-1">
+                    Surat Keterangan
+                  </span>
+                )}
+              </div>
+              {!collapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`text-red-400 transition-transform duration-200 ${suratOpen ? 'rotate-180' : ''}`}
+                />
+              )}
+            </button>
+
+            {/* Sub items */}
+            {suratOpen && !collapsed && (
+              <div className="pl-6 space-y-1 text-xs animate-fade-in">
+                {suratSubItems.map(sub => (
+                  <NavLink
+                    key={sub.to}
+                    to={sub.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) => `
+                      flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-150 relative
+                      ${isActive
+                        ? 'text-white bg-white/20 font-bold'
+                        : 'text-teal-200 hover:text-white hover:bg-white/10'
+                      }
+                    `}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span className={`w-1.5 h-1.5 rounded-full border border-teal-300 shrink-0 ${isActive ? 'bg-orange-400 border-orange-400' : 'bg-transparent'}`} />
+                        <span className="truncate">{sub.label}</span>
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {navItems.slice(5).map(item => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -163,7 +262,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium cursor-pointer"
           >
             <LogOut size={18} className="shrink-0" />
             {!collapsed && <span>Keluar</span>}
