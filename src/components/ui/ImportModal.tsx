@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Upload, FileSpreadsheet, FileText, File, X, CheckCircle, AlertCircle, Download, ScanLine, Sparkles, Code, Edit3 } from 'lucide-react'
 import { parseXLSX, parseWord, downloadTemplate } from '../../lib/importExport'
-import { extractDocumentScan } from '../../lib/ocrService'
+import { extractDocumentScan, importExcelSmart } from '../../lib/ocrService'
 import { parseOcrText, cleanMarkdownText } from '../../lib/ocrParser'
 import { Button } from './Button'
 
@@ -67,6 +67,17 @@ export function ImportModal({
     setFileName(file.name)
     setStatus('reading')
     try {
+      // 1. Coba gunakan Smart AI Column Mapper dari backend Vercel FastAPI
+      if (!file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
+        const res = await importExcelSmart(file)
+        if (res.success && res.data && res.data.length > 0) {
+          setRows(res.data)
+          setStatus('preview')
+          return
+        }
+      }
+
+      // 2. Fallback parsing lokal jika file docx atau jika AI backend offline
       let raw: Record<string, unknown>[] = []
       if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
         raw = await parseWord(file)
