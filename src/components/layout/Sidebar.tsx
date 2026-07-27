@@ -19,9 +19,6 @@ const navItems = [
 
 const suratSubItems = [
   { to: '/surat/pgs', label: 'Untuk Pengganti Sementara' },
-  { to: '/surat/matakuliah', label: 'Untuk Matakuliah' },
-  { to: '/surat/penelitian', label: 'Untuk Penelitian' },
-  { to: '/surat/magang', label: 'Untuk Kerja Praktek/Magang' },
 ]
 
 interface SidebarProps {
@@ -163,17 +160,15 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               }`}
             >
               <div className="flex items-center gap-3">
-                <FileText size={18} className="shrink-0 text-red-400 group-hover:text-red-300" />
+                <FileText size={18} className="shrink-0 text-teal-300 group-hover:text-white" />
                 {!collapsed && (
-                  <span className="font-bold text-red-300 group-hover:text-red-200 flex items-center gap-1">
-                    Surat Keterangan
-                  </span>
+                  <span className="truncate">Surat Keterangan</span>
                 )}
               </div>
               {!collapsed && (
                 <ChevronDown
                   size={16}
-                  className={`text-red-400 transition-transform duration-200 ${suratOpen ? 'rotate-180' : ''}`}
+                  className={`text-teal-300 transition-transform duration-200 ${suratOpen ? 'rotate-180' : ''}`}
                 />
               )}
             </button>
@@ -194,12 +189,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                       }
                     `}
                   >
-                    {({ isActive }) => (
-                      <>
-                        <span className={`w-1.5 h-1.5 rounded-full border border-teal-300 shrink-0 ${isActive ? 'bg-orange-400 border-orange-400' : 'bg-transparent'}`} />
-                        <span className="truncate">{sub.label}</span>
-                      </>
-                    )}
+                    <span className="truncate">{sub.label}</span>
                   </NavLink>
                 ))}
               </div>
