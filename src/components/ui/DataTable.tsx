@@ -9,7 +9,10 @@ import {
   Trash2,
   RotateCcw,
   Eye,
-  EyeOff
+  EyeOff,
+  GripVertical,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react'
 
 export interface Column<T> {
@@ -50,6 +53,7 @@ export function DataTable<T extends Record<string, unknown>>({
   const [page, setPage] = useState(1)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
+  const [draggedKey, setDraggedKey] = useState<string | null>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
 
   // Load custom columns from localStorage
@@ -84,6 +88,32 @@ export function DataTable<T extends Record<string, unknown>>({
     return []
   })
 
+  // All available columns list
+  const allAvailableColumns: Column<T>[] = [...columns, ...customColumns]
+
+  // Load column order from localStorage
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`table_col_order_${tableId}`)
+      if (saved) {
+        return JSON.parse(saved) as string[]
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+    return allAvailableColumns.map(c => c.key)
+  })
+
+  // Synchronize columnOrder when columns or customColumns change
+  useEffect(() => {
+    const currentKeys = allAvailableColumns.map(c => c.key)
+    setColumnOrder(prev => {
+      const existing = prev.filter(k => currentKeys.includes(k))
+      const added = currentKeys.filter(k => !existing.includes(k))
+      return [...existing, ...added]
+    })
+  }, [columns, customColumns])
+
   // Save custom columns whenever changed
   useEffect(() => {
     try {
@@ -103,6 +133,15 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }, [hiddenKeys, tableId])
 
+  // Save column order whenever changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(`table_col_order_${tableId}`, JSON.stringify(columnOrder))
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }, [columnOrder, tableId])
+
   // Close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -118,14 +157,19 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }, [popoverOpen])
 
-  // Combined list of all available columns
-  const allAvailableColumns: Column<T>[] = [...columns, ...customColumns]
+  // Map of columns for fast lookup
+  const colMap = new Map(allAvailableColumns.map(c => [c.key, c]))
+
+  // Sorted list of available columns according to columnOrder
+  const orderedAvailableColumns: Column<T>[] = columnOrder
+    .map(key => colMap.get(key))
+    .filter((col): col is Column<T> => col !== undefined)
 
   // Columns currently visible on table
-  const displayedColumns = allAvailableColumns.filter(c => !hiddenKeys.includes(c.key))
+  const displayedColumns = orderedAvailableColumns.filter(c => !hiddenKeys.includes(c.key))
 
-  // If user hides all columns, fallback to showing all to avoid broken empty table
-  const activeColumns = displayedColumns.length > 0 ? displayedColumns : allAvailableColumns
+  // Fallback to all if user hides all
+  const activeColumns = displayedColumns.length > 0 ? displayedColumns : orderedAvailableColumns
 
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize))
   const paged = data.slice((page - 1) * pageSize, page * pageSize)
@@ -152,11 +196,41 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }
 
+  const moveColumn = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= columnOrder.length) return
+    setColumnOrder(prev => {
+      const updated = [...prev]
+      const [moved] = updated.splice(fromIndex, 1)
+      updated.splice(toIndex, 0, moved)
+      return updated
+    })
+  }
+
+  const handleDragStart = (e: React.DragEvent, key: string) => {
+    setDraggedKey(key)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (e: React.DragEvent, targetKey: string) => {
+    e.preventDefault()
+    if (!draggedKey || draggedKey === targetKey) return
+    const fromIndex = columnOrder.indexOf(draggedKey)
+    const toIndex = columnOrder.indexOf(targetKey)
+    if (fromIndex !== -1 && toIndex !== -1) {
+      moveColumn(fromIndex, toIndex)
+    }
+    setDraggedKey(null)
+  }
+
   const toggleColumnVisibility = (key: string) => {
     if (hiddenKeys.includes(key)) {
       setHiddenKeys(prev => prev.filter(k => k !== key))
     } else {
-      // Prevent hiding if it's the last visible column
       if (displayedColumns.length > 1) {
         setHiddenKeys(prev => [...prev, key])
       }
@@ -183,14 +257,17 @@ export function DataTable<T extends Record<string, unknown>>({
   const handleDeleteCustomColumn = (key: string) => {
     setCustomColumns(prev => prev.filter(c => c.key !== key))
     setHiddenKeys(prev => prev.filter(k => k !== key))
+    setColumnOrder(prev => prev.filter(k => k !== key))
   }
 
   const handleResetColumns = () => {
     setHiddenKeys([])
     setCustomColumns([])
+    setColumnOrder(columns.map(c => c.key))
     try {
       localStorage.removeItem(`table_custom_cols_${tableId}`)
       localStorage.removeItem(`table_hidden_cols_${tableId}`)
+      localStorage.removeItem(`table_col_order_${tableId}`)
     } catch (e) {
       // Ignore
     }
@@ -220,17 +297,17 @@ export function DataTable<T extends Record<string, unknown>>({
       {/* Top Toolbar: Column Control */}
       <div className="flex items-center justify-between gap-3 px-1">
         <div className="text-xs text-[#64748B] font-medium">
-          Menampilkan <span className="font-bold text-teal-700">{activeColumns.length}</span> dari {allAvailableColumns.length} kolom
+          Menampilkan <span className="font-bold text-teal-700">{activeColumns.length}</span> dari {orderedAvailableColumns.length} kolom
         </div>
 
         <div className="relative" ref={popoverRef}>
           <button
             type="button"
             onClick={() => setPopoverOpen(!popoverOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl border border-teal-200 shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl border border-teal-200 shadow-sm transition-all active:scale-95 cursor-pointer"
           >
             <SlidersHorizontal size={14} className="text-teal-600" />
-            Kelola Kolom
+            Kelola & Urutkan Kolom
             <span className="ml-1 px-1.5 py-0.2 bg-teal-200 text-teal-800 text-[10px] rounded-full font-extrabold">
               {activeColumns.length}
             </span>
@@ -238,65 +315,120 @@ export function DataTable<T extends Record<string, unknown>>({
 
           {/* Column Manager Dropdown Popover */}
           {popoverOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-fade-in space-y-4">
+            <div className="absolute right-0 top-full mt-2 w-84 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-50 animate-fade-in space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                 <div>
                   <h4 className="text-xs font-extrabold text-[#2B3440] flex items-center gap-1.5">
-                    <SlidersHorizontal size={14} className="text-teal-600" /> Atur Kolom Tabel
+                    <SlidersHorizontal size={14} className="text-teal-600" /> Atur & Urutkan Kolom
                   </h4>
-                  <p className="text-[10px] text-[#64748B]">Centang untuk menampilkan/menyembunyikan</p>
+                  <p className="text-[10px] text-[#64748B]">Geser (drag) atau panah ↑↓ untuk merubah urutan</p>
                 </div>
                 <button
+                  type="button"
                   onClick={handleResetColumns}
                   title="Reset ke tampilan default"
-                  className="text-[10px] flex items-center gap-1 text-gray-500 hover:text-teal-600 font-semibold transition-colors"
+                  className="text-[10px] flex items-center gap-1 text-gray-500 hover:text-teal-600 font-semibold transition-colors cursor-pointer"
                 >
                   <RotateCcw size={12} /> Reset
                 </button>
               </div>
 
-              {/* Checkbox List */}
-              <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                {allAvailableColumns.map(col => {
+              {/* Checkbox & Reorderable List */}
+              <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                {orderedAvailableColumns.map((col, idx) => {
                   const isVisible = !hiddenKeys.includes(col.key)
+                  const isDragging = draggedKey === col.key
                   return (
                     <div
                       key={col.key}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-teal-50/60 transition-colors group cursor-pointer"
-                      onClick={() => toggleColumnVisibility(col.key)}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, col.key)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, col.key)}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border border-transparent transition-all duration-150 group select-none ${
+                        isDragging
+                          ? 'bg-teal-100 border-teal-300 opacity-50 scale-95'
+                          : 'hover:bg-teal-50/70 hover:border-teal-100 bg-white border-gray-50'
+                      }`}
                     >
-                      <label className="flex items-center gap-2 text-xs text-[#2B3440] cursor-pointer select-none font-medium flex-1">
-                        <input
-                          type="checkbox"
-                          checked={isVisible}
-                          onChange={() => {}} // handled by parent div click
-                          className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
-                        />
-                        <span className={col.isCustom ? 'font-semibold text-teal-700' : ''}>
-                          {col.header}
-                        </span>
-                        {col.isCustom && (
-                          <span className="text-[9px] px-1.5 py-0.2 bg-purple-100 text-purple-700 rounded font-bold">
-                            Custom
-                          </span>
-                        )}
-                      </label>
+                      {/* Drag Handle & Checkbox Label */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div
+                          className="cursor-grab active:cursor-grabbing p-0.5 text-gray-300 group-hover:text-teal-600 transition-colors shrink-0"
+                          title="Klik & tarik untuk menggeser urutan"
+                        >
+                          <GripVertical size={14} />
+                        </div>
 
-                      <div className="flex items-center gap-1.5">
-                        {isVisible ? (
-                          <Eye size={13} className="text-teal-600" />
-                        ) : (
-                          <EyeOff size={13} className="text-gray-300" />
-                        )}
+                        <label
+                          className="flex items-center gap-2 text-xs text-[#2B3440] cursor-pointer font-medium truncate flex-1"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            toggleColumnVisibility(col.key)
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={() => {}}
+                            className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer shrink-0"
+                          />
+                          <span className={`truncate ${col.isCustom ? 'font-semibold text-teal-700' : ''}`}>
+                            {col.header}
+                          </span>
+                          {col.isCustom && (
+                            <span className="text-[9px] px-1.5 py-0.2 bg-purple-100 text-purple-700 rounded font-bold shrink-0">
+                              Custom
+                            </span>
+                          )}
+                        </label>
+                      </div>
+
+                      {/* Action Controls: Up/Down Arrows, Eye, Delete */}
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        {/* Move Up/Down buttons */}
+                        <div className="flex items-center gap-0.5 bg-gray-50 rounded-lg p-0.5 border border-gray-100 opacity-70 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveColumn(idx, idx - 1)}
+                            title="Geser ke Atas"
+                            className="p-0.5 text-gray-500 hover:text-teal-700 hover:bg-white rounded disabled:opacity-20 transition-all cursor-pointer"
+                          >
+                            <ChevronUp size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === orderedAvailableColumns.length - 1}
+                            onClick={() => moveColumn(idx, idx + 1)}
+                            title="Geser ke Bawah"
+                            className="p-0.5 text-gray-500 hover:text-teal-700 hover:bg-white rounded disabled:opacity-20 transition-all cursor-pointer"
+                          >
+                            <ChevronDown size={12} />
+                          </button>
+                        </div>
+
+                        {/* Visibility Eye Icon */}
+                        <button
+                          type="button"
+                          onClick={() => toggleColumnVisibility(col.key)}
+                          title={isVisible ? 'Sembunyikan kolom' : 'Tampilkan kolom'}
+                          className="p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          {isVisible ? (
+                            <Eye size={13} className="text-teal-600" />
+                          ) : (
+                            <EyeOff size={13} className="text-gray-300" />
+                          )}
+                        </button>
+
+                        {/* Custom Column Delete */}
                         {col.isCustom && (
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteCustomColumn(col.key)
-                            }}
+                            onClick={() => handleDeleteCustomColumn(col.key)}
                             title="Hapus kolom custom ini"
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -324,7 +456,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     <button
                       type="submit"
                       disabled={!newColumnName.trim()}
-                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1"
+                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Plus size={12} /> Tambah
                     </button>
@@ -341,7 +473,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-teal-600 text-white">
+              <tr className="bg-teal-600 text-white select-none">
                 {selectable && (
                   <th className="px-3 py-2 text-center text-[11px] font-semibold w-10">
                     <input
@@ -359,9 +491,17 @@ export function DataTable<T extends Record<string, unknown>>({
                 {activeColumns.map(col => (
                   <th
                     key={col.key}
-                    className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap ${col.width ?? ''}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, col.key)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, col.key)}
+                    className={`px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap cursor-grab active:cursor-grabbing hover:bg-teal-700 transition-colors ${col.width ?? ''}`}
+                    title="Klik dan tarik (drag) untuk menggeser posisi kolom ini"
                   >
-                    {col.header}
+                    <div className="flex items-center gap-1.5">
+                      <span>{col.header}</span>
+                      <GripVertical size={11} className="opacity-40 hover:opacity-100 shrink-0" />
+                    </div>
                   </th>
                 ))}
                 {actions && <th className="px-3 py-2 text-center text-[11px] font-semibold w-32">Aksi</th>}
@@ -446,7 +586,7 @@ function PageBtn({ children, onClick, disabled }: { children: React.ReactNode; o
     <button
       onClick={onClick}
       disabled={disabled}
-      className="p-1.5 rounded-lg text-[#64748B] hover:bg-white hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      className="p-1.5 rounded-lg text-[#64748B] hover:bg-white hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
     >
       {children}
     </button>
