@@ -18,27 +18,24 @@ export default function SuratPgsPage() {
   })
 
   // State for Surat Data
-  const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-  const defaultNomor = `KP/09/${Math.floor(100 + Math.random() * 900)}/${new Date().getFullYear()}`
-
   const [formData, setFormData] = useState<SkPgsData>({
-    nomorSurat: defaultNomor,
-    tanggalSurat: todayStr,
+    nomorSurat: 'KP/015/7.3/H-R',
+    tanggalSurat: '27 Juli 2026',
     pegawai: {
-      nama: 'DEBY KARTIKA SARI',
-      npp: '6108017005020002',
-      jabatanAsal: 'TELLER',
-      jenjangAsal: 'ASST',
-      gradeAsal: 'GRADE 6',
-      unitAsal: 'BRANCH OFFICE LANDAK'
+      nama: 'TIARA TESALONIKA PASARIBU',
+      npp: 'K070341',
+      jabatanAsal: 'PROGRAM RELATIONSHIP MANAGER',
+      jenjangAsal: '',
+      gradeAsal: 'NON GRADE',
+      unitAsal: 'PONTIANAK BRANCH OFFICE'
     },
     penugasan: {
-      jabatanPgs: 'CUSTOMER SERVICE MANAGER',
+      jabatanPgs: 'PGS PROGRAM RELATIONSHIP MANAGER',
       jenjangPgs: 'ASST',
-      gradePgs: 'GRADE 7',
-      lokasiPgs: 'BRANCH OFFICE LANDAK',
-      tanggalMulai: '01 Agustus 2026',
-      tanggalSelesai: '31 Agustus 2026'
+      gradePgs: 'NON GRADE',
+      lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
+      tanggalMulai: '27 Juli 2026',
+      tanggalSelesai: '31 Juli 2026'
     }
   })
 
