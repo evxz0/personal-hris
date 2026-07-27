@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Upload, FileSpreadsheet, FileText, File, X, CheckCircle, AlertCircle, Download, ScanLine, Sparkles, Code, Edit3 } from 'lucide-react'
-import { parseXLSX, parseWord, downloadTemplate } from '../../lib/importExport'
+import { Upload, FileSpreadsheet, FileText, File, X, CheckCircle, AlertCircle, ScanLine, Sparkles, Code, Edit3 } from 'lucide-react'
+import { parseXLSX, parseWord } from '../../lib/importExport'
 import { extractDocumentScan, importExcelSmart } from '../../lib/ocrService'
 import { parseOcrText, cleanMarkdownText } from '../../lib/ocrParser'
 import { Button } from './Button'
@@ -12,8 +12,8 @@ interface ImportModalProps {
   onClose: () => void
   onImport: (rows: Record<string, unknown>[]) => Promise<void>
   title: string
-  templateHeaders: string[]
-  templateFilename: string
+  templateHeaders?: string[]
+  templateFilename?: string
   fieldMapping: Record<string, string> // { 'NPP': 'npp', 'Nama': 'nama', ... }
   requiredFields: string[] // column keys required
   initialMode?: ImportMode
@@ -23,7 +23,7 @@ type FileStatus = 'idle' | 'reading' | 'preview' | 'importing' | 'success' | 'er
 
 export function ImportModal({
   isOpen, onClose, onImport, title,
-  templateHeaders, templateFilename, fieldMapping, requiredFields,
+  fieldMapping, requiredFields,
   initialMode = 'excel'
 }: ImportModalProps) {
   const [mode, setMode] = useState<ImportMode>(initialMode)
@@ -233,23 +233,9 @@ export function ImportModal({
         )}
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          {/* Mode Excel: Template Download & Format Info */}
+          {/* Mode Excel: Format Info */}
           {mode === 'excel' && status === 'idle' && (
             <>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50 border border-teal-100">
-                <div>
-                  <p className="text-sm font-semibold text-teal-700">Unduh Template Excel</p>
-                  <p className="text-xs text-teal-600">Gunakan template ini agar format kolom sesuai</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  icon={<Download size={14} />}
-                  onClick={() => downloadTemplate(templateHeaders, templateFilename)}
-                >
-                  Template
-                </Button>
-              </div>
 
               <div className="flex gap-3 text-xs text-[#64748B]">
                 {[
