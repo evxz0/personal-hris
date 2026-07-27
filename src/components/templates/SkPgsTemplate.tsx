@@ -69,41 +69,40 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .table-meta td, .table-diktum td { vertical-align: top; padding: 2px 0; }
       `}</style>
 
-      {/* Top Header: Meta Table on Left, Enlarged BNI Logo on Right (shifted higher) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-        <table className="table-meta" style={{ width: '55%' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '85px' }}>Putusan</td>
-              <td style={{ width: '15px' }}>:</td>
-              <td><b>REGIONAL OFFICE 09</b></td>
-            </tr>
-            <tr>
-              <td>Nomor</td>
-              <td>:</td>
-              <td><b>{data.nomorSurat || 'KP/.../...'}</b></td>
-            </tr>
-            <tr>
-              <td>Tanggal</td>
-              <td>:</td>
-              <td><b>{data.tanggalSurat || '-'}</b></td>
-            </tr>
-            <tr>
-              <td>Hal</td>
-              <td>:</td>
-              <td><b>Pengganti Sementara</b></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style={{ width: '40%', textAlign: 'right', marginTop: '-12px' }}>
-          <img
-            src="/logo-kop-bni.jpg"
-            alt="BNI Logo"
-            style={{ height: '62px', objectFit: 'contain', display: 'inline-block' }}
-          />
-        </div>
+      {/* 1. BNI Logo Header (Strictly ABOVE Metadata, Right Aligned, No Cut-Off) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <img
+          src="/logo-kop-bni.jpg"
+          alt="BNI Logo"
+          style={{ height: '54px', width: 'auto', objectFit: 'contain' }}
+        />
       </div>
+
+      {/* 2. Metadata Table (Below Logo) */}
+      <table className="table-meta" style={{ width: '60%', marginBottom: '20px' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '85px' }}>Putusan</td>
+            <td style={{ width: '15px' }}>:</td>
+            <td><b>REGIONAL OFFICE 09</b></td>
+          </tr>
+          <tr>
+            <td>Nomor</td>
+            <td>:</td>
+            <td><b>{data.nomorSurat || 'KP/.../...'}</b></td>
+          </tr>
+          <tr>
+            <td>Tanggal</td>
+            <td>:</td>
+            <td><b>{data.tanggalSurat || '-'}</b></td>
+          </tr>
+          <tr>
+            <td>Hal</td>
+            <td>:</td>
+            <td><b>Pengganti Sementara</b></td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
