@@ -45,7 +45,10 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     <div ref={ref} className="sk-pgs-paper">
       <style>{`
         @media print {
-          @page { size: A4 portrait; margin: 15mm 20mm; }
+          @page {
+            size: A4 portrait;
+            margin: 25.4mm 25.4mm 7.5mm 25.4mm;
+          }
           body { visibility: hidden; background: white; }
           .sk-pgs-paper, .sk-pgs-paper * { visibility: visible; }
           .sk-pgs-paper { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; padding: 0 !important; }
@@ -53,7 +56,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .sk-pgs-paper {
           width: 210mm;
           min-height: 297mm;
-          padding: 15mm 20mm;
+          padding: 25.4mm 25.4mm 7.5mm 25.4mm;
           background: white;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 10pt;
@@ -66,9 +69,9 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .table-meta td, .table-diktum td { vertical-align: top; padding: 2px 0; }
       `}</style>
 
-      {/* Top Header: Meta Table on Left, BNI Logo on Right */}
+      {/* Top Header: Meta Table on Left, Enlarged BNI Logo on Right (shifted higher) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-        <table className="table-meta" style={{ width: '60%' }}>
+        <table className="table-meta" style={{ width: '55%' }}>
           <tbody>
             <tr>
               <td style={{ width: '85px' }}>Putusan</td>
@@ -93,11 +96,11 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           </tbody>
         </table>
 
-        <div style={{ width: '35%', textAlign: 'right' }}>
+        <div style={{ width: '40%', textAlign: 'right', marginTop: '-12px' }}>
           <img
             src="/logo-kop-bni.jpg"
             alt="BNI Logo"
-            style={{ height: '48px', objectFit: 'contain', display: 'inline-block' }}
+            style={{ height: '62px', objectFit: 'contain', display: 'inline-block' }}
           />
         </div>
       </div>
@@ -185,13 +188,14 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             <td>:</td>
             <td>
               <div>Menunjuk :</div>
-              <div style={{ paddingLeft: '15px', marginTop: '4px' }}>
+              {/* Centered Employee Detail Block */}
+              <div style={{ textAlign: 'center', marginTop: '6px', marginBottom: '14px' }}>
                 <b>Sdr. {data.pegawai.nama || '[NAMA PEGAWAI]'} – NPP.{data.pegawai.npp || '[NPP]'}</b><br />
                 <b>{data.pegawai.jabatanAsal} {formatGrade(data.pegawai.jenjangAsal, data.pegawai.gradeAsal)}</b><br />
                 <b>{data.pegawai.unitAsal}</b>
               </div>
               
-              <div style={{ paddingLeft: '15px', marginTop: '10px' }}>
+              <div style={{ marginTop: '10px' }}>
                 <table className="table-diktum" style={{ width: '100%' }}>
                   <tbody>
                     <tr>
