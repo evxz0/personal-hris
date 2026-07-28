@@ -129,7 +129,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           <img
             src="/logo-kop-bni.jpg"
             alt="BNI Logo"
-            style={{ height: '42px', width: 'auto', objectFit: 'contain', display: 'inline-block' }}
+            style={{ height: '1.25cm', width: '4.09cm', objectFit: 'contain', display: 'inline-block' }}
           />
         </div>
       </div>
