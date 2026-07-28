@@ -74,9 +74,8 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             margin: 0.4in 0.5in 0.35in 0.75in;
           }
           html, body {
-            height: 100%;
-            overflow: hidden !important;
-            visibility: hidden;
+            height: auto !important;
+            overflow: visible !important;
             background: white;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -85,11 +84,11 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             visibility: visible;
           }
           .sk-pgs-paper {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            position: relative !important;
             width: 100% !important;
-            max-height: 275mm !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
             box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
@@ -118,7 +117,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
 
       {/* Header: Meta Table on Left (Unbolded), BNI Logo on Right */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <table className="table-meta" style={{ width: '60%' }}>
+        <table className="table-meta" style={{ width: '58%' }}>
           <tbody>
             <tr>
               <td style={{ width: '85px' }}>Putusan</td>
@@ -143,7 +142,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           </tbody>
         </table>
 
-        <div style={{ width: '38%', textAlign: 'right' }}>
+        <div style={{ width: '40%', textAlign: 'right' }}>
           <img
             src="/logo-kop-bni.jpg"
             alt="BNI Logo"
