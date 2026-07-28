@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useReactToPrint } from 'react-to-print'
 import { supabase } from '../../lib/supabase'
 import { SkPgsTemplate, type SkPgsData } from '../../components/templates/SkPgsTemplate'
-import { Printer, FileText, UserCheck, Briefcase } from 'lucide-react'
+import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
 export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -36,6 +36,10 @@ export default function SuratPgsPage() {
       lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       tanggalMulai: '27 Juli 2026',
       tanggalSelesai: '31 Juli 2026'
+    },
+    penandatangan: {
+      nama: 'NOVACHRISTO JOSEPH SILANGEN',
+      jabatan: 'AREA HEAD'
     }
   })
 
@@ -281,6 +285,37 @@ export default function SuratPgsPage() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Section 4: Pejabat Penandatangan */}
+          <div className="space-y-3 pt-2">
+            <p className="text-xs font-extrabold text-teal-800 uppercase tracking-wide border-l-2 border-teal-600 pl-2 flex items-center gap-1.5">
+              <Award size={14} className="text-teal-600" /> 4. Pejabat Penandatangan
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-[#64748B]">Pilih Pejabat Penandatangan</label>
+              <select
+                value={formData.penandatangan?.nama || 'NOVACHRISTO JOSEPH SILANGEN'}
+                onChange={e => {
+                  const selectedNama = e.target.value
+                  if (selectedNama === 'UCOK PARLINDUNGAN SIANIPAR') {
+                    setFormData({
+                      ...formData,
+                      penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'ABS Team Leader' }
+                    })
+                  } else {
+                    setFormData({
+                      ...formData,
+                      penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' }
+                    })
+                  }
+                }}
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
+              >
+                <option value="NOVACHRISTO JOSEPH SILANGEN">1. NOVACHRISTO JOSEPH SILANGEN (AREA HEAD)</option>
+                <option value="UCOK PARLINDUNGAN SIANIPAR">2. UCOK PARLINDUNGAN SIANIPAR (ABS Team Leader)</option>
+              </select>
             </div>
           </div>
         </div>

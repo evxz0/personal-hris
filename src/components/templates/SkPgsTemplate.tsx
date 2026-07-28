@@ -19,6 +19,10 @@ export interface SkPgsData {
     tanggalMulai: string;
     tanggalSelesai: string;
   };
+  penandatangan?: {
+    nama: string;
+    jabatan: string;
+  };
 }
 
 interface Props {
@@ -41,6 +45,16 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     return '';
   };
 
+  // Helper to format name to Title Case (e.g. Tiara Tesalonika Pasaribu)
+  const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Helper to get title without bolding the 'PGS' prefix
   const getPgsTitle = () => {
     const raw = data.penugasan.jabatanPgs || '';
@@ -48,17 +62,20 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     return cleanTitle;
   };
 
+  const pejabatNama = data.penandatangan?.nama || 'NOVACHRISTO JOSEPH SILANGEN';
+  const pejabatJabatan = data.penandatangan?.jabatan || 'AREA HEAD';
+
   return (
     <div ref={ref} className="sk-pgs-paper">
       <style>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 0.5in 0.5in 0.5in 0.75in;
+            margin: 0.4in 0.5in 0.35in 0.75in;
           }
           html, body {
             height: 100%;
-            overflow: hidden;
+            overflow: hidden !important;
             visibility: hidden;
             background: white;
             -webkit-print-color-adjust: exact;
@@ -72,34 +89,35 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
-            max-height: 270mm !important;
+            max-height: 275mm !important;
             box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
-            font-size: 10pt !important;
-            line-height: 1.4 !important;
+            font-size: 9.5pt !important;
+            line-height: 1.35 !important;
             page-break-after: avoid !important;
+            page-break-before: avoid !important;
             page-break-inside: avoid !important;
           }
         }
         .sk-pgs-paper {
           width: 210mm;
           min-height: 297mm;
-          padding: 0.5in 0.5in 0.5in 0.75in;
+          padding: 0.4in 0.5in 0.35in 0.75in;
           background: white;
           font-family: Arial, Helvetica, sans-serif;
-          font-size: 10pt;
-          line-height: 1.4;
+          font-size: 9.5pt;
+          line-height: 1.35;
           color: #000;
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
           margin: 0 auto;
           box-sizing: border-box;
         }
-        .table-meta td, .table-diktum td { vertical-align: top; padding: 1.5px 0; }
+        .table-meta td, .table-diktum td { vertical-align: top; padding: 1px 0; }
       `}</style>
 
       {/* Header: Meta Table on Left (Unbolded), BNI Logo on Right */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <table className="table-meta" style={{ width: '60%' }}>
           <tbody>
             <tr>
@@ -135,14 +153,14 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </div>
 
       {/* Title */}
-      <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '12px' }}>
         <h3 style={{ margin: 0, fontSize: '11pt', fontWeight: 'bold' }}>SURAT KEPUTUSAN</h3>
         <h4 style={{ margin: 0, fontSize: '10pt', fontWeight: 'bold' }}>REGIONAL OFFICE 09</h4>
         <h4 style={{ margin: 0, fontSize: '10pt', fontWeight: 'bold' }}>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</h4>
       </div>
 
       {/* Menimbang */}
-      <table className="table-diktum" style={{ width: '100%', marginBottom: '6px' }}>
+      <table className="table-diktum" style={{ width: '100%', marginBottom: '5px' }}>
         <tbody>
           <tr>
             <td style={{ width: '110px' }}>Menimbang</td>
@@ -172,7 +190,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </table>
 
       {/* Mengingat */}
-      <table className="table-diktum" style={{ width: '100%', marginBottom: '6px' }}>
+      <table className="table-diktum" style={{ width: '100%', marginBottom: '5px' }}>
         <tbody>
           <tr>
             <td style={{ width: '110px' }}>Mengingat</td>
@@ -190,7 +208,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </table>
 
       {/* Memperhatikan */}
-      <table className="table-diktum" style={{ width: '100%', marginBottom: '10px' }}>
+      <table className="table-diktum" style={{ width: '100%', marginBottom: '8px' }}>
         <tbody>
           <tr>
             <td style={{ width: '110px' }}>Memperhatikan</td>
@@ -201,10 +219,10 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </table>
 
       {/* Memutuskan */}
-      <div style={{ textAlign: 'center', fontWeight: 'bold', margin: '10px 0' }}>MEMUTUSKAN</div>
+      <div style={{ textAlign: 'center', fontWeight: 'bold', margin: '8px 0' }}>MEMUTUSKAN</div>
 
       {/* Menetapkan & Diktum */}
-      <table className="table-diktum" style={{ width: '100%', marginBottom: '10px' }}>
+      <table className="table-diktum" style={{ width: '100%', marginBottom: '8px' }}>
         <tbody>
           <tr>
             <td style={{ width: '110px' }}>Menetapkan</td>
@@ -218,13 +236,13 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             <td>
               <div>Menunjuk :</div>
               {/* Centered Employee Details with Underlined Bold Name */}
-              <div style={{ textAlign: 'center', marginTop: '4px', marginBottom: '8px' }}>
+              <div style={{ textAlign: 'center', marginTop: '4px', marginBottom: '6px' }}>
                 <u><b>Sdr. {data.pegawai.nama || '[NAMA PEGAWAI]'} – NPP.{data.pegawai.npp || '[NPP]'}</b></u><br />
                 <b>{data.pegawai.jabatanAsal} {formatGrade(data.pegawai.jenjangAsal, data.pegawai.gradeAsal)}</b><br />
                 <b>{data.pegawai.unitAsal}</b>
               </div>
               
-              <div style={{ marginTop: '6px' }}>
+              <div style={{ marginTop: '4px' }}>
                 <table className="table-diktum" style={{ width: '100%' }}>
                   <tbody>
                     <tr>
@@ -251,33 +269,33 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '6px' }}>Kedua</td>
-            <td style={{ paddingTop: '6px' }}>:</td>
-            <td style={{ paddingTop: '6px', textAlign: 'justify' }}>
+            <td style={{ paddingTop: '5px' }}>Kedua</td>
+            <td style={{ paddingTop: '5px' }}>:</td>
+            <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
               Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal {data.penugasan.tanggalMulai || '...'} – {data.penugasan.tanggalSelesai || '...'}.
             </td>
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '6px' }}>Ketiga</td>
-            <td style={{ paddingTop: '6px' }}>:</td>
-            <td style={{ paddingTop: '6px', textAlign: 'justify' }}>
-              Selama penunjukkan pengganti sementara tersebut kepada Sdr. {data.pegawai.nama || '[NAMA]'} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan dengan pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
+            <td style={{ paddingTop: '5px' }}>Ketiga</td>
+            <td style={{ paddingTop: '5px' }}>:</td>
+            <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
+              Selama penunjukkan pengganti sementara tersebut kepada Sdr. {toTitleCase(data.pegawai.nama || '[Nama]')} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan dengan pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
             </td>
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '6px' }}>Keempat</td>
-            <td style={{ paddingTop: '6px' }}>:</td>
-            <td style={{ paddingTop: '6px' }}>
+            <td style={{ paddingTop: '5px' }}>Keempat</td>
+            <td style={{ paddingTop: '5px' }}>:</td>
+            <td style={{ paddingTop: '5px' }}>
               Surat Keputusan ini berlaku sejak tanggal efektif penunjukkan.
             </td>
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '6px' }}>Kelima</td>
-            <td style={{ paddingTop: '6px' }}>:</td>
-            <td style={{ paddingTop: '6px', textAlign: 'justify' }}>
+            <td style={{ paddingTop: '5px' }}>Kelima</td>
+            <td style={{ paddingTop: '5px' }}>:</td>
+            <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
               Apabila dikemudian hari dari Surat Keputusan ini terdapat kekeliruan, akan diadakan pembetulan sebagaimana mestinya.
             </td>
           </tr>
@@ -285,21 +303,23 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </table>
 
       {/* Penutup */}
-      <p style={{ textAlign: 'justify', fontSize: '9.5pt', marginTop: '12px', lineHeight: '1.4' }}>
+      <p style={{ textAlign: 'justify', fontSize: '9pt', marginTop: '10px', lineHeight: '1.35' }}>
         Surat Keputusan ini disampaikan kepada yang bersangkutan melalui unitnya masing-masing untuk diketahui dan dilaksanakan sebagaimana mestinya, dengan tembusan kepada Unit Organisasi lain yang memerlukan.
       </p>
 
-      {/* Signature Block (Left-Aligned as in physical BNI SK) */}
-      <div style={{ marginTop: '15px', textAlign: 'left' }}>
+      {/* Signature Block */}
+      <div style={{ marginTop: '12px', textAlign: 'left' }}>
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT. BANK NEGARA INDONESIA (PERSERO) Tbk.</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>REGIONAL OFFICE 09</p>
 
-        <div style={{ height: '55px', width: '100%' }}></div>
+        <div style={{ height: '48px', width: '100%' }}></div>
 
         <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
-          NOVACHRISTO JOSEPH SILANGEN
+          {pejabatNama}
         </p>
-        <p style={{ margin: 0, fontWeight: 'bold' }}>AREA HEAD</p>
+        <p style={{ margin: 0, fontWeight: 'bold' }}>
+          {pejabatJabatan}
+        </p>
       </div>
     </div>
   );
