@@ -54,7 +54,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         @media print {
           @page {
             size: A4 portrait;
-            margin: 12.5mm 25.4mm 12.5mm 25.4mm;
+            margin: 0.5in 0.5in 0.5in 0.75in;
           }
           html, body {
             height: 100%;
@@ -85,7 +85,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .sk-pgs-paper {
           width: 210mm;
           min-height: 297mm;
-          padding: 12.5mm 25.4mm 12.5mm 25.4mm;
+          padding: 0.5in 0.5in 0.5in 0.75in;
           background: white;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 10pt;
