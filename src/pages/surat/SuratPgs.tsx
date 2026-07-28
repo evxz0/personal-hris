@@ -73,7 +73,7 @@ export default function SuratPgsPage() {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <div className="flex items-center gap-2 text-teal-700 font-bold text-xs uppercase tracking-wider mb-1">
             <FileText size={16} /> Surat Keterangan
@@ -82,15 +82,6 @@ export default function SuratPgsPage() {
           <p className="text-sm text-[#64748B] mt-1">
             Buat dan cetak Surat Keputusan Penugasan Pengganti Sementara (PGS) BNI Regional Office 09.
           </p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={() => handlePrint()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
-          >
-            <Printer size={16} /> Cetak / Export PDF
-          </button>
         </div>
       </div>
 

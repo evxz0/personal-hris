@@ -307,11 +307,11 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </p>
 
       {/* Signature Block */}
-      <div style={{ marginTop: '12px', textAlign: 'left' }}>
+      <div style={{ marginTop: '20px', textAlign: 'left' }}>
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT. BANK NEGARA INDONESIA (PERSERO) Tbk.</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>REGIONAL OFFICE 09</p>
 
-        <div style={{ height: '48px', width: '100%' }}></div>
+        <div style={{ height: '75px', width: '100%' }}></div>
 
         <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
           {pejabatNama}
