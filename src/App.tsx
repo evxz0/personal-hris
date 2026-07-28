@@ -12,6 +12,7 @@ import AbsensiPage from './pages/Absensi'
 import SettingsPage from './pages/Settings'
 import RiwayatPage from './pages/Riwayat'
 import SuratPgsPage from './pages/surat/SuratPgs'
+import SuratBalasanCutiPage from './pages/surat/SuratBalasanCuti'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -60,8 +61,9 @@ export default function App() {
         <Route path="/magang" element={<ProtectedRoute session={session}><MagangPage /></ProtectedRoute>} />
         <Route path="/absensi" element={<ProtectedRoute session={session}><AbsensiPage /></ProtectedRoute>} />
         
-        {/* Surat Keterangan Route */}
+        {/* Surat Keterangan Routes */}
         <Route path="/surat/pgs" element={<ProtectedRoute session={session}><SuratPgsPage /></ProtectedRoute>} />
+        <Route path="/surat/balasan-cuti" element={<ProtectedRoute session={session}><SuratBalasanCutiPage /></ProtectedRoute>} />
 
         <Route path="/riwayat" element={<ProtectedRoute session={session}><RiwayatPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />

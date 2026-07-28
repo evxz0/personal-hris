@@ -19,6 +19,7 @@ const navItems = [
 
 const suratSubItems = [
   { to: '/surat/pgs', label: 'Untuk Pengganti Sementara' },
+  { to: '/surat/balasan-cuti', label: 'Untuk Balasan Cuti' },
 ]
 
 interface SidebarProps {
