@@ -33,7 +33,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const location = useLocation()
 
   const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
-  const [suratOpen, setSuratOpen] = useState(true)
+  const [suratOpen, setSuratOpen] = useState(false)
 
   const isSuratActive = location.pathname.startsWith('/surat')
 
