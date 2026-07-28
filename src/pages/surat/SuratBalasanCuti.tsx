@@ -5,6 +5,23 @@ import { supabase } from '../../lib/supabase'
 import { SuratBalasanCutiTemplate, type SuratBalasanCutiData } from '../../components/templates/SuratBalasanCutiTemplate'
 import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
 
+// Helper function to convert numbers to Indonesian words (Terbilang)
+function terbilang(n: number | string): string {
+  const num = typeof n === 'string' ? parseInt(n, 10) : n;
+  if (isNaN(num) || num < 0) return '';
+  if (num === 0) return 'nol';
+  
+  const satuan = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+  
+  if (num < 12) return satuan[num];
+  if (num < 20) return terbilang(num - 10) + ' belas';
+  if (num < 100) return terbilang(Math.floor(num / 10)) + ' puluh' + (num % 10 !== 0 ? ' ' + terbilang(num % 10) : '');
+  if (num < 200) return 'seratus' + (num % 100 !== 0 ? ' ' + terbilang(num % 100) : '');
+  if (num < 1000) return terbilang(Math.floor(num / 100)) + ' ratus' + (num % 100 !== 0 ? ' ' + terbilang(num % 100) : '');
+  
+  return String(num);
+}
+
 export default function SuratBalasanCutiPage() {
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -30,7 +47,7 @@ export default function SuratBalasanCutiPage() {
     tahunCuti: '2026',
     tanggalPermohonan: '16 Juli 2026',
     cuti: {
-      jumlahHari: '05',
+      jumlahHari: '5',
       jumlahHariTerbilang: 'lima',
       tanggalMulai: '03 Agustus 2026',
       tanggalSelesai: '07 Agustus 2026',
@@ -221,9 +238,20 @@ export default function SuratBalasanCutiPage() {
                   <label className="text-[11px] font-semibold text-[#64748B]">Lama Cuti (Angka)</label>
                   <input
                     type="text"
-                    placeholder="misal: 05"
+                    placeholder="misal: 5"
                     value={formData.cuti.jumlahHari}
-                    onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, jumlahHari: e.target.value } })}
+                    onChange={e => {
+                      const val = e.target.value
+                      const autoTerbilang = terbilang(val)
+                      setFormData({
+                        ...formData,
+                        cuti: {
+                          ...formData.cuti,
+                          jumlahHari: val,
+                          jumlahHariTerbilang: autoTerbilang || formData.cuti.jumlahHariTerbilang
+                        }
+                      })
+                    }}
                     className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
                   />
                 </div>
@@ -287,7 +315,18 @@ export default function SuratBalasanCutiPage() {
                     type="text"
                     placeholder="misal: 5"
                     value={formData.cuti.sisaCuti}
-                    onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, sisaCuti: e.target.value } })}
+                    onChange={e => {
+                      const val = e.target.value
+                      const autoTerbilang = terbilang(val)
+                      setFormData({
+                        ...formData,
+                        cuti: {
+                          ...formData.cuti,
+                          sisaCuti: val,
+                          sisaCutiTerbilang: autoTerbilang || formData.cuti.sisaCutiTerbilang
+                        }
+                      })
+                    }}
                     className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
                   />
                 </div>
