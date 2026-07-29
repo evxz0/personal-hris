@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useReactToPrint } from 'react-to-print'
 import { supabase } from '../../lib/supabase'
 import { SkPgsTemplate, type SkPgsData } from '../../components/templates/SkPgsTemplate'
+import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDropdown'
+import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
 export default function SuratPgsPage() {
@@ -73,11 +75,36 @@ export default function SuratPgsPage() {
     }
   }
 
+  const [downloading, setDownloading] = useState(false)
+
   // Handle print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `SK_PGS_${formData.pegawai.npp || 'Surat'}`
   })
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return
+    try {
+      setDownloading(true)
+      await exportElementToPDF(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
+    } catch (e) {
+      console.error(e)
+      alert('Gagal mengunduh dokumen PDF')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleDownloadWord = async () => {
+    if (!printRef.current) return
+    try {
+      exportElementToWord(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
+    } catch (e) {
+      console.error(e)
+      alert('Gagal mengunduh dokumen Word')
+    }
+  }
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -346,13 +373,20 @@ export default function SuratPgsPage() {
             <span className="text-xs font-bold text-[#64748B] flex items-center gap-1.5">
               <FileText size={14} className="text-teal-600" /> Pratinjau Dokumen SK PGS (A4)
             </span>
-            <button
-              type="button"
-              onClick={() => handlePrint()}
-              className="text-xs font-bold text-teal-600 hover:text-teal-800 flex items-center gap-1 cursor-pointer"
-            >
-              <Printer size={13} /> Cetak
-            </button>
+            <div className="flex items-center gap-2">
+              <DocumentDownloadDropdown
+                onDownloadPDF={handleDownloadPDF}
+                onDownloadWord={handleDownloadWord}
+                loading={downloading}
+              />
+              <button
+                type="button"
+                onClick={() => handlePrint()}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-teal-700 hover:text-teal-900 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors cursor-pointer"
+              >
+                <Printer size={13} /> Cetak
+              </button>
+            </div>
           </div>
 
           <div className="bg-gray-200/70 p-4 rounded-2xl overflow-x-auto shadow-inner flex justify-center">
