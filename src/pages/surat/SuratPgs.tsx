@@ -34,6 +34,7 @@ export default function SuratPgsPage() {
       jenjangPgs: 'ASST',
       gradePgs: 'NON GRADE',
       unitPgs: 'SUNGAI PINYUH BRANCH OFFICE',
+      unitDiktum: 'PONTIANAK BRANCH OFFICE',
       lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       tanggalMulai: '27 Juli 2026',
       tanggalSelesai: '31 Juli 2026'
@@ -202,7 +203,7 @@ export default function SuratPgsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Unit Asal</label>
+                <label className="text-[11px] font-semibold text-[#64748B]">Unit Pegawai (Tampil di bagian 'Menunjuk')</label>
                 <input
                   type="text"
                   value={formData.pegawai.unitAsal}
@@ -248,13 +249,22 @@ export default function SuratPgsPage() {
                   />
                 </div>
               </div>
+              <div>
+                <label className="text-[11px] font-semibold text-[#64748B]">Unit PGS (Untuk 'Sebagai')</label>
+                <input
+                  type="text"
+                  value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs}
+                  onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: e.target.value } })}
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Unit PGS (Untuk 'Sebagai')</label>
+                  <label className="text-[11px] font-semibold text-[#64748B]">Unit (Untuk Diktum 'Unit')</label>
                   <input
                     type="text"
-                    value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: e.target.value } })}
+                    value={formData.penugasan.unitDiktum ?? formData.pegawai.unitAsal}
+                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitDiktum: e.target.value } })}
                     className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
                   />
                 </div>

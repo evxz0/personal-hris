@@ -16,6 +16,7 @@ export interface SkPgsData {
     jenjangPgs: string;
     gradePgs: string;
     unitPgs?: string;
+    unitDiktum?: string;
     lokasiPgs: string;
     tanggalMulai: string;
     tanggalSelesai: string;
@@ -255,7 +256,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
                     <tr>
                       <td>Unit</td>
                       <td>:</td>
-                      <td><b>{data.pegawai.unitAsal}</b></td>
+                      <td><b>{data.penugasan.unitDiktum ?? data.pegawai.unitAsal}</b></td>
                     </tr>
                     <tr>
                       <td>Lokasi</td>
