@@ -3,6 +3,7 @@ import { Upload, FileSpreadsheet, FileText, File, X, CheckCircle, AlertCircle, S
 import { parseXLSX, parseWord } from '../../lib/importExport'
 import { extractDocumentScan, importExcelSmart } from '../../lib/ocrService'
 import { parseOcrText, cleanMarkdownText } from '../../lib/ocrParser'
+import { parseSpreadsheetSmart, matchHeaderToKey } from '../../lib/dataMiningParser'
 import { Button } from './Button'
 
 export type ImportMode = 'excel' | 'ocr'
@@ -67,38 +68,66 @@ export function ImportModal({
     setFileName(file.name)
     setStatus('reading')
     try {
-      // 1. Coba gunakan Smart AI Column Mapper dari backend Vercel FastAPI
+      // 1. Coba gunakan Smart AI Column Mapper dari backend Vercel FastAPI jika online
       if (!file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
-        const res = await importExcelSmart(file)
-        if (res.success && res.data && res.data.length > 0) {
-          setRows(res.data)
-          setStatus('preview')
-          return
+        try {
+          const res = await importExcelSmart(file)
+          if (res.success && res.data && res.data.length > 0) {
+            setRows(res.data)
+            setStatus('preview')
+            return
+          }
+        } catch {
+          // Fallback ke Data Mining Engine lokal
         }
       }
 
-      // 2. Fallback parsing lokal jika file docx atau jika AI backend offline
-      let raw: Record<string, unknown>[] = []
+      // 2. Data Mining Engine & Fuzzy AI Header Matcher Lokal
+      let rawRows: Record<string, unknown>[] = []
+
       if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
-        raw = await parseWord(file)
+        const rawWord = await parseWord(file)
+        rawRows = rawWord.map(row => {
+          const obj: Record<string, unknown> = {}
+          for (const [colHeader, val] of Object.entries(row)) {
+            const matchedKey = matchHeaderToKey(colHeader, fieldMapping)
+            if (matchedKey) {
+              obj[matchedKey] = val
+            } else {
+              obj[colHeader] = val
+            }
+          }
+          return obj
+        })
       } else {
-        raw = await parseXLSX(file)
+        const arrayBuffer = await file.arrayBuffer()
+        rawRows = parseSpreadsheetSmart(arrayBuffer, fieldMapping, requiredFields)
       }
-      if (raw.length === 0) throw new Error('File kosong atau format tidak dikenali.')
 
-      // Map columns
-      const mapped = raw.map(row => {
-        const obj: Record<string, unknown> = {}
-        for (const [header, key] of Object.entries(fieldMapping)) {
-          const val = row[header] ?? row[header.toLowerCase()] ?? row[key] ?? ''
-          obj[key] = val
+      if (rawRows.length === 0) {
+        // Fallback ketiga: coba parse standard XLSX jika data mining tidak mendeteksi baris khusus
+        const standardRaw = await parseXLSX(file)
+        if (standardRaw.length > 0) {
+          rawRows = standardRaw.map(row => {
+            const obj: Record<string, unknown> = {}
+            for (const [colHeader, val] of Object.entries(row)) {
+              const matchedKey = matchHeaderToKey(colHeader, fieldMapping)
+              if (matchedKey) {
+                obj[matchedKey] = val
+              } else {
+                obj[colHeader] = val
+              }
+            }
+            return obj
+          })
         }
-        return obj
-      })
-      // Filter rows that have required fields
-      const valid = mapped.filter(r => requiredFields.every(f => r[f] && String(r[f]).trim() !== ''))
-      if (valid.length === 0) throw new Error('Tidak ada data valid. Periksa header kolom file Anda.')
-      setRows(valid)
+      }
+
+      if (rawRows.length === 0) {
+        throw new Error('Tidak ada data valid yang dapat dibaca. Periksa isi file Anda.')
+      }
+
+      setRows(rawRows)
       setStatus('preview')
     } catch (e) {
       const msg = e instanceof Error ? e.message : (typeof e === 'object' && e !== null && 'message' in e ? String((e as any).message) : 'Gagal membaca file')
