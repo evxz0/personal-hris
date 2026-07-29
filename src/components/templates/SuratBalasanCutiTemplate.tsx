@@ -88,7 +88,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
       `}</style>
 
       {/* Header: Logo BNI on Right Header */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '15px' }}>
         <img
           src="/logo-kop-bni.jpg"
           alt="BNI Logo"

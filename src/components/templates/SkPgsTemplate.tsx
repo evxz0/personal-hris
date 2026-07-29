@@ -118,7 +118,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       `}</style>
 
       {/* Header: Logo BNI on Top Right */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '10px' }}>
         <img
           src="/logo-kop-bni.jpg"
           alt="BNI Logo"
