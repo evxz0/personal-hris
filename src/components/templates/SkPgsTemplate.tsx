@@ -32,9 +32,9 @@ interface Props {
 }
 
 export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
-  const formatGrade = (jenjang?: string, grade?: string) => {
-    const cleanJ = jenjang?.trim() || '';
-    const cleanG = grade?.trim() || '';
+  const formatGrade = (jenjang?: any, grade?: any) => {
+    const cleanJ = jenjang ? String(jenjang).trim() : '';
+    const cleanG = grade ? String(grade).trim() : '';
     if (cleanJ && cleanG) {
       return `(${cleanJ} / ${cleanG})`;
     }
@@ -48,9 +48,9 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
   };
 
   // Helper to format name to Title Case (e.g. Tiara Tesalonika Pasaribu)
-  const toTitleCase = (str: string) => {
+  const toTitleCase = (str: any) => {
     if (!str) return '';
-    return str
+    return String(str)
       .toLowerCase()
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))

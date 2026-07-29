@@ -52,6 +52,9 @@ export default function SuratPgsPage() {
     setSelectedNpp(npp)
     const emp = karyawanList.find(k => k.npp === npp)
     if (emp) {
+      const rawGrade = emp.grade !== null && emp.grade !== undefined ? String(emp.grade).trim() : ''
+      const gradeStr = rawGrade ? (rawGrade.toUpperCase().includes('GRADE') ? rawGrade : `GRADE ${rawGrade}`) : 'NON GRADE'
+      const unitVal = emp.outlet || (emp as any).departemen || 'REGIONAL OFFICE 09'
       setFormData(prev => ({
         ...prev,
         pegawai: {
@@ -59,8 +62,12 @@ export default function SuratPgsPage() {
           npp: emp.npp || '',
           jabatanAsal: emp.jabatan || 'STAFF',
           jenjangAsal: emp.jenjang || '',
-          gradeAsal: emp.grade || 'GRADE 5',
-          unitAsal: emp.outlet || emp.departemen || 'REGIONAL OFFICE 09'
+          gradeAsal: gradeStr,
+          unitAsal: unitVal
+        },
+        penugasan: {
+          ...prev.penugasan,
+          unitDiktum: unitVal
         }
       }))
     }
