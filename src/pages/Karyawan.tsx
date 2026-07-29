@@ -246,9 +246,9 @@ export default function KaryawanPage() {
       const digiHc = r.npp_digi_hc ? String(r.npp_digi_hc).trim() : null
       const webmail = r.npp_webmail ? String(r.npp_webmail).trim() : null
       
-      // Fallback for npp: if empty, try npp_digi_hc or npp_webmail or generate a unique ID
+      // Fallback for npp: if empty or simple row sequence number (1-3 digits), use digiHc/webmail or generate ID
       let nppVal = String(r.npp ?? '').trim()
-      if (!nppVal) {
+      if (!nppVal || /^\d{1,3}$/.test(nppVal)) {
         if (isTad && digiHc) {
           nppVal = digiHc
         } else if (isTad && webmail) {
@@ -267,7 +267,6 @@ export default function KaryawanPage() {
         kategori: (isTad ? 'TAD' : isBina ? 'BINA' : 'FTE') as 'FTE'|'TAD'|'BINA',
         outlet: r.outlet ? String(r.outlet) : null,
         tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),
-        alamat: r.alamat ? String(r.alamat) : r.alamat_utama ? String(r.alamat_utama) : r.rumah ? String(r.rumah) : null,
         posisi_saat_ini: isBina ? null : r.posisi_saat_ini ? String(r.posisi_saat_ini) : null,
         jenjang: isBina ? null : r.jenjang ? String(r.jenjang) : null,
         jabatan: r.jabatan ? String(r.jabatan) : null,

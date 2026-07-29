@@ -76,6 +76,10 @@ export function matchHeaderToKey(header: string, fieldMapping: Record<string, st
   const normHeader = normalizeString(header)
   if (!normHeader) return null
 
+  // Ignore row index/sequence headers (e.g. 'no', 'no.', 'no urut', '#')
+  const isRowIndexHeader = /^(no|no\.|no urut|nomor urut|nr|index|#)$/i.test(normHeader)
+  if (isRowIndexHeader) return null
+
   // 1. Direct match with fieldMapping keys (e.g. 'NPP', 'Nama Lengkap', etc.)
   for (const [mapLabel, targetKey] of Object.entries(fieldMapping)) {
     if (normalizeString(mapLabel) === normHeader) return targetKey
@@ -89,7 +93,10 @@ export function matchHeaderToKey(header: string, fieldMapping: Record<string, st
     const synonymList = SYNONYMS[targetKey] || [targetKey]
     for (const syn of synonymList) {
       const normSyn = normalizeString(syn)
-      if (normHeader === normSyn || normHeader.includes(normSyn) || normSyn.includes(normHeader)) {
+      if (normHeader === normSyn) {
+        return targetKey
+      }
+      if (normSyn.length > 3 && (normHeader.includes(normSyn) || normSyn.includes(normHeader))) {
         return targetKey
       }
     }

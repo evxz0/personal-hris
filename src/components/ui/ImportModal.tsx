@@ -206,7 +206,7 @@ export function ImportModal({
     }
   }
 
-  const previewHeaders = Object.values(fieldMapping)
+  const previewHeaders = Array.from(new Set(Object.values(fieldMapping)))
   const previewData = rows.slice(0, 5)
 
   return (

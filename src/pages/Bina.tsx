@@ -199,7 +199,7 @@ export default function BinaPage() {
   const handleImport = async (rows: Record<string, unknown>[]) => {
     const mapped = rows.map(r => {
       let nppVal = String(r.npp ?? '').trim()
-      if (!nppVal) {
+      if (!nppVal || /^\d{1,3}$/.test(nppVal)) {
         nppVal = `GEN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
       }
 
@@ -211,7 +211,6 @@ export default function BinaPage() {
         outlet: r.outlet ? String(r.outlet) : null,
         jenis_kelamin: r.jenis_kelamin ? String(r.jenis_kelamin) : null,
         tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),
-        alamat: r.alamat ? String(r.alamat) : r.alamat_utama ? String(r.alamat_utama) : r.rumah ? String(r.rumah) : null,
         tanggal_mulai: parseDateStringToISO(r.tanggal_mulai),
         tanggal_berakhir: parseDateStringToISO(r.tanggal_berakhir),
         kd_wil: r.kd_wil ? String(r.kd_wil) : null,
