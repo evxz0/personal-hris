@@ -60,10 +60,14 @@ export function parseOcrText(
         // TTL (Tempat Tanggal Lahir)
         if (
           cleanKey.includes('ttl') ||
-          (cleanKey.includes('tempat') && (cleanKey.includes('lahir') || cleanKey.includes('tgl')))
+          cleanKey.includes('tempat') ||
+          cleanKey.includes('lahir') ||
+          cleanKey.includes('tgl lahir') ||
+          cleanKey.includes('tanggal lahir')
         ) {
           resultRow['ttl'] = rawVal
           resultRow['tempat_tanggal_lahir'] = rawVal
+          resultRow['tanggal_lahir'] = rawVal
 
           // Split tempat & tanggal if comma exists
           if (rawVal.includes(',')) {
@@ -90,6 +94,8 @@ export function parseOcrText(
         if (cleanKey === 'alamat' || cleanKey.includes('alamat')) {
           mainAddress = rawVal
           resultRow['alamat_utama'] = rawVal
+          resultRow['alamat'] = rawVal
+          resultRow['rumah'] = rawVal
         } else if (cleanKey.includes('rt') || cleanKey.includes('rw')) {
           rtRw = rawVal
           resultRow['rt_rw'] = rawVal
@@ -133,9 +139,10 @@ export function parseOcrText(
   if (kelDesa) addressParts.push(`Kel/Desa: ${kelDesa}`)
   if (kecamatan) addressParts.push(`Kecamatan: ${kecamatan}`)
 
-  if (addressParts.length > 0) {
-    const combinedAddress = addressParts.join(', ')
+  const combinedAddress = addressParts.length > 0 ? addressParts.join(', ') : mainAddress
+  if (combinedAddress) {
     resultRow['alamat'] = combinedAddress
+    resultRow['alamat_utama'] = combinedAddress
     resultRow['rumah'] = combinedAddress
 
     if (fieldMapping) {

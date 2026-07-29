@@ -210,6 +210,8 @@ export default function BinaPage() {
         kategori: 'BINA' as const,
         outlet: r.outlet ? String(r.outlet) : null,
         jenis_kelamin: r.jenis_kelamin ? String(r.jenis_kelamin) : null,
+        tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),
+        alamat: r.alamat ? String(r.alamat) : r.alamat_utama ? String(r.alamat_utama) : r.rumah ? String(r.rumah) : null,
         tanggal_mulai: parseDateStringToISO(r.tanggal_mulai),
         tanggal_berakhir: parseDateStringToISO(r.tanggal_berakhir),
         kd_wil: r.kd_wil ? String(r.kd_wil) : null,
@@ -236,6 +238,7 @@ export default function BinaPage() {
       Kategori: k.kategori,
       Outlet: k.outlet || '-',
       'Jenis Kelamin': k.jenis_kelamin || '-',
+      TTL: formatDate(k.tanggal_lahir),
       Jabatan: k.jabatan || '-',
       'Tanggal Mulai': k.tanggal_mulai ? formatDate(k.tanggal_mulai) : '-',
       'Tanggal Berakhir': k.tanggal_berakhir ? formatDate(k.tanggal_berakhir) : '-',
@@ -248,22 +251,24 @@ export default function BinaPage() {
     exportToPDF(
       data.map(k => ({
         ...k,
-        tanggal_mulai: k.tanggal_mulai ? formatDate(k.tanggal_mulai) : '-',
-        tanggal_berakhir: k.tanggal_berakhir ? formatDate(k.tanggal_berakhir) : '-',
-        batch: k.batch ? `Batch ${k.batch}` : '-',
+        tanggal_lahir: formatDate(k.tanggal_lahir),
+        tanggal_mulai: formatDate(k.tanggal_mulai),
+        tanggal_berakhir: formatDate(k.tanggal_berakhir),
       })) as unknown as Record<string, unknown>[],
       [
         { header: 'NPP', dataKey: 'npp' },
         { header: 'Nama', dataKey: 'nama' },
-        { header: 'Jenis Kelamin', dataKey: 'jenis_kelamin' },
+        { header: 'Kategori', dataKey: 'kategori' },
         { header: 'Outlet', dataKey: 'outlet' },
+        { header: 'Jenis Kelamin', dataKey: 'jenis_kelamin' },
+        { header: 'TTL', dataKey: 'tanggal_lahir' },
         { header: 'Jabatan', dataKey: 'jabatan' },
         { header: 'Tgl Mulai', dataKey: 'tanggal_mulai' },
         { header: 'Tgl Berakhir', dataKey: 'tanggal_berakhir' },
-        { header: 'Kd Wil', dataKey: 'kd_wil' },
+        { header: 'KD Wil', dataKey: 'kd_wil' },
         { header: 'Batch', dataKey: 'batch' },
       ],
-      'Laporan Data Bina',
+      'Master Data Bina',
       'Master_Bina'
     )
   }
@@ -320,13 +325,13 @@ export default function BinaPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
           <input
             type="text"
-            placeholder="Cari NPP, nama, jabatan..."
+            placeholder="Cari berdasarkan nama, NPP, atau jabatan..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-sm bg-white rounded-xl border border-gray-200 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-all placeholder:text-[#64748B]"
           />
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap items-center gap-2">
           <MultiSelect
             selectedValues={filterOutlet}
             onChange={setFilterOutlet}
@@ -365,6 +370,7 @@ export default function BinaPage() {
               </span>
             )
           }},
+          { key: 'tanggal_lahir', header: 'TTL', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_lahir ? formatDate(r.tanggal_lahir) : '-'}</span> },
           { key: 'jenis_kelamin', header: 'Jenis Kelamin', render: (r: any) => <span>{String(r.jenis_kelamin || '-')}</span> },
           { key: 'outlet', header: 'Outlet' },
           { key: 'alamat', header: 'Alamat', render: (r: any) => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.alamat || r.rumah || '-')}>{String(r.alamat || r.rumah || '-')}</span> },

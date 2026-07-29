@@ -23,16 +23,35 @@ const EMPTY: KaryawanInsert = {
 
 const parseDateStringToISO = (val: any): string | null => {
   if (!val) return null
-  const str = String(val).trim()
-  if (!str) return null
+  const s = String(val).trim()
+  if (!s) return null
 
-  // 1. If it's already in YYYY-MM-DD format
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    return str
+  const cleanStr = s.includes(',') ? s.split(',')[1].trim() : s
+
+  // 1. Direct YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
+    return cleanStr
   }
 
-  // 2. If it's in DD/MM/YYYY or DD-MM-YYYY format
-  const dmyMatch = str.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/)
+  // 2. Indonesian Month Names map
+  const MONTH_MAP: Record<string, string> = {
+    januari: '01', jan: '01', februari: '02', feb: '02', maret: '03', mar: '03',
+    april: '04', apr: '04', mei: '05', juni: '06', jun: '06', juli: '07', jul: '07',
+    agustus: '08', agu: '08', ags: '08', september: '09', sep: '09', oktober: '10', okt: '10',
+    november: '11', nov: '11', desember: '12', des: '12'
+  }
+
+  const indoMatch = cleanStr.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/)
+  if (indoMatch) {
+    const day = indoMatch[1].padStart(2, '0')
+    const mStr = indoMatch[2].toLowerCase()
+    const month = MONTH_MAP[mStr]
+    const year = indoMatch[3]
+    if (month) return `${year}-${month}-${day}`
+  }
+
+  // 3. DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+  const dmyMatch = cleanStr.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
   if (dmyMatch) {
     const [, day, month, year] = dmyMatch
     const formattedDay = day.padStart(2, '0')
@@ -40,9 +59,9 @@ const parseDateStringToISO = (val: any): string | null => {
     return `${year}-${formattedMonth}-${formattedDay}`
   }
 
-  // 3. If it's an Excel serial date number
-  if (/^\d+(\.\d+)?$/.test(str)) {
-    const num = Number(str)
+  // 4. Excel Serial Date
+  if (/^\d+(\.\d+)?$/.test(cleanStr)) {
+    const num = Number(cleanStr)
     if (num > 20000 && num < 60000) {
       const date = new Date((num - 25569) * 86400 * 1000)
       if (!isNaN(date.getTime())) {
@@ -51,9 +70,9 @@ const parseDateStringToISO = (val: any): string | null => {
     }
   }
 
-  // 4. Fallback JS Date parsing
+  // 5. Fallback JS Date
   try {
-    const parsed = new Date(str)
+    const parsed = new Date(cleanStr)
     if (!isNaN(parsed.getTime())) {
       return parsed.toISOString().split('T')[0]
     }
@@ -61,7 +80,7 @@ const parseDateStringToISO = (val: any): string | null => {
     // Ignore
   }
 
-  return null
+  return cleanStr
 }
 
 const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
@@ -247,7 +266,8 @@ export default function KaryawanPage() {
         nama: String(r.nama ?? ''),
         kategori: (isTad ? 'TAD' : isBina ? 'BINA' : 'FTE') as 'FTE'|'TAD'|'BINA',
         outlet: r.outlet ? String(r.outlet) : null,
-        tanggal_lahir: parseDateStringToISO(r.tanggal_lahir),
+        tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),
+        alamat: r.alamat ? String(r.alamat) : r.alamat_utama ? String(r.alamat_utama) : r.rumah ? String(r.rumah) : null,
         posisi_saat_ini: isBina ? null : r.posisi_saat_ini ? String(r.posisi_saat_ini) : null,
         jenjang: isBina ? null : r.jenjang ? String(r.jenjang) : null,
         jabatan: r.jabatan ? String(r.jabatan) : null,
@@ -255,7 +275,7 @@ export default function KaryawanPage() {
         nik: r.nik ? String(r.nik) : null,
         npp_digi_hc: isTad ? digiHc : null,
         npp_webmail: isTad ? webmail : null,
-        jenis_kelamin: isBina && r.jenis_kelamin ? String(r.jenis_kelamin) : null,
+        jenis_kelamin: r.jenis_kelamin ? String(r.jenis_kelamin) : null,
         tanggal_mulai: isBina ? parseDateStringToISO(r.tanggal_mulai) : null,
         tanggal_berakhir: isBina ? parseDateStringToISO(r.tanggal_berakhir) : null,
         kd_wil: isBina && r.kd_wil ? String(r.kd_wil) : null,
@@ -287,7 +307,7 @@ export default function KaryawanPage() {
       Nama: k.nama, Kategori: k.kategori,
       Outlet: k.outlet,
       'Jenis Kelamin': k.jenis_kelamin || '-',
-      'Tgl Lahir': formatDate(k.tanggal_lahir),
+      TTL: formatDate(k.tanggal_lahir),
       'Posisi': k.posisi_saat_ini, Jenjang: k.jenjang,
       Jabatan: k.jabatan,
       'Tgl Mulai': formatDate(k.tanggal_mulai),
@@ -323,7 +343,7 @@ export default function KaryawanPage() {
         { header: 'KD Wil', dataKey: 'kd_wil' },
         { header: 'Grade', dataKey: 'grade' },
         { header: 'Batch', dataKey: 'batch' },
-        { header: 'Tgl Lahir', dataKey: 'tanggal_lahir' },
+        { header: 'TTL', dataKey: 'tanggal_lahir' },
       ],
       'Master Data Karyawan (FTE & TAD)',
       'Master_Karyawan'
@@ -362,7 +382,7 @@ export default function KaryawanPage() {
           </span>
         )
       }},
-      tanggal_lahir: { key: 'tanggal_lahir', header: 'Tgl Lahir', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_lahir ? formatDate(r.tanggal_lahir) : '-'}</span> },
+      tanggal_lahir: { key: 'tanggal_lahir', header: 'TTL', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_lahir ? formatDate(r.tanggal_lahir) : '-'}</span> },
       outlet: { key: 'outlet', header: 'Outlet' },
       jenis_kelamin: { key: 'jenis_kelamin', header: 'Jenis Kelamin', render: (r: any) => <span>{String(r.jenis_kelamin || '-')}</span> },
       alamat: { key: 'alamat', header: 'Alamat', render: (r: any) => <span className="text-xs text-[#475569] max-w-[240px] inline-block truncate" title={String(r.alamat || r.rumah || '-')}>{String(r.alamat || r.rumah || '-')}</span> },
