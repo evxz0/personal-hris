@@ -33,6 +33,7 @@ export default function SuratPgsPage() {
       jabatanPgs: 'PGS PROGRAM RELATIONSHIP MANAGER',
       jenjangPgs: 'ASST',
       gradePgs: 'NON GRADE',
+      unitPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       tanggalMulai: '27 Juli 2026',
       tanggalSelesai: '31 Juli 2026'
@@ -247,14 +248,25 @@ export default function SuratPgsPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Lokasi PGS</label>
-                <input
-                  type="text"
-                  value={formData.penugasan.lokasiPgs}
-                  onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, lokasiPgs: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748B]">Unit PGS (Untuk 'Sebagai')</label>
+                  <input
+                    type="text"
+                    value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs}
+                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: e.target.value } })}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[#64748B]">Lokasi PGS (Untuk 'Lokasi')</label>
+                  <input
+                    type="text"
+                    value={formData.penugasan.lokasiPgs}
+                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, lokasiPgs: e.target.value } })}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
