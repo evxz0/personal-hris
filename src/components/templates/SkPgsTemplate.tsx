@@ -117,41 +117,40 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         .table-meta td, .table-diktum td { vertical-align: top; padding: 1px 0; }
       `}</style>
 
-      {/* Header: Meta Table on Left (Unbolded), BNI Logo on Right */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <table className="table-meta" style={{ width: '58%' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '85px' }}>Putusan</td>
-              <td style={{ width: '15px' }}>:</td>
-              <td>REGIONAL OFFICE 09</td>
-            </tr>
-            <tr>
-              <td>Nomor</td>
-              <td>:</td>
-              <td>{data.nomorSurat || 'KP/.../...'}</td>
-            </tr>
-            <tr>
-              <td>Tanggal</td>
-              <td>:</td>
-              <td>{data.tanggalSurat || '-'}</td>
-            </tr>
-            <tr>
-              <td>Hal</td>
-              <td>:</td>
-              <td>Pengganti Sementara</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style={{ width: '40%', textAlign: 'right' }}>
-          <img
-            src="/logo-kop-bni.jpg"
-            alt="BNI Logo"
-            style={{ height: '1.25cm', width: '4.09cm', objectFit: 'contain', display: 'inline-block' }}
-          />
-        </div>
+      {/* Header: Logo BNI on Top Right */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <img
+          src="/logo-kop-bni.jpg"
+          alt="BNI Logo"
+          style={{ height: '1.25cm', width: '4.09cm', objectFit: 'contain', display: 'inline-block' }}
+        />
       </div>
+
+      {/* Metadata Table */}
+      <table className="table-meta" style={{ width: '58%', marginBottom: '12px' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '85px' }}>Putusan</td>
+            <td style={{ width: '15px' }}>:</td>
+            <td>REGIONAL OFFICE 09</td>
+          </tr>
+          <tr>
+            <td>Nomor</td>
+            <td>:</td>
+            <td>{data.nomorSurat || 'KP/.../...'}</td>
+          </tr>
+          <tr>
+            <td>Tanggal</td>
+            <td>:</td>
+            <td>{data.tanggalSurat || '-'}</td>
+          </tr>
+          <tr>
+            <td>Hal</td>
+            <td>:</td>
+            <td>Pengganti Sementara</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: '12px' }}>
