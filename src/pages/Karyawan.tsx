@@ -189,17 +189,24 @@ export default function KaryawanPage() {
   }
 
   const handleSave = async () => {
+    const payload = {
+      ...form,
+      nama: String(form.nama || '').toUpperCase().trim()
+    }
     if (editId) {
-      await updateMutation.mutateAsync({ id: editId, payload: form })
+      await updateMutation.mutateAsync({ id: editId, payload })
     } else {
-      await addMutation.mutateAsync(form)
+      await addMutation.mutateAsync(payload)
     }
     setModalOpen(false)
   }
 
   const handleSaveMutasi = async () => {
     try {
-      await mutasiMutation.mutateAsync(mutasiForm)
+      await mutasiMutation.mutateAsync({
+        ...mutasiForm,
+        nama: String(mutasiForm.nama || '').toUpperCase().trim()
+      })
       setMutasiOpen(false)
     } catch (err: any) {
       console.error(err)
@@ -263,7 +270,7 @@ export default function KaryawanPage() {
       return {
         ...EMPTY,
         npp: nppVal,
-        nama: String(r.nama ?? ''),
+        nama: String(r.nama ?? '').toUpperCase().trim(),
         kategori: (isTad ? 'TAD' : isBina ? 'BINA' : 'FTE') as 'FTE'|'TAD'|'BINA',
         outlet: r.outlet ? String(r.outlet) : null,
         tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),

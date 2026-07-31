@@ -32,8 +32,8 @@ interface Props {
 }
 
 export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
-  const pejabatNama = data.penandatangan?.nama ?? 'Ucok P. Sianipar';
-  const pejabatJabatan = data.penandatangan?.jabatan ?? 'Area Business Support Team Leader';
+  const pejabatNama = data.penandatangan?.nama ?? '';
+  const pejabatJabatan = data.penandatangan?.jabatan ?? '';
 
   return (
     <div ref={ref} className="sk-balasan-paper">

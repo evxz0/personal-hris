@@ -224,6 +224,10 @@ export function parseSpreadsheetSmart(
         val = String(val ?? '').trim()
       }
 
+      if (fieldKey === 'nama' && typeof val === 'string') {
+        val = val.toUpperCase()
+      }
+
       rowObj[fieldKey] = val
     })
 

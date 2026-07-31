@@ -64,8 +64,8 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     return cleanTitle;
   };
 
-  const pejabatNama = data.penandatangan?.nama || 'NOVACHRISTO JOSEPH SILANGEN';
-  const pejabatJabatan = data.penandatangan?.jabatan || 'AREA HEAD';
+  const pejabatNama = data.penandatangan?.nama ?? '';
+  const pejabatJabatan = data.penandatangan?.jabatan ?? '';
 
   return (
     <div ref={ref} className="sk-pgs-paper">

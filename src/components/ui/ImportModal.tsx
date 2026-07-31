@@ -195,7 +195,14 @@ export function ImportModal({
   const handleImport = async () => {
     setStatus('importing')
     try {
-      const payload = mode === 'ocr' ? [ocrParsedForm] : rows
+      const rawPayload = mode === 'ocr' ? [ocrParsedForm] : rows
+      const payload = rawPayload.map(row => {
+        const cleanRow = { ...row }
+        if (cleanRow.nama && typeof cleanRow.nama === 'string') {
+          cleanRow.nama = cleanRow.nama.toUpperCase().trim()
+        }
+        return cleanRow
+      })
       await onImport(payload)
       setSuccessCount(payload.length)
       setStatus('success')

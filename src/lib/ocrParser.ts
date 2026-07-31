@@ -219,6 +219,11 @@ export function parseOcrText(
     if (nikMatch) resultRow['nik'] = nikMatch[0]
   }
 
+  // Ensure nama is uppercase if present
+  if (resultRow['nama'] && typeof resultRow['nama'] === 'string') {
+    resultRow['nama'] = resultRow['nama'].toUpperCase().trim()
+  }
+
   // Ensure default field values if fieldMapping is provided
   if (fieldMapping) {
     for (const key of Object.values(fieldMapping)) {
