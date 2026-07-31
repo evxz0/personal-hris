@@ -6,6 +6,7 @@ import { SuratBalasanCutiTemplate, type SuratBalasanCutiData } from '../../compo
 import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDropdown'
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
+import { useReferensi } from '../../hooks/useReferensi'
 import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
 
 // Helper function to convert numbers to Indonesian words (Terbilang)
@@ -28,6 +29,9 @@ function terbilang(n: number | string): string {
 export default function SuratBalasanCutiPage() {
   const printRef = useRef<HTMLDivElement>(null)
   const addRiwayatSurat = useAddRiwayatSurat()
+
+  // Fetch Master Outlet referensi
+  const { data: outlets = [] } = useReferensi('OUTLET')
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({
@@ -263,12 +267,21 @@ export default function SuratBalasanCutiPage() {
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-[#64748B]">Unit / Kantor Asal</label>
-                <input
-                  type="text"
-                  value={formData.pegawai.unitAsal}
+                <select
+                  value={formData.pegawai.unitAsal ?? ''}
                   onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
+                >
+                  <option value="">-- Kosong (Tanpa Unit) --</option>
+                  {formData.pegawai.unitAsal && !outlets.some(o => o.nama_referensi === formData.pegawai.unitAsal) && (
+                    <option value={formData.pegawai.unitAsal}>{formData.pegawai.unitAsal}</option>
+                  )}
+                  {outlets.map(o => (
+                    <option key={o.id} value={o.nama_referensi}>
+                      {o.nama_referensi}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

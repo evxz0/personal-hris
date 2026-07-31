@@ -8,10 +8,14 @@ import { exportElementToPDF, exportElementToWord } from '../../lib/documentExpor
 import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
+import { useReferensi } from '../../hooks/useReferensi'
 
 export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
   const addRiwayatSurat = useAddRiwayatSurat()
+
+  // Fetch Master Outlet referensi
+  const { data: outlets = [] } = useReferensi('OUTLET')
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({
@@ -258,12 +262,21 @@ export default function SuratPgsPage() {
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-[#64748B]">Unit Pegawai (Tampil di bagian 'Menunjuk')</label>
-                <input
-                  type="text"
-                  value={formData.pegawai.unitAsal}
+                <select
+                  value={formData.pegawai.unitAsal ?? ''}
                   onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
+                >
+                  <option value="">-- Kosong (Tanpa Unit) --</option>
+                  {formData.pegawai.unitAsal && !outlets.some(o => o.nama_referensi === formData.pegawai.unitAsal) && (
+                    <option value={formData.pegawai.unitAsal}>{formData.pegawai.unitAsal}</option>
+                  )}
+                  {outlets.map(o => (
+                    <option key={o.id} value={o.nama_referensi}>
+                      {o.nama_referensi}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -305,31 +318,58 @@ export default function SuratPgsPage() {
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-[#64748B]">Unit PGS (Untuk 'Sebagai')</label>
-                <input
-                  type="text"
-                  value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs}
+                <select
+                  value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs ?? ''}
                   onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
+                >
+                  <option value="">-- Kosong (Tanpa Unit) --</option>
+                  {formData.penugasan.unitPgs && !outlets.some(o => o.nama_referensi === formData.penugasan.unitPgs) && (
+                    <option value={formData.penugasan.unitPgs}>{formData.penugasan.unitPgs}</option>
+                  )}
+                  {outlets.map(o => (
+                    <option key={o.id} value={o.nama_referensi}>
+                      {o.nama_referensi}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-[#64748B]">Unit (Untuk Diktum 'Unit')</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.unitDiktum ?? formData.pegawai.unitAsal}
+                  <select
+                    value={formData.penugasan.unitDiktum ?? formData.pegawai.unitAsal ?? ''}
                     onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitDiktum: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
+                  >
+                    <option value="">-- Kosong (Tanpa Unit) --</option>
+                    {formData.penugasan.unitDiktum && !outlets.some(o => o.nama_referensi === formData.penugasan.unitDiktum) && (
+                      <option value={formData.penugasan.unitDiktum}>{formData.penugasan.unitDiktum}</option>
+                    )}
+                    {outlets.map(o => (
+                      <option key={o.id} value={o.nama_referensi}>
+                        {o.nama_referensi}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-[#64748B]">Lokasi PGS (Untuk 'Lokasi')</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.lokasiPgs}
+                  <select
+                    value={formData.penugasan.lokasiPgs ?? ''}
                     onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, lokasiPgs: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
+                  >
+                    <option value="">-- Kosong (Tanpa Lokasi) --</option>
+                    {formData.penugasan.lokasiPgs && !outlets.some(o => o.nama_referensi === formData.penugasan.lokasiPgs) && (
+                      <option value={formData.penugasan.lokasiPgs}>{formData.penugasan.lokasiPgs}</option>
+                    )}
+                    {outlets.map(o => (
+                      <option key={o.id} value={o.nama_referensi}>
+                        {o.nama_referensi}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
