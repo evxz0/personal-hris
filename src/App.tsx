@@ -11,6 +11,7 @@ import MagangPage from './pages/Magang'
 import AbsensiPage from './pages/Absensi'
 import SettingsPage from './pages/Settings'
 import RiwayatPage from './pages/Riwayat'
+import RiwayatSuratPage from './pages/RiwayatSurat'
 import SuratPgsPage from './pages/surat/SuratPgs'
 import SuratBalasanCutiPage from './pages/surat/SuratBalasanCuti'
 
@@ -65,7 +66,11 @@ export default function App() {
         <Route path="/surat/pgs" element={<ProtectedRoute session={session}><SuratPgsPage /></ProtectedRoute>} />
         <Route path="/surat/balasan-cuti" element={<ProtectedRoute session={session}><SuratBalasanCutiPage /></ProtectedRoute>} />
 
-        <Route path="/riwayat" element={<ProtectedRoute session={session}><RiwayatPage /></ProtectedRoute>} />
+        {/* Riwayat Dropdown Routes */}
+        <Route path="/riwayat" element={<Navigate to="/riwayat/karyawan" replace />} />
+        <Route path="/riwayat/karyawan" element={<ProtectedRoute session={session}><RiwayatPage /></ProtectedRoute>} />
+        <Route path="/riwayat/surat" element={<ProtectedRoute session={session}><RiwayatSuratPage /></ProtectedRoute>} />
+
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
 
         {/* Fallback */}

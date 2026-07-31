@@ -7,8 +7,11 @@ import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDr
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
+import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
+
 export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
+  const addRiwayatSurat = useAddRiwayatSurat()
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({
@@ -48,6 +51,18 @@ export default function SuratPgsPage() {
   })
 
   const [selectedNpp, setSelectedNpp] = useState<string>('')
+  const [downloading, setDownloading] = useState(false)
+
+  const logHistory = () => {
+    addRiwayatSurat.mutate({
+      nomor_surat: formData.nomorSurat,
+      jenis_surat: 'SK PGS',
+      nama_pegawai: formData.pegawai.nama,
+      npp_pegawai: formData.pegawai.npp,
+      tanggal_surat: formData.tanggalSurat,
+      payload: formData as any
+    })
+  }
 
   // Handle employee selection from dropdown
   const handleSelectEmployee = (npp: string) => {
@@ -75,18 +90,22 @@ export default function SuratPgsPage() {
     }
   }
 
-  const [downloading, setDownloading] = useState(false)
-
   // Handle print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `SK_PGS_${formData.pegawai.npp || 'Surat'}`
   })
 
+  const triggerPrint = () => {
+    logHistory()
+    handlePrint()
+  }
+
   const handleDownloadPDF = async () => {
     if (!printRef.current) return
     try {
       setDownloading(true)
+      logHistory()
       await exportElementToPDF(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -99,6 +118,7 @@ export default function SuratPgsPage() {
   const handleDownloadWord = async () => {
     if (!printRef.current) return
     try {
+      logHistory()
       exportElementToWord(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -381,7 +401,7 @@ export default function SuratPgsPage() {
               />
               <button
                 type="button"
-                onClick={() => handlePrint()}
+                onClick={() => triggerPrint()}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-teal-700 hover:text-teal-900 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors cursor-pointer"
               >
                 <Printer size={13} /> Cetak

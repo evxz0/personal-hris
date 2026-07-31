@@ -13,13 +13,16 @@ const navItems = [
   { to: '/bina', icon: <UserCheck size={18} />, label: 'Master Bina' },
   { to: '/magang', icon: <GraduationCap size={18} />, label: 'Master Magang' },
   { to: '/absensi', icon: <CalendarOff size={18} />, label: 'Absensi' },
-  { to: '/riwayat', icon: <ArrowRightLeft size={18} />, label: 'Riwayat' },
-  { to: '/settings', icon: <Settings size={18} />, label: 'Pengaturan' },
 ]
 
 const suratSubItems = [
   { to: '/surat/pgs', label: 'Untuk Pengganti Sementara' },
   { to: '/surat/balasan-cuti', label: 'Untuk Balasan Cuti' },
+]
+
+const riwayatSubItems = [
+  { to: '/riwayat/karyawan', label: 'Riwayat Karyawan' },
+  { to: '/riwayat/surat', label: 'Riwayat Surat' },
 ]
 
 interface SidebarProps {
@@ -35,8 +38,10 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
   const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
   const [suratOpen, setSuratOpen] = useState(false)
+  const [riwayatOpen, setRiwayatOpen] = useState(false)
 
   const isSuratActive = location.pathname.startsWith('/surat')
+  const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
@@ -197,40 +202,83 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
             )}
           </div>
 
-          {navItems.slice(5).map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              onClick={() => setMobileOpen(false)}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
-                transition-all duration-200 group relative
-                ${isActive
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-teal-200 hover:bg-white/10 hover:text-white'
-                }
-              `}
+          {/* Dropdown Riwayat */}
+          <div className="space-y-1 pt-1">
+            <button
+              type="button"
+              onClick={() => setRiwayatOpen(!riwayatOpen)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
+                isRiwayatActive ? 'bg-white/15 text-white shadow-sm' : 'text-teal-200 hover:bg-white/10 hover:text-white'
+              }`}
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-400 rounded-r-full" />
-                  )}
-                  <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
-                    {item.icon}
-                  </span>
-                  {!collapsed && <span className="truncate animate-fade-in">{item.label}</span>}
-                  {collapsed && (
-                    <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
-                                    opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                      {item.label}
-                    </div>
-                  )}
-                </>
+              <div className="flex items-center gap-3">
+                <ArrowRightLeft size={18} className="shrink-0 text-teal-300 group-hover:text-white" />
+                {!collapsed && (
+                  <span className="truncate">Riwayat</span>
+                )}
+              </div>
+              {!collapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`text-teal-300 transition-transform duration-200 ${riwayatOpen || isRiwayatActive ? 'rotate-180' : ''}`}
+                />
               )}
-            </NavLink>
-          ))}
+            </button>
+
+            {/* Sub items */}
+            {(riwayatOpen || isRiwayatActive) && !collapsed && (
+              <div className="pl-6 space-y-1 text-xs animate-fade-in">
+                {riwayatSubItems.map(sub => (
+                  <NavLink
+                    key={sub.to}
+                    to={sub.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) => `
+                      flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-150 relative
+                      ${isActive
+                        ? 'text-white bg-white/20 font-bold'
+                        : 'text-teal-200 hover:text-white hover:bg-white/10'
+                      }
+                    `}
+                  >
+                    <span className="truncate">{sub.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Settings */}
+          <NavLink
+            to="/settings"
+            onClick={() => setMobileOpen(false)}
+            className={({ isActive }) => `
+              flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+              transition-all duration-200 group relative
+              ${isActive
+                ? 'bg-white/15 text-white shadow-sm'
+                : 'text-teal-200 hover:bg-white/10 hover:text-white'
+              }
+            `}
+          >
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-400 rounded-r-full" />
+                )}
+                <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
+                  <Settings size={18} />
+                </span>
+                {!collapsed && <span className="truncate animate-fade-in">Pengaturan</span>}
+                {collapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
+                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    Pengaturan
+                  </div>
+                )}
+              </>
+            )}
+          </NavLink>
         </nav>
 
         {/* Bottom */}

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { SuratBalasanCutiTemplate, type SuratBalasanCutiData } from '../../components/templates/SuratBalasanCutiTemplate'
 import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDropdown'
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
+import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
 
 // Helper function to convert numbers to Indonesian words (Terbilang)
@@ -26,6 +27,7 @@ function terbilang(n: number | string): string {
 
 export default function SuratBalasanCutiPage() {
   const printRef = useRef<HTMLDivElement>(null)
+  const addRiwayatSurat = useAddRiwayatSurat()
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({
@@ -65,6 +67,18 @@ export default function SuratBalasanCutiPage() {
   })
 
   const [selectedNpp, setSelectedNpp] = useState<string>('')
+  const [downloading, setDownloading] = useState(false)
+
+  const logHistory = () => {
+    addRiwayatSurat.mutate({
+      nomor_surat: formData.nomorSurat,
+      jenis_surat: 'Surat Balasan Cuti',
+      nama_pegawai: formData.pegawai.nama,
+      npp_pegawai: formData.pegawai.npp,
+      tanggal_surat: formData.tanggalSurat,
+      payload: formData as any
+    })
+  }
 
   // Handle employee selection from dropdown
   const handleSelectEmployee = (npp: string) => {
@@ -83,18 +97,22 @@ export default function SuratBalasanCutiPage() {
     }
   }
 
-  const [downloading, setDownloading] = useState(false)
-
   // Handle print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`
   })
 
+  const triggerPrint = () => {
+    logHistory()
+    handlePrint()
+  }
+
   const handleDownloadPDF = async () => {
     if (!printRef.current) return
     try {
       setDownloading(true)
+      logHistory()
       await exportElementToPDF(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -107,6 +125,7 @@ export default function SuratBalasanCutiPage() {
   const handleDownloadWord = async () => {
     if (!printRef.current) return
     try {
+      logHistory()
       exportElementToWord(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -417,7 +436,7 @@ export default function SuratBalasanCutiPage() {
               />
               <button
                 type="button"
-                onClick={() => handlePrint()}
+                onClick={() => triggerPrint()}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-teal-700 hover:text-teal-900 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors cursor-pointer"
               >
                 <Printer size={13} /> Cetak
