@@ -304,8 +304,8 @@ function renderSkPgsHtml(data: SkPgsData): string {
         <tr><td>Kedua</td><td>:</td><td>Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal ${data.penugasan.tanggalMulai} – ${data.penugasan.tanggalSelesai}.</td></tr>
       </table>
       <div style="margin-top: 30px; text-align: right;">
-        <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
-        <p><b>REGIONAL OFFICE 09</b></p>
+        <p><b>PT Bank Negara Indonesia (Persero) Tbk</b></p>
+        <p><b>Regional Office 09, Area III, Kalimantan Barat</b></p>
         <br/><br/><br/>
         ${data.penandatangan?.nama ? `
           <p><u><b>${data.penandatangan.nama}</b></u></p>
