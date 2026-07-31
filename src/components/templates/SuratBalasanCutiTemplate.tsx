@@ -32,8 +32,8 @@ interface Props {
 }
 
 export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
-  const pejabatNama = data.penandatangan?.nama || 'Ucok P. Sianipar';
-  const pejabatJabatan = data.penandatangan?.jabatan || 'ABS Team Leader';
+  const pejabatNama = data.penandatangan?.nama ?? 'Ucok P. Sianipar';
+  const pejabatJabatan = data.penandatangan?.jabatan ?? 'Area Business Support Team Leader';
 
   return (
     <div ref={ref} className="sk-balasan-paper">
@@ -48,38 +48,35 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
             overflow: visible !important;
             background: white;
             -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+          }
+          body * {
+            visibility: hidden;
           }
           .sk-balasan-paper, .sk-balasan-paper * {
             visibility: visible;
           }
           .sk-balasan-paper {
-            position: relative !important;
+            position: absolute;
+            left: 0;
+            top: 0;
             width: 100% !important;
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
             margin: 0 !important;
-            font-size: 10pt !important;
-            line-height: 1.4 !important;
-            page-break-after: avoid !important;
-            page-break-before: avoid !important;
-            page-break-inside: avoid !important;
+            padding: 0 !important;
+            box-shadow: none !important;
           }
         }
+
         .sk-balasan-paper {
           width: 210mm;
           min-height: 297mm;
-          padding: 0.75in 0.5in 0.5in 0.75in;
-          background: white;
-          font-family: Arial, Helvetica, sans-serif;
-          font-size: 10pt;
-          line-height: 1.45;
-          color: #000;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+          padding: 1.5cm 1.5cm 1.5cm 2.2cm;
           margin: 0 auto;
+          background: white;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 9.5pt;
+          line-height: 1.35;
+          color: #000;
           box-sizing: border-box;
         }
         .table-balasan-meta td { vertical-align: top; padding: 1.5px 0; }
@@ -105,7 +102,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
       <table className="table-balasan-meta" style={{ width: '100%', marginBottom: '14px' }}>
         <tbody>
           <tr>
-            <td style={{ width: '50px' }}>No.</td>
+            <td style={{ width: '60px' }}>No.</td>
             <td style={{ width: '15px' }}>:</td>
             <td><b>{data.nomorSurat || 'W09/10.3/014/2026'}</b></td>
           </tr>
@@ -117,7 +114,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         </tbody>
       </table>
 
-      {/* Kepada */}
+      {/* Kepada & Hal */}
       <div style={{ marginBottom: '16px', lineHeight: '1.4' }}>
         Kepada :<br />
         <b>Sdr/i. {data.pegawai.nama || 'Feri Wahyudi'} – NPP. {data.pegawai.npp || 'P036191'}</b><br />
@@ -126,68 +123,45 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         <b><u>{data.pegawai.kotaUnit || 'PONTIANAK'}</u></b>
       </div>
 
-      {/* Subject & Sub-header */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ marginBottom: '8px' }}>
-          Hal &nbsp;&nbsp;&nbsp;&nbsp;: Pelaksanaan Cuti Tahunan Tahun {data.tahunCuti || '2026'}
-        </div>
-        <div>
-          <u><b>Cfm. Surat Permohonan Pelaksanaan Cuti Sdr. Tanggal {data.tanggalPermohonan || '16 Juli 2026'}</b></u>
-        </div>
+      <div style={{ marginBottom: '16px', lineHeight: '1.4' }}>
+        Hal : Pelaksanaan Cuti Tahunan Tahun {data.tahunCuti || '2026'}<br />
+        <b><u>Cfm. Surat Permohonan Pelaksanaan Cuti Sdr. Tanggal {data.tanggalPermohonan || '16 Juli 2026'}</u></b>
       </div>
 
-      {/* Body Opening */}
-      <div style={{ marginBottom: '12px' }}>
+      {/* Body Content */}
+      <div style={{ textAlign: 'justify', marginBottom: '12px' }}>
         Menunjuk perihal pada pokok surat, dengan ini kami sampaikan sebagai berikut :
       </div>
 
-      {/* Body Points (1 - 6) */}
       <div className="list-cuti" style={{ marginBottom: '16px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <ol>
+          <li>
+            Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} {data.cuti.statusOpct || 'dapat'} dilaksanakan selama <b>{data.cuti.jumlahHari || '5'} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
+          </li>
+          <li>
+            Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun {data.tahunCuti || '2026'} adalah <b>{data.cuti.sisaCuti || '5'} ({data.cuti.sisaCutiTerbilang || 'lima'})</b> hari kerja.
+          </li>
+        </ol>
+      </div>
+
+      {/* Operational Note */}
+      <div style={{ marginBottom: '16px' }}>
+        <table style={{ width: '100%' }}>
           <tbody>
             <tr>
-              <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '8px' }}>1.</td>
+              <td style={{ width: '20px', verticalAlign: 'top' }}>-</td>
               <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
-                Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} dapat dilaksanakan selama <b>{data.cuti.jumlahHari || '5'} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
+                Sebelum melaksanakan Cuti, dimohon agar Saudara menyerahkan pekerjaan dan tanggung jawab Saudara kepada Atasan / Pengganti Sementara dengan sebaik-baiknya.
               </td>
             </tr>
             <tr>
-              <td style={{ verticalAlign: 'top', paddingBottom: '8px' }}>2.</td>
-              <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
-                Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun {data.tahunCuti || '2026'} adalah <b>{data.cuti.sisaCuti || '5'} ({data.cuti.sisaCutiTerbilang || 'lima'})</b> hari kerja.
-              </td>
-            </tr>
-            <tr>
-              <td style={{ verticalAlign: 'top', paddingBottom: '8px' }}>3.</td>
-              <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
-                Ongkos Perjalanan Cuti Tahunan (OPCT) {data.tahunCuti || '2026'} Saudara <b>{data.cuti.statusOpct || 'dapat'}</b> dibayarkan. Pengajuan pencairan OPCT tahun {data.tahunCuti || '2026'} dapat saudara ajukan melalui aplikasi DigiHc.
-              </td>
-            </tr>
-            <tr>
-              <td style={{ verticalAlign: 'top', paddingBottom: '8px' }}>4.</td>
-              <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
-                Sebelum pelaksanaan cuti tersebut, harap Saudara mengisi form rencana ketidakhadiran pada aplikasi DigiHc.
-              </td>
-            </tr>
-            <tr>
-              <td style={{ verticalAlign: 'top', paddingBottom: '8px' }}>5.</td>
-              <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
-                Jika diperlukan Saudara bersedia kami panggil dan Sisa Cuti Saudara akan kami perhitungkan kembali.
-              </td>
-            </tr>
-            <tr>
-              <td style={{ verticalAlign: 'top', paddingBottom: '8px' }}>6.</td>
+              <td style={{ width: '20px', verticalAlign: 'top' }}>-</td>
               <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '8px' }}>
                 Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-
-      {/* Closing */}
-      <div style={{ marginBottom: '24px' }}>
-        Demikian kami sampaikan untuk dimaklumi.
       </div>
 
       {/* Signature Block */}
@@ -197,12 +171,16 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
 
         <div style={{ height: '70px', width: '100%' }}></div>
 
-        <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
-          {pejabatNama}
-        </p>
-        <p style={{ margin: 0, fontWeight: 'bold' }}>
-          {pejabatJabatan}
-        </p>
+        {pejabatNama ? (
+          <>
+            <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
+              {pejabatNama}
+            </p>
+            <p style={{ margin: 0, fontWeight: 'bold' }}>
+              {pejabatJabatan}
+            </p>
+          </>
+        ) : null}
       </div>
     </div>
   );

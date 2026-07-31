@@ -398,25 +398,31 @@ export default function SuratBalasanCutiPage() {
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-[#64748B]">Pilih Pejabat Penandatangan</label>
               <select
-                value={formData.penandatangan?.nama || 'Ucok P. Sianipar'}
+                value={formData.penandatangan?.nama ? (formData.penandatangan.nama.includes('NOVACHRISTO') ? 'NOVACHRISTO' : 'UCOK') : 'KOSONG'}
                 onChange={e => {
-                  const selectedNama = e.target.value
-                  if (selectedNama === 'NOVACHRISTO JOSEPH SILANGEN') {
+                  const val = e.target.value
+                  if (val === 'NOVACHRISTO') {
                     setFormData({
                       ...formData,
                       penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' }
                     })
+                  } else if (val === 'UCOK') {
+                    setFormData({
+                      ...formData,
+                      penandatangan: { nama: 'Ucok P. Sianipar', jabatan: 'Area Business Support Team Leader' }
+                    })
                   } else {
                     setFormData({
                       ...formData,
-                      penandatangan: { nama: 'Ucok P. Sianipar', jabatan: 'ABS Team Leader' }
+                      penandatangan: { nama: '', jabatan: '' }
                     })
                   }
                 }}
                 className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
               >
-                <option value="UCOK P. SIANIPAR">1. Ucok P. Sianipar (ABS Team Leader)</option>
-                <option value="NOVACHRISTO JOSEPH SILANGEN">2. NOVACHRISTO JOSEPH SILANGEN (AREA HEAD)</option>
+                <option value="UCOK">1. Ucok P. Sianipar (Area Business Support Team Leader)</option>
+                <option value="NOVACHRISTO">2. NOVACHRISTO JOSEPH SILANGEN (AREA HEAD)</option>
+                <option value="KOSONG">3. -- Kosong (Tanpa Nama & Jabatan) --</option>
               </select>
             </div>
           </div>

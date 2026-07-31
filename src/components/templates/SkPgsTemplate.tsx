@@ -314,12 +314,16 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
 
         <div style={{ height: '75px', width: '100%' }}></div>
 
-        <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
-          {pejabatNama}
-        </p>
-        <p style={{ margin: 0, fontWeight: 'bold' }}>
-          {pejabatJabatan}
-        </p>
+        {pejabatNama ? (
+          <>
+            <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
+              {pejabatNama}
+            </p>
+            <p style={{ margin: 0, fontWeight: 'bold' }}>
+              {pejabatJabatan}
+            </p>
+          </>
+        ) : null}
       </div>
     </div>
   );

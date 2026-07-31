@@ -307,8 +307,10 @@ function renderSkPgsHtml(data: SkPgsData): string {
         <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
         <p><b>REGIONAL OFFICE 09</b></p>
         <br/><br/><br/>
-        <p><u><b>${data.penandatangan?.nama || 'NOVACHRISTO JOSEPH SILANGEN'}</b></u></p>
-        <p><b>${data.penandatangan?.jabatan || 'AREA HEAD'}</b></p>
+        ${data.penandatangan?.nama ? `
+          <p><u><b>${data.penandatangan.nama}</b></u></p>
+          <p><b>${data.penandatangan.jabatan}</b></p>
+        ` : ''}
       </div>
     </div>
   `
@@ -346,8 +348,10 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
         <p><b>REGIONAL OFFICE 09</b></p>
         <br/><br/><br/>
-        <p><u><b>${data.penandatangan?.nama || 'Ucok P. Sianipar'}</b></u></p>
-        <p><b>${data.penandatangan?.jabatan || 'ABS Team Leader'}</b></p>
+        ${data.penandatangan?.nama ? `
+          <p><u><b>${data.penandatangan.nama}</b></u></p>
+          <p><b>${data.penandatangan.jabatan}</b></p>
+        ` : ''}
       </div>
     </div>
   `

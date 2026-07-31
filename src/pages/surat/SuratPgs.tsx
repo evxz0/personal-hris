@@ -363,25 +363,31 @@ export default function SuratPgsPage() {
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-[#64748B]">Pilih Pejabat Penandatangan</label>
               <select
-                value={formData.penandatangan?.nama || 'NOVACHRISTO JOSEPH SILANGEN'}
+                value={formData.penandatangan?.nama ? (formData.penandatangan.nama.includes('UCOK') ? 'UCOK' : 'NOVACHRISTO') : 'KOSONG'}
                 onChange={e => {
-                  const selectedNama = e.target.value
-                  if (selectedNama === 'UCOK PARLINDUNGAN SIANIPAR') {
+                  const val = e.target.value
+                  if (val === 'UCOK') {
                     setFormData({
                       ...formData,
-                      penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'ABS Team Leader' }
+                      penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'Area Business Support Team Leader' }
+                    })
+                  } else if (val === 'NOVACHRISTO') {
+                    setFormData({
+                      ...formData,
+                      penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' }
                     })
                   } else {
                     setFormData({
                       ...formData,
-                      penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' }
+                      penandatangan: { nama: '', jabatan: '' }
                     })
                   }
                 }}
                 className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
               >
-                <option value="NOVACHRISTO JOSEPH SILANGEN">1. NOVACHRISTO JOSEPH SILANGEN (AREA HEAD)</option>
-                <option value="UCOK PARLINDUNGAN SIANIPAR">2. UCOK PARLINDUNGAN SIANIPAR (ABS Team Leader)</option>
+                <option value="NOVACHRISTO">1. NOVACHRISTO JOSEPH SILANGEN (AREA HEAD)</option>
+                <option value="UCOK">2. UCOK PARLINDUNGAN SIANIPAR (Area Business Support Team Leader)</option>
+                <option value="KOSONG">3. -- Kosong (Tanpa Nama & Jabatan) --</option>
               </select>
             </div>
           </div>
