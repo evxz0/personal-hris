@@ -44,6 +44,30 @@ export function useRiwayatSurat(searchQuery = '') {
         }
         const { data, error } = await q
         if (error) throw error
+
+        // Auto-sync offline/local storage entries to Supabase cloud if table exists
+        const localList = getLocalHistory()
+        if (localList.length > 0 && data) {
+          const supabaseNos = new Set(data.map(d => `${d.nomor_surat}-${d.npp_pegawai}`))
+          const unsynced = localList.filter(l => !supabaseNos.has(`${l.nomor_surat}-${l.npp_pegawai}`))
+          
+          if (unsynced.length > 0) {
+            supabase.from('riwayat_surat').insert(unsynced.map(u => ({
+              nomor_surat: u.nomor_surat,
+              jenis_surat: u.jenis_surat,
+              nama_pegawai: u.nama_pegawai,
+              npp_pegawai: u.npp_pegawai,
+              tanggal_surat: u.tanggal_surat,
+              payload: u.payload,
+              created_at: u.created_at
+            }))).then(({ error: syncErr }) => {
+              if (!syncErr) {
+                saveLocalHistory([]) // clear local queue after successful cloud sync
+              }
+            })
+          }
+        }
+
         return (data ?? []) as RiwayatSurat[]
       } catch (err) {
         console.warn('Supabase riwayat_surat query failed or table missing, using local storage fallback:', err)
