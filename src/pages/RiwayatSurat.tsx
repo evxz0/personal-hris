@@ -74,7 +74,7 @@ export default function RiwayatSuratPage() {
   }
 
   // Trigger Word download from history item payload
-  const handleDownloadWordFromHistory = (item: RiwayatSurat) => {
+  const handleDownloadWordFromHistory = async (item: RiwayatSurat) => {
     // Render document in a hidden temporary container
     const container = document.createElement('div')
     container.style.position = 'fixed'
@@ -87,17 +87,17 @@ export default function RiwayatSuratPage() {
         const p = item.payload as unknown as SkPgsData
         const element = document.createElement('div')
         element.innerHTML = renderSkPgsHtml(p)
-        exportElementToWord(element, `SK_PGS_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
+        await exportElementToWord(element, `SK_PGS_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
       } else if (item.jenis_surat === 'Surat Keterangan Kerja') {
         const p = item.payload as unknown as SuratKeteranganKerjaData
         const element = document.createElement('div')
         element.innerHTML = renderKeteranganKerjaHtml(p)
-        exportElementToWord(element, `Surat_Keterangan_Kerja_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
+        await exportElementToWord(element, `Surat_Keterangan_Kerja_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
       } else {
         const p = item.payload as unknown as SuratBalasanCutiData
         const element = document.createElement('div')
         element.innerHTML = renderBalasanCutiHtml(p)
-        exportElementToWord(element, `Surat_Balasan_Cuti_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
+        await exportElementToWord(element, `Surat_Balasan_Cuti_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
       }
     } catch (e) {
       console.error(e)

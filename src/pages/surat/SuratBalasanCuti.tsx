@@ -133,7 +133,7 @@ export default function SuratBalasanCutiPage() {
     if (!printRef.current) return
     try {
       logHistory()
-      exportElementToWord(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
+      await exportElementToWord(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
       alert('Gagal mengunduh dokumen Word')

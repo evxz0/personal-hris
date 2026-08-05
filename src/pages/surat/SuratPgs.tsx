@@ -126,7 +126,7 @@ export default function SuratPgsPage() {
     if (!printRef.current) return
     try {
       logHistory()
-      exportElementToWord(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
+      await exportElementToWord(printRef.current, `SK_PGS_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
       alert('Gagal mengunduh dokumen Word')
