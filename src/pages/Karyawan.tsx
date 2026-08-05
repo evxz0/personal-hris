@@ -1,7 +1,7 @@
-import { Plus, Search, Edit2, Trash2, Users, FileDown, FileText, ArrowRightLeft } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Users, FileDown, FileText, ArrowRightLeft, Type } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useKaryawan, useAddKaryawan, useUpdateKaryawan, useDeleteKaryawan, useBulkDeleteKaryawan, useBulkInsertKaryawan, type Karyawan, type KaryawanInsert } from '../hooks/useKaryawan'
+import { useKaryawan, useAddKaryawan, useUpdateKaryawan, useDeleteKaryawan, useBulkDeleteKaryawan, useBulkInsertKaryawan, useUppercaseAllNames, type Karyawan, type KaryawanInsert } from '../hooks/useKaryawan'
 import { useAddMutasi } from '../hooks/useMutasi'
 import { useReferensi } from '../hooks/useReferensi'
 import { DataTable } from '../components/ui/DataTable'
@@ -134,6 +134,7 @@ export default function KaryawanPage() {
   const bulkDeleteMutation = useBulkDeleteKaryawan()
   const bulkInsert       = useBulkInsertKaryawan()
   const mutasiMutation   = useAddMutasi()
+  const uppercaseMutation = useUppercaseAllNames()
 
   const categoryOrder: Record<string, number> = { 'FTE': 1, 'TAD': 2, 'BINA': 3 }
 
@@ -492,6 +493,22 @@ export default function KaryawanPage() {
             onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
             onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<Type size={15} />}
+            loading={uppercaseMutation.isPending}
+            onClick={async () => {
+              try {
+                await uppercaseMutation.mutateAsync()
+                alert('Berhasil mengonversi seluruh nama karyawan di database menjadi HURUF KAPITAL (UPPERCASE)!')
+              } catch (e: any) {
+                alert('Gagal mengonversi nama: ' + (e?.message || JSON.stringify(e)))
+              }
+            }}
+          >
+            Ubah Uppercase
+          </Button>
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>

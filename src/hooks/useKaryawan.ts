@@ -39,8 +39,34 @@ export function useKaryawan(searchQuery = '') {
       }
       const { data, error } = await q
       if (error) throw error
-      return (data ?? []) as Karyawan[]
+      const rows = (data ?? []) as Karyawan[]
+      return rows.map(k => ({
+        ...k,
+        nama: k.nama ? String(k.nama).toUpperCase() : ''
+      }))
     },
+  })
+}
+
+export function useUppercaseAllNames() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.from('karyawan').select('id, nama')
+      if (error) throw error
+      if (data && data.length > 0) {
+        const needsUpdate = data.filter(k => k.nama && k.nama !== k.nama.toUpperCase())
+        if (needsUpdate.length > 0) {
+          const updates = needsUpdate.map(k =>
+            supabase.from('karyawan').update({ nama: k.nama.toUpperCase().trim() }).eq('id', k.id)
+          )
+          await Promise.all(updates)
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['karyawan'] })
+    }
   })
 }
 
