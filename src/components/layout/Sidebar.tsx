@@ -87,9 +87,9 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         ${collapsed ? 'w-16' : 'w-64'}
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Logo Area */}
-        <div className="flex items-center justify-between px-4 py-5 border-b border-teal-600/50">
-          {!collapsed && (
+        {/* Logo & Toggle Header */}
+        <div className={`flex items-center ${collapsed ? 'flex-col gap-2.5 py-4 px-2' : 'justify-between px-4 py-5'} border-b border-teal-600/50 transition-all`}>
+          {!collapsed ? (
             <div className="flex items-center gap-3 animate-fade-in">
               <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-md shrink-0">
                 <span className="text-white font-extrabold text-sm">P</span>
@@ -99,19 +99,25 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 <p className="text-[10px] text-teal-300 mt-0.5 leading-none">SDM System</p>
               </div>
             </div>
-          )}
-          {collapsed && (
-            <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center mx-auto">
-              <span className="text-white font-extrabold text-sm">P</span>
+          ) : (
+            <div
+              onClick={() => setCollapsed(false)}
+              className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform"
+              title="P-HRIS (Klik untuk memperluas sidebar)"
+            >
+              <span className="text-white font-extrabold text-base">P</span>
             </div>
           )}
+
           {/* Collapse button desktop */}
           <button
             onClick={() => setCollapsed(c => !c)}
-            className="hidden lg:flex p-1 rounded-lg hover:bg-teal-600/50 transition-colors text-teal-300 hover:text-white"
+            className="hidden lg:flex p-1.5 rounded-lg hover:bg-teal-600/50 transition-colors text-teal-300 hover:text-white cursor-pointer"
+            title={collapsed ? 'Perluas Sidebar' : 'Kecilkan Sidebar'}
           >
             <ChevronLeft size={16} className={`transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
           </button>
+
           {/* Close button mobile */}
           <button
             onClick={() => setMobileOpen(false)}
@@ -122,7 +128,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1.5 overflow-x-hidden">
           {navItems.slice(0, 5).map(item => (
             <NavLink
               key={item.to}
@@ -130,10 +136,11 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               end={item.to === '/'}
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+                flex items-center rounded-xl font-medium text-sm
                 transition-all duration-200 group relative
+                ${collapsed ? 'justify-center py-3 px-0' : 'gap-3 px-3 py-2.5'}
                 ${isActive
-                  ? 'bg-white/15 text-white shadow-sm'
+                  ? 'bg-white/15 text-white shadow-sm font-bold'
                   : 'text-teal-200 hover:bg-white/10 hover:text-white'
                 }
               `}
@@ -148,8 +155,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                   </span>
                   {!collapsed && <span className="truncate animate-fade-in">{item.label}</span>}
                   {collapsed && (
-                    <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
-                                    opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    <div className="absolute left-full ml-3 px-3 py-1.5 bg-teal-900/95 text-white text-xs font-semibold rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                       {item.label}
                     </div>
                   )}
@@ -159,15 +165,17 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           ))}
 
           {/* Dropdown Surat Keterangan */}
-          <div className="space-y-1 pt-1">
+          <div className="space-y-1 pt-1 relative group">
             <button
               type="button"
               onClick={() => setSuratOpen(!suratOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
-                isSuratActive ? 'bg-white/15 text-white shadow-sm' : 'text-teal-200 hover:bg-white/10 hover:text-white'
+              className={`w-full flex items-center rounded-xl font-medium text-sm transition-all duration-200 ${
+                collapsed ? 'justify-center py-3 px-0' : 'justify-between px-3 py-2.5'
+              } ${
+                isSuratActive ? 'bg-white/15 text-white shadow-sm font-bold' : 'text-teal-200 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
                 <FileText size={18} className="shrink-0 text-teal-300 group-hover:text-white" />
                 {!collapsed && (
                   <span className="truncate">Surat Keterangan</span>
@@ -181,7 +189,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               )}
             </button>
 
-            {/* Sub items */}
+            {/* Sub items when EXPANDED */}
             {suratOpen && !collapsed && (
               <div className="pl-6 space-y-1 text-xs animate-fade-in">
                 {suratSubItems.map(sub => (
@@ -202,18 +210,42 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 ))}
               </div>
             )}
+
+            {/* Sub items Flyout when COLLAPSED */}
+            {collapsed && (
+              <div className="absolute left-full top-0 ml-2 py-2 px-1 bg-teal-900/95 border border-teal-700/60 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto min-w-[200px] z-50 backdrop-blur-md">
+                <div className="px-3 py-1 text-[11px] font-bold text-teal-300 border-b border-teal-800/80 mb-1">
+                  Surat Keterangan
+                </div>
+                {suratSubItems.map(sub => (
+                  <NavLink
+                    key={sub.to}
+                    to={sub.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) => `
+                      block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                      ${isActive ? 'text-white bg-white/20 font-bold' : 'text-teal-100 hover:bg-white/10 hover:text-white'}
+                    `}
+                  >
+                    {sub.label}
+                  </NavLink>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Dropdown Riwayat */}
-          <div className="space-y-1 pt-1">
+          <div className="space-y-1 pt-1 relative group">
             <button
               type="button"
               onClick={() => setRiwayatOpen(!riwayatOpen)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
-                isRiwayatActive ? 'bg-white/15 text-white shadow-sm' : 'text-teal-200 hover:bg-white/10 hover:text-white'
+              className={`w-full flex items-center rounded-xl font-medium text-sm transition-all duration-200 ${
+                collapsed ? 'justify-center py-3 px-0' : 'justify-between px-3 py-2.5'
+              } ${
+                isRiwayatActive ? 'bg-white/15 text-white shadow-sm font-bold' : 'text-teal-200 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
                 <ArrowRightLeft size={18} className="shrink-0 text-teal-300 group-hover:text-white" />
                 {!collapsed && (
                   <span className="truncate">Riwayat</span>
@@ -227,7 +259,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               )}
             </button>
 
-            {/* Sub items */}
+            {/* Sub items when EXPANDED */}
             {(riwayatOpen || isRiwayatActive) && !collapsed && (
               <div className="pl-6 space-y-1 text-xs animate-fade-in">
                 {riwayatSubItems.map(sub => (
@@ -248,6 +280,28 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 ))}
               </div>
             )}
+
+            {/* Sub items Flyout when COLLAPSED */}
+            {collapsed && (
+              <div className="absolute left-full top-0 ml-2 py-2 px-1 bg-teal-900/95 border border-teal-700/60 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto min-w-[180px] z-50 backdrop-blur-md">
+                <div className="px-3 py-1 text-[11px] font-bold text-teal-300 border-b border-teal-800/80 mb-1">
+                  Riwayat
+                </div>
+                {riwayatSubItems.map(sub => (
+                  <NavLink
+                    key={sub.to}
+                    to={sub.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) => `
+                      block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                      ${isActive ? 'text-white bg-white/20 font-bold' : 'text-teal-100 hover:bg-white/10 hover:text-white'}
+                    `}
+                  >
+                    {sub.label}
+                  </NavLink>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Settings */}
@@ -255,10 +309,11 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
             to="/settings"
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) => `
-              flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+              flex items-center rounded-xl font-medium text-sm
               transition-all duration-200 group relative
+              ${collapsed ? 'justify-center py-3 px-0' : 'gap-3 px-3 py-2.5'}
               ${isActive
-                ? 'bg-white/15 text-white shadow-sm'
+                ? 'bg-white/15 text-white shadow-sm font-bold'
                 : 'text-teal-200 hover:bg-white/10 hover:text-white'
               }
             `}
@@ -273,8 +328,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 </span>
                 {!collapsed && <span className="truncate animate-fade-in">Pengaturan</span>}
                 {collapsed && (
-                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
-                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                  <div className="absolute left-full ml-3 px-3 py-1.5 bg-teal-900/95 text-white text-xs font-semibold rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                     Pengaturan
                   </div>
                 )}
@@ -283,9 +337,9 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           </NavLink>
         </nav>
 
-        {/* Bottom */}
-        <div className="px-2 py-4 border-t border-teal-600/50 space-y-1">
-          <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 transition-all duration-200 text-sm font-medium relative group">
+        {/* Bottom User Area */}
+        <div className={`py-3 border-t border-teal-600/50 space-y-1 ${collapsed ? 'px-1' : 'px-2'}`}>
+          <div className={`w-full flex items-center rounded-xl text-teal-200 transition-all duration-200 text-sm font-medium relative group ${collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'}`}>
             <User size={18} className="shrink-0 text-teal-300" />
             {!collapsed && (
               <div className="flex flex-col min-w-0">
@@ -294,19 +348,23 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               </div>
             )}
             {collapsed && (
-              <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-teal-900 text-white text-xs rounded-lg shadow-lg
-                              opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute left-full ml-3 px-3 py-2 bg-teal-900/95 text-white text-xs rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                 <p className="font-bold">{user?.nama || 'User'}</p>
-                <p className="text-[10px] font-mono mt-0.5">{user?.uid || 'Loading...'}</p>
+                <p className="text-[10px] font-mono mt-0.5 text-teal-300">{user?.uid || 'Loading...'}</p>
               </div>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium cursor-pointer"
+            className={`w-full flex items-center rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium cursor-pointer relative group ${collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'}`}
           >
             <LogOut size={18} className="shrink-0" />
             {!collapsed && <span>Keluar</span>}
+            {collapsed && (
+              <div className="absolute left-full ml-3 px-3 py-1.5 bg-red-950 text-red-200 text-xs font-semibold rounded-xl shadow-xl border border-red-800/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                Keluar
+              </div>
+            )}
           </button>
         </div>
       </aside>
