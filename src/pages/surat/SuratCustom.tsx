@@ -160,9 +160,9 @@ export default function SuratCustomPage() {
             <FileUp size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#1E293B]">Template Surat Custom (Word Upload)</h1>
+            <h1 className="text-xl font-bold text-[#1E293B]">Template Surat Custom (Upload Template)</h1>
             <p className="text-xs text-[#64748B] mt-0.5">
-              Tambah dan buat surat secara fleksibel hanya dengan mengunggah file Word (.docx)
+              Tambah dan buat surat secara fleksibel hanya dengan mengunggah file template (.docx)
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function SuratCustomPage() {
             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-semibold hover:bg-teal-700 shadow-md transition-all active:scale-95"
           >
             <Plus size={16} />
-            <span>Upload Template Word Baru</span>
+            <span>Upload Template Baru</span>
           </button>
 
           {activeTemplate && (
@@ -206,7 +206,7 @@ export default function SuratCustomPage() {
           <div className="max-w-md">
             <h3 className="text-base font-bold text-teal-950">Belum Ada Template Custom yang Diunggah</h3>
             <p className="text-xs text-[#64748B] mt-1">
-              Unggah berkas Microsoft Word (.docx) surat organisasi Anda. Logo BNI dan format ukuran A4 akan otomatis disesuaikan!
+              Unggah berkas template (.docx) surat organisasi Anda. Logo BNI dan format ukuran A4 akan otomatis disesuaikan!
             </p>
           </div>
           <button
@@ -214,7 +214,7 @@ export default function SuratCustomPage() {
             className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-lg transition-all active:scale-95 mt-2"
           >
             <Sparkles size={16} />
-            <span>Upload Berkas Word (.docx) Sekarang</span>
+            <span>Upload Berkas Template Sekarang</span>
           </button>
         </div>
       ) : (
@@ -316,6 +316,7 @@ export default function SuratCustomPage() {
                   ref={printRef}
                   htmlContent={activeTemplate.html_content}
                   placeholderValues={placeholderValues}
+                  hideLogo={activeTemplate.show_logo === false}
                 />
               </div>
             )}

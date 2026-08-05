@@ -4,9 +4,11 @@ import { supabase } from '../lib/supabase'
 export interface CustomTemplate {
   id: string
   nama_template: string
+  kategori?: string
   deskripsi?: string
   html_content: string
   detected_placeholders: string[]
+  show_logo?: boolean
   created_at: string
 }
 
@@ -51,13 +53,22 @@ export function useCustomTemplates() {
 export function useAddCustomTemplate() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { nama_template: string; deskripsi?: string; html_content: string; detected_placeholders: string[] }) => {
+    mutationFn: async (payload: {
+      nama_template: string
+      kategori?: string
+      deskripsi?: string
+      html_content: string
+      detected_placeholders: string[]
+      show_logo?: boolean
+    }) => {
       const newItem: CustomTemplate = {
         id: 'TPL-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
         nama_template: payload.nama_template,
+        kategori: payload.kategori || 'Surat Keterangan',
         deskripsi: payload.deskripsi || '',
         html_content: payload.html_content,
         detected_placeholders: payload.detected_placeholders,
+        show_logo: payload.show_logo ?? true,
         created_at: new Date().toISOString()
       }
 
@@ -71,9 +82,11 @@ export function useAddCustomTemplate() {
         await supabase.from('master_template_surat').insert([{
           id: newItem.id,
           nama_template: newItem.nama_template,
+          kategori: newItem.kategori,
           deskripsi: newItem.deskripsi,
           html_content: newItem.html_content,
-          detected_placeholders: newItem.detected_placeholders
+          detected_placeholders: newItem.detected_placeholders,
+          show_logo: newItem.show_logo
         }])
       } catch (err) {
         console.warn('Could not insert into Supabase master_template_surat:', err)
