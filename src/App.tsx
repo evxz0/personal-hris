@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import type { Session } from '@supabase/supabase-js'
+import { useIdleTimeout } from './hooks/useIdleTimeout'
 import { Layout } from './components/layout/Layout'
 import LoginPage from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -25,6 +26,9 @@ function ProtectedRoute({ session, children }: { session: Session | null; childr
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Attach 1-hour idle timeout listener when session is active
+  useIdleTimeout(!!session)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

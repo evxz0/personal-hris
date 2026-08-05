@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, LogIn, Shield } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Shield, Clock } from 'lucide-react'
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('')
@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+
+  const isTimeout = new URLSearchParams(window.location.search).get('reason') === 'timeout'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,10 +43,15 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-          {/* Top accent bar removed */}
-
           <div className="px-8 py-10">
-            {/* Logo, title and subtitle removed */}
+
+            {/* Timeout Notification */}
+            {isTimeout && (
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-semibold mb-5 shadow-2xs">
+                <Clock size={18} className="text-amber-600 shrink-0" />
+                <span>Sesi Anda telah berakhir karena tidak ada aktivitas selama 1 jam. Silakan masuk kembali.</span>
+              </div>
+            )}
 
             {/* Security badge */}
             <div className="flex items-center justify-center gap-2 mb-6 px-4 py-2 rounded-xl bg-teal-50 border border-teal-100">
