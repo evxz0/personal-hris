@@ -133,28 +133,46 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         Menunjuk perihal pada pokok surat, dengan ini kami sampaikan sebagai berikut :
       </div>
 
-      <div className="list-cuti" style={{ marginBottom: '16px' }}>
-        <ol style={{ margin: 0, paddingLeft: '22px' }}>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} {data.cuti.statusOpct || 'dapat'} dilaksanakan selama <b>{data.cuti.jumlahHari || '5'} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
-          </li>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun {data.tahunCuti || '2026'} adalah <b>{data.cuti.sisaCuti || '5'} ({data.cuti.sisaCutiTerbilang || 'lima'})</b> hari kerja.
-          </li>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Ongkos Perjalanan Cuti Tahunan (OPCT) {data.tahunCuti || '2026'} Saudara <u><b>{data.cuti.statusOpct || 'dapat'}</b></u> dibayarkan. Pengajuan pencairan OPCT tahun {data.tahunCuti || '2026'} dapat saudara ajukan melalui aplikasi DigiHc.
-          </li>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Sebelum pelaksanaan cuti tersebut, harap Saudara mengisi form rencana ketidakhadiran pada aplikasi DigiHc.
-          </li>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Jika diperlukan Saudara bersedia kami panggil dan Sisa Cuti Saudara akan kami perhitungkan kembali.
-          </li>
-          <li style={{ marginBottom: '10px', textAlign: 'justify' }}>
-            Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.
-          </li>
-        </ol>
-      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>1.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} {data.cuti.statusOpct || 'dapat'} dilaksanakan selama <b>{String(data.cuti.jumlahHari || '5').padStart(2, '0')} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
+            </td>
+          </tr>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>2.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun {data.tahunCuti || '2026'} adalah <b>{data.cuti.sisaCuti || '5'} ({data.cuti.sisaCutiTerbilang || 'lima'})</b> hari kerja.
+            </td>
+          </tr>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>3.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Ongkos Perjalanan Cuti Tahunan (OPCT) {data.tahunCuti || '2026'} Saudara <u><b>{data.cuti.statusOpct || 'dapat'}</b></u> dibayarkan. Pengajuan pencairan OPCT tahun {data.tahunCuti || '2026'} dapat saudara ajukan melalui aplikasi DigiHc.
+            </td>
+          </tr>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>4.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Sebelum pelaksanaan cuti tersebut, harap Saudara mengisi form rencana ketidakhadiran pada aplikasi DigiHc.
+            </td>
+          </tr>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>5.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Jika diperlukan Saudara bersedia kami panggil dan Sisa Cuti Saudara akan kami perhitungkan kembali.
+            </td>
+          </tr>
+          <tr>
+            <td style={{ width: '22px', verticalAlign: 'top', paddingBottom: '10px' }}>6.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
+              Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       <div style={{ marginTop: '16px', marginBottom: '24px', textAlign: 'justify' }}>
         Demikian kami sampaikan untuk dimaklumi.
