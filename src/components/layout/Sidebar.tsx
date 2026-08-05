@@ -18,6 +18,7 @@ const navItems = [
 const suratSubItems = [
   { to: '/surat/pgs', label: 'Untuk Pengganti Sementara' },
   { to: '/surat/balasan-cuti', label: 'Untuk Balasan Cuti' },
+  { to: '/surat/keterangan-kerja', label: 'Surat Keterangan Kerja' },
 ]
 
 const riwayatSubItems = [

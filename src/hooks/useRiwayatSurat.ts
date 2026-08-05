@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 export interface RiwayatSurat {
   id: string
   nomor_surat: string
-  jenis_surat: 'SK PGS' | 'Surat Balasan Cuti'
+  jenis_surat: 'SK PGS' | 'Surat Balasan Cuti' | 'Surat Keterangan Kerja'
   nama_pegawai: string
   npp_pegawai: string
   tanggal_surat: string

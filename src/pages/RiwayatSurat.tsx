@@ -9,6 +9,7 @@ import { exportToXLSX, exportToPDF } from '../lib/importExport'
 import { exportElementToWord } from '../lib/documentExport'
 import { SkPgsTemplate, type SkPgsData } from '../components/templates/SkPgsTemplate'
 import { SuratBalasanCutiTemplate, type SuratBalasanCutiData } from '../components/templates/SuratBalasanCutiTemplate'
+import { SuratKeteranganKerjaTemplate, type SuratKeteranganKerjaData } from '../components/templates/SuratKeteranganKerjaTemplate'
 import { useReactToPrint } from 'react-to-print'
 
 export default function RiwayatSuratPage() {
@@ -87,6 +88,11 @@ export default function RiwayatSuratPage() {
         const element = document.createElement('div')
         element.innerHTML = renderSkPgsHtml(p)
         exportElementToWord(element, `SK_PGS_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
+      } else if (item.jenis_surat === 'Surat Keterangan Kerja') {
+        const p = item.payload as unknown as SuratKeteranganKerjaData
+        const element = document.createElement('div')
+        element.innerHTML = renderKeteranganKerjaHtml(p)
+        exportElementToWord(element, `Surat_Keterangan_Kerja_${item.npp_pegawai}_${item.nomor_surat.replace(/[\/\\]/g, '_')}`)
       } else {
         const p = item.payload as unknown as SuratBalasanCutiData
         const element = document.createElement('div')
@@ -142,6 +148,7 @@ export default function RiwayatSuratPage() {
             <option value="ALL">Semua Jenis Surat</option>
             <option value="SK PGS">SK PGS</option>
             <option value="Surat Balasan Cuti">Surat Balasan Cuti</option>
+            <option value="Surat Keterangan Kerja">Surat Keterangan Kerja</option>
           </select>
           <div className="text-xs text-[#64748B] px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium whitespace-nowrap">
             {filtered.length} riwayat
@@ -160,9 +167,10 @@ export default function RiwayatSuratPage() {
           { key: 'nomor_surat', header: 'Nomor Surat', render: r => <span className="font-bold text-teal-800">{String(r.nomor_surat)}</span> },
           { key: 'jenis_surat', header: 'Jenis Surat', render: r => {
             const isPgs = r.jenis_surat === 'SK PGS'
+            const isKerja = r.jenis_surat === 'Surat Keterangan Kerja'
             return (
               <span className={`text-xs px-2.5 py-1 rounded-full font-extrabold ${
-                isPgs ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800'
+                isPgs ? 'bg-teal-100 text-teal-800' : isKerja ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
               }`}>
                 {String(r.jenis_surat)}
               </span>
@@ -232,6 +240,8 @@ export default function RiwayatSuratPage() {
             <div className="transform scale-90 origin-top bg-white shadow-xl rounded-lg">
               {previewItem.jenis_surat === 'SK PGS' ? (
                 <SkPgsTemplate ref={modalPrintRef} data={previewItem.payload as unknown as SkPgsData} />
+              ) : previewItem.jenis_surat === 'Surat Keterangan Kerja' ? (
+                <SuratKeteranganKerjaTemplate ref={modalPrintRef} data={previewItem.payload as unknown as SuratKeteranganKerjaData} />
               ) : (
                 <SuratBalasanCutiTemplate ref={modalPrintRef} data={previewItem.payload as unknown as SuratBalasanCutiData} />
               )}
@@ -347,6 +357,65 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
       <div style="margin-top: 30px; text-align: right;">
         <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
         <p><b>REGIONAL OFFICE 09</b></p>
+        <br/><br/><br/>
+        ${data.penandatangan?.nama ? `
+          <p><u><b>${data.penandatangan.nama}</b></u></p>
+          <p><b>${data.penandatangan.jabatan}</b></p>
+        ` : ''}
+      </div>
+    </div>
+  `
+}
+
+/** Helper to render Surat Keterangan Kerja HTML string for Word export */
+function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
+  const kotaText = data.kotaSurat || 'Pontianak'
+  const fullNomor = data.nomorSurat ? (data.nomorSurat.startsWith('PNK') ? data.nomorSurat : `PNK / 12 / ${data.nomorSurat}`) : 'PNK / 12 / '
+
+  return `
+    <div style="font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.4;">
+      <div style="text-align: right; margin-bottom: 15px;">
+        <img src="/logo-kop-bni.jpg" style="height: 1.25cm; width: 4.09cm; object-fit: contain;" />
+      </div>
+      <div style="margin-bottom: 10px;">${kotaText}, ${data.tanggalSurat}</div>
+      <table style="width: 60%; margin-bottom: 20px;">
+        <tr><td style="width: 70px;">Nomor</td><td style="width: 15px;">:</td><td>${fullNomor}</td></tr>
+        <tr><td>Hal</td><td>:</td><td>${data.halSurat || 'Keterangan Bekerja'}</td></tr>
+        <tr><td>Lamp</td><td>:</td><td>${data.lampiran || '---'}</td></tr>
+      </table>
+      <div style="text-align: center; margin: 15px 0 20px 0;">
+        <h3 style="margin: 0; font-size: 11pt; text-decoration: underline;"><b>SURAT KETERANGAN</b></h3>
+      </div>
+      <p style="margin: 0 0 10px 0;">Yang bertanda tangan dibawah ini :</p>
+      <table style="width: 100%; margin-bottom: 15px;">
+        <tr><td style="width: 150px;">Nama</td><td style="width: 15px;">:</td><td>${data.pejabat?.nama || '[NAMA]'}</td></tr>
+        <tr><td>NPP</td><td>:</td><td>${data.pejabat?.npp || '[NPP]'}</td></tr>
+        <tr><td>Jabatan</td><td>:</td><td>
+          ${data.pejabat?.jabatan || '[POSISI]'}<br/>
+          ${data.pejabat?.unitOrgLine1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}<br/>
+          ${data.pejabat?.unitOrgLine2 || 'Pontianak Branch Office'}
+        </td></tr>
+      </table>
+      <p style="margin: 0 0 10px 0;">Menerangkan bahwa,</p>
+      <table style="width: 100%; margin-bottom: 15px;">
+        <tr><td style="width: 150px;">Nama</td><td style="width: 15px;">:</td><td>${data.pegawai?.nama || '[NAMA]'}</td></tr>
+        <tr><td>NPP</td><td>:</td><td>${data.pegawai?.npp || '[NPP]'}</td></tr>
+        <tr><td>Tempat/Tanggal Lahir</td><td>:</td><td>${data.pegawai?.ttl || '[TTL]'}</td></tr>
+        <tr><td>Posisi</td><td>:</td><td>
+          ${data.pegawai?.posisi || '[POSISI]'}<br/>
+          ${data.pegawai?.unitOrgLine1 || 'PT. Bank Negara Indonesia (Persero) Tbk'}<br/>
+          ${data.pegawai?.unitOrgLine2 || 'Pontianak Branch Office'}
+        </td></tr>
+      </table>
+      <p style="text-align: justify; margin: 15px 0; line-height: 1.45;">
+        Adalah benar tercatat sebagai pegawai PT. Bank Negara Indonesia (Persero) Tbk sejak tanggal ${data.keterangan?.tanggalMulai || '[Tanggal Mulai]'} sampai dengan ${data.keterangan?.tanggalSelesai || '[Tanggal Selesai]'}, yang bersangkutan mengundurkan diri dari PT. Bank Negara Indonesia (Persero) Tbk., dengan posisi terakhir sebagai ${data.keterangan?.posisiTerakhir || data.pegawai?.posisi || '[Posisi Terakhir]'}
+      </p>
+      <p style="text-align: justify; margin: 15px 0 35px 0; line-height: 1.45;">
+        Demikianlah Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya, dengan tidak mengikat PT. Bank Negara Indonesia (Persero) Tbk.
+      </p>
+      <div style="margin-top: 20px; text-align: left;">
+        <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}</p>
+        <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}</p>
         <br/><br/><br/>
         ${data.penandatangan?.nama ? `
           <p><u><b>${data.penandatangan.nama}</b></u></p>

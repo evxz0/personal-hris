@@ -14,6 +14,7 @@ import RiwayatPage from './pages/Riwayat'
 import RiwayatSuratPage from './pages/RiwayatSurat'
 import SuratPgsPage from './pages/surat/SuratPgs'
 import SuratBalasanCutiPage from './pages/surat/SuratBalasanCuti'
+import SuratKeteranganKerjaPage from './pages/surat/SuratKeteranganKerja'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -65,6 +66,7 @@ export default function App() {
         {/* Surat Keterangan Routes */}
         <Route path="/surat/pgs" element={<ProtectedRoute session={session}><SuratPgsPage /></ProtectedRoute>} />
         <Route path="/surat/balasan-cuti" element={<ProtectedRoute session={session}><SuratBalasanCutiPage /></ProtectedRoute>} />
+        <Route path="/surat/keterangan-kerja" element={<ProtectedRoute session={session}><SuratKeteranganKerjaPage /></ProtectedRoute>} />
 
         {/* Riwayat Dropdown Routes */}
         <Route path="/riwayat" element={<Navigate to="/riwayat/karyawan" replace />} />
