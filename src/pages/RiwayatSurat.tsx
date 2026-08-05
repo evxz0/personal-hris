@@ -350,10 +350,15 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <b><u>Cfm. Surat Permohonan Pelaksanaan Cuti Sdr. Tanggal ${data.tanggalPermohonan}</u></b>
       </div>
       <p>Menunjuk perihal pada pokok surat, dengan ini kami sampaikan sebagai berikut :</p>
-      <ol style="padding-left: 20px;">
-        <li>Pelaksanaan cuti tahunan Saudara tahun ${data.tahunCuti} dapat dilaksanakan selama <b>${data.cuti.jumlahHari} (${data.cuti.jumlahHariTerbilang})</b> hari kerja terhitung sejak tanggal <b>${data.cuti.tanggalMulai} s/d ${data.cuti.tanggalSelesai}</b> dan aktif kembali bekerja pada tanggal <b>${data.cuti.tanggalAktif}</b></li>
-        <li>Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun ${data.tahunCuti} adalah <b>${data.cuti.sisaCuti} (${data.cuti.sisaCutiTerbilang})</b> hari kerja.</li>
+      <ol style="padding-left: 22px;">
+        <li style="margin-bottom: 8px;">Pelaksanaan cuti tahunan Saudara tahun ${data.tahunCuti} ${data.cuti.statusOpct || 'dapat'} dilaksanakan selama <b>${data.cuti.jumlahHari} (${data.cuti.jumlahHariTerbilang})</b> hari kerja terhitung sejak tanggal <b>${data.cuti.tanggalMulai} s/d ${data.cuti.tanggalSelesai}</b> dan aktif kembali bekerja pada tanggal <b>${data.cuti.tanggalAktif}</b></li>
+        <li style="margin-bottom: 8px;">Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun ${data.tahunCuti} adalah <b>${data.cuti.sisaCuti} (${data.cuti.sisaCutiTerbilang})</b> hari kerja.</li>
+        <li style="margin-bottom: 8px;">Ongkos Perjalanan Cuti Tahunan (OPCT) ${data.tahunCuti} Saudara <u><b>${data.cuti.statusOpct || 'dapat'}</b></u> dibayarkan. Pengajuan pencairan OPCT tahun ${data.tahunCuti} dapat saudara ajukan melalui aplikasi DigiHc.</li>
+        <li style="margin-bottom: 8px;">Sebelum pelaksanaan cuti tersebut, harap Saudara mengisi form rencana ketidakhadiran pada aplikasi DigiHc.</li>
+        <li style="margin-bottom: 8px;">Jika diperlukan Saudara bersedia kami panggil dan Sisa Cuti Saudara akan kami perhitungkan kembali.</li>
+        <li style="margin-bottom: 8px;">Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.</li>
       </ol>
+      <div style="margin-top: 16px; margin-bottom: 24px;">Demikian kami sampaikan untuk dimaklumi.</div>
       <div style="margin-top: 30px; text-align: right;">
         <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
         <p><b>REGIONAL OFFICE 09</b></p>
