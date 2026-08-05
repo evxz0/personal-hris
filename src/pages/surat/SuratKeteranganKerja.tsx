@@ -17,7 +17,10 @@ export default function SuratKeteranganKerjaPage() {
     queryKey: ['karyawan-select-kerja'],
     queryFn: async () => {
       const { data } = await supabase.from('karyawan').select('*').order('nama', { ascending: true })
-      return data ?? []
+      return (data ?? []).map(k => ({
+        ...k,
+        nama: k.nama ? String(k.nama).toUpperCase() : ''
+      }))
     }
   })
 
@@ -75,14 +78,14 @@ export default function SuratKeteranganKerjaPage() {
         ...prev,
         pegawai: {
           ...prev.pegawai,
-          nama: emp.nama || '',
+          nama: (emp.nama || '').toUpperCase(),
           npp: emp.npp || '',
           ttl: ttlStr,
-          posisi: emp.jabatan || 'STAFF'
+          posisi: (emp.jabatan || 'STAFF').toUpperCase()
         },
         keterangan: {
           ...prev.keterangan,
-          posisiTerakhir: emp.jabatan || 'STAFF'
+          posisiTerakhir: (emp.jabatan || 'STAFF').toUpperCase()
         }
       }))
     }

@@ -38,7 +38,10 @@ export default function SuratBalasanCutiPage() {
     queryKey: ['karyawan-select-cuti'],
     queryFn: async () => {
       const { data } = await supabase.from('karyawan').select('*').order('nama', { ascending: true })
-      return data ?? []
+      return (data ?? []).map(k => ({
+        ...k,
+        nama: k.nama ? String(k.nama).toUpperCase() : ''
+      }))
     }
   })
 
@@ -92,9 +95,9 @@ export default function SuratBalasanCutiPage() {
       setFormData(prev => ({
         ...prev,
         pegawai: {
-          nama: emp.nama || '',
+          nama: (emp.nama || '').toUpperCase(),
           npp: emp.npp || '',
-          unitAsal: emp.outlet || emp.departemen || 'Pontianak Branch Office',
+          unitAsal: (emp.outlet || emp.departemen || 'Pontianak Branch Office').toUpperCase(),
           kotaUnit: (emp.outlet || 'PONTIANAK').toUpperCase()
         }
       }))

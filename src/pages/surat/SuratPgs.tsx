@@ -22,7 +22,10 @@ export default function SuratPgsPage() {
     queryKey: ['karyawan-select'],
     queryFn: async () => {
       const { data } = await supabase.from('karyawan').select('*').order('nama', { ascending: true })
-      return data ?? []
+      return (data ?? []).map(k => ({
+        ...k,
+        nama: k.nama ? String(k.nama).toUpperCase() : ''
+      }))
     }
   })
 
@@ -79,16 +82,16 @@ export default function SuratPgsPage() {
       setFormData(prev => ({
         ...prev,
         pegawai: {
-          nama: emp.nama || '',
+          nama: (emp.nama || '').toUpperCase(),
           npp: emp.npp || '',
-          jabatanAsal: emp.jabatan || 'STAFF',
-          jenjangAsal: emp.jenjang || '',
-          gradeAsal: gradeStr,
-          unitAsal: unitVal
+          jabatanAsal: (emp.jabatan || 'STAFF').toUpperCase(),
+          jenjangAsal: (emp.jenjang || '').toUpperCase(),
+          gradeAsal: gradeStr.toUpperCase(),
+          unitAsal: (unitVal || '').toUpperCase()
         },
         penugasan: {
           ...prev.penugasan,
-          unitDiktum: unitVal
+          unitDiktum: (unitVal || '').toUpperCase()
         }
       }))
     }

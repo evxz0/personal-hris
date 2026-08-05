@@ -47,15 +47,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
     return '';
   };
 
-  // Helper to format name to Title Case (e.g. Tiara Tesalonika Pasaribu)
-  const toTitleCase = (str: any) => {
-    if (!str) return '';
-    return String(str)
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+
 
   // Helper to get title without bolding the 'PGS' prefix
   const getPgsTitle = () => {
@@ -280,7 +272,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
             <td style={{ paddingTop: '5px' }}>Ketiga</td>
             <td style={{ paddingTop: '5px' }}>:</td>
             <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
-              Selama penunjukkan pengganti sementara tersebut kepada Sdr. {toTitleCase(data.pegawai.nama || '[Nama]')} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan dengan pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
+              Selama penunjukkan pengganti sementara tersebut kepada Sdr. {(data.pegawai.nama || '[NAMA]').toUpperCase()} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan megenai pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
             </td>
           </tr>
 

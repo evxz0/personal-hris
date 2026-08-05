@@ -22,7 +22,10 @@ export default function SuratCustomPage() {
     queryKey: ['karyawan-select-custom'],
     queryFn: async () => {
       const { data } = await supabase.from('karyawan').select('*').order('nama', { ascending: true })
-      return data ?? []
+      return (data ?? []).map(k => ({
+        ...k,
+        nama: k.nama ? String(k.nama).toUpperCase() : ''
+      }))
     }
   })
 
@@ -72,12 +75,12 @@ export default function SuratCustomPage() {
     if (emp) {
       setPlaceholderValues(prev => ({
         ...prev,
-        NAMA: emp.nama || '',
+        NAMA: (emp.nama || '').toUpperCase(),
         NPP: emp.npp || '',
-        JABATAN: emp.jabatan || 'STAFF',
-        POSISI: emp.jabatan || 'STAFF',
-        UNIT: emp.outlet || 'Pontianak Branch Office',
-        OUTLET: emp.outlet || 'Pontianak Branch Office',
+        JABATAN: (emp.jabatan || 'STAFF').toUpperCase(),
+        POSISI: (emp.jabatan || 'STAFF').toUpperCase(),
+        UNIT: (emp.outlet || 'Pontianak Branch Office').toUpperCase(),
+        OUTLET: (emp.outlet || 'Pontianak Branch Office').toUpperCase(),
         NIK: emp.nik || '',
         TTL: emp.tanggal_lahir
           ? `Pontianak, ${new Date(emp.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
