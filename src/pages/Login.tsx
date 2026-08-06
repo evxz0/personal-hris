@@ -100,7 +100,7 @@ export default function LoginPage() {
                   <CheckCircle2 size={16} className="text-orange-400 shrink-0" />
                   <span>Enkripsi Secure Login</span>
                 </div>
-                <p className="text-[11px] text-teal-200/80 leading-snug">Autentikasi terenkripsi dengan proteksi auto timeout 1 jam.</p>
+                <p className="text-[11px] text-teal-200/80 leading-snug">Autentikasi terenkripsi dengan proteksi auto timeout 25 menit.</p>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function LoginPage() {
             {isTimeout && (
               <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-semibold mb-6 shadow-sm animate-fade-in">
                 <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                <span className="leading-snug">Sesi Anda telah berakhir karena tidak ada aktivitas selama 1 jam. Silakan masuk kembali.</span>
+                <span className="leading-snug">Sesi Anda telah berakhir karena tidak ada aktivitas selama 25 menit. Silakan masuk kembali.</span>
               </div>
             )}
 

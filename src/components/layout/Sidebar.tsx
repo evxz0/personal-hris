@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Users, GraduationCap,
   CalendarOff, Settings, FileText, ChevronDown,
-  ChevronLeft, LogOut, X, User, ArrowRightLeft, UserCheck
+  ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -38,8 +38,6 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
-
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
@@ -50,25 +48,6 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
     if (isSuratActive) setSuratOpen(true)
     if (isRiwayatActive) setRiwayatOpen(true)
   }, [location.pathname])
-
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
-      if (authUser) {
-        const npp = authUser.email?.split('@')[0] || ''
-        const uid = authUser.id || ''
-        let nama = 'User'
-        
-        if (npp) {
-          const { data } = await supabase.from('karyawan').select('nama').eq('npp', npp).single()
-          if (data?.nama) {
-            nama = data.nama
-          }
-        }
-        
-        setUser({ npp, nama, uid })
-      }
-    })
-  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -96,13 +75,13 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         {/* Logo & Toggle Header */}
         <div className={`flex items-center ${collapsed ? 'flex-col gap-2.5 py-4 px-2' : 'justify-between px-4 py-5'} border-b border-teal-600/50 transition-all`}>
           {!collapsed ? (
-            <div className="flex items-center gap-3 animate-fade-in">
+            <div className="flex items-center gap-3 animate-fade-in max-w-[170px]">
               <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-md shrink-0">
                 <span className="text-white font-extrabold text-sm">P</span>
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-extrabold tracking-wide leading-none">P-HRIS</p>
-                <p className="text-[10px] text-teal-300 mt-0.5 leading-none">SDM System</p>
+                <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
               </div>
             </div>
           ) : (
@@ -340,23 +319,8 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           </NavLink>
         </nav>
 
-        {/* Bottom User Area */}
-        <div className={`py-3 border-t border-teal-600/50 space-y-1 ${collapsed ? 'px-1' : 'px-2'}`}>
-          <div className={`w-full flex items-center rounded-xl text-teal-200 transition-all duration-200 text-sm font-medium relative group ${collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'}`}>
-            <User size={18} className="shrink-0 text-teal-300" />
-            {!collapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-white truncate leading-none">{user?.nama || 'User'}</span>
-                <span className="text-[9px] text-teal-300 font-mono truncate mt-1">{user?.uid || 'Loading...'}</span>
-              </div>
-            )}
-            {collapsed && (
-              <div className="absolute left-full ml-3 px-3 py-2 bg-teal-900/95 text-white text-xs rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                <p className="font-bold">{user?.nama || 'User'}</p>
-                <p className="text-[10px] font-mono mt-0.5 text-teal-300">{user?.uid || 'Loading...'}</p>
-              </div>
-            )}
-          </div>
+        {/* Bottom Action Area */}
+        <div className={`py-3 border-t border-teal-600/50 ${collapsed ? 'px-1' : 'px-2'}`}>
           <button
             onClick={handleLogout}
             className={`w-full flex items-center rounded-xl text-teal-200 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium cursor-pointer relative group ${collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'}`}
