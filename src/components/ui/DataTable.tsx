@@ -417,6 +417,8 @@ export function DataTable<T extends Record<string, unknown>>({
                 type="button"
                 onClick={() => {
                   setKelolaDropdownOpen(false)
+                  setShowSelectColumn(false)
+                  if (onSelectionChange) onSelectionChange([])
                   setPopoverOpen(true)
                 }}
                 className="w-full text-left px-3.5 py-2 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-2.5 transition-colors cursor-pointer text-[#2B3440]"
