@@ -138,7 +138,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
           <tr>
             <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '10px' }}>1.</td>
             <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '10px' }}>
-              Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} {data.cuti.statusOpct || 'dapat'} dilaksanakan selama <b>{String(data.cuti.jumlahHari || '5').padStart(2, '0')} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
+              Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} dapat dilaksanakan selama <b>{String(data.cuti.jumlahHari || '5').padStart(2, '0')} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
             </td>
           </tr>
           <tr>

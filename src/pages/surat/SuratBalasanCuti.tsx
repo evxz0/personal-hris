@@ -366,6 +366,7 @@ export default function SuratBalasanCutiPage() {
                     className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
                   >
                     <option value="dapat">dapat</option>
+                    <option value="Telah">Telah</option>
                     <option value="tidak dapat">tidak dapat</option>
                   </select>
                 </div>
