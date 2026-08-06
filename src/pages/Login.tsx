@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, MailCheck } from 'lucide-react'
@@ -28,6 +28,25 @@ export default function LoginPage() {
 
   const navigate = useNavigate()
   const isTimeout = new URLSearchParams(window.location.search).get('reason') === 'timeout'
+
+  // Listen for Supabase PASSWORD_RECOVERY event (when user clicks Reset Password link in email)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthMode('reset_password')
+        setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah.')
+      }
+    })
+
+    if (window.location.hash.includes('type=recovery')) {
+      setAuthMode('reset_password')
+      setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah.')
+    }
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   // Helper to format NPP to email
   const formatEmail = (input: string) => {
