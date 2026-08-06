@@ -29,8 +29,22 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const isTimeout = new URLSearchParams(window.location.search).get('reason') === 'timeout'
 
-  // Listen for Supabase PASSWORD_RECOVERY event (when user clicks Reset Password link in email)
+  // Listen for Supabase PASSWORD_RECOVERY event & handle URL token / errors
   useEffect(() => {
+    const hashStr = window.location.hash.replace('#', '?')
+    const hashParams = new URLSearchParams(hashStr)
+    const searchParams = new URLSearchParams(window.location.search)
+
+    const hashError = hashParams.get('error_description') || searchParams.get('error_description')
+    if (hashError) {
+      if (hashError.includes('expired') || hashError.includes('invalid')) {
+        setError('Tautan / kode OTP pemulihan telah kadaluarsa. Silakan minta kode OTP / tautan baru di bawah ini.')
+        setAuthMode('forgot_email')
+      } else {
+        setError(decodeURIComponent(hashError))
+      }
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setAuthMode('reset_password')
@@ -83,7 +97,12 @@ export default function LoginPage() {
     setResetTargetEmail(email)
 
     try {
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email)
+      // Pass explicit redirectTo parameter matching active origin (e.g. https://personal-hris.github.io/login)
+      const redirectUrl = `${window.location.origin}/login`
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      })
+
       if (resetErr) {
         if (
           resetErr.status === 429 ||
@@ -98,7 +117,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      setInfoMessage(`Kode OTP pemulihan kata sandi telah dikirimkan ke email ${email}.`)
+      setInfoMessage(`Kode OTP / link pemulihan kata sandi telah dikirimkan ke email ${email}.`)
       setAuthMode('verify_otp')
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Gagal mengirimkan kode OTP. Silakan coba lagi.'
