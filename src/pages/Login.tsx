@@ -85,8 +85,18 @@ export default function LoginPage() {
     try {
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email)
       if (resetErr) {
-        // Continue to OTP page with graceful notice if Supabase auth rate limits
-        console.warn('Supabase resetPasswordForEmail notice:', resetErr.message)
+        if (
+          resetErr.status === 429 ||
+          resetErr.message?.toLowerCase().includes('rate limit') ||
+          resetErr.message?.toLowerCase().includes('over_email_send_rate_limit')
+        ) {
+          setError('Batas pengiriman email terlampaui (Rate Limit). Supabase membatasi pengiriman email berulang dalam rentang waktu singkat. Silakan tunggu 1 - 2 menit, atau klik tombol "Sudah Punya OTP / Link Email" jika sudah menerima email sebelumnya.')
+          setLoading(false)
+          return
+        }
+        setError(resetErr.message || 'Gagal mengirimkan email pemulihan.')
+        setLoading(false)
+        return
       }
       setInfoMessage(`Kode OTP pemulihan kata sandi telah dikirimkan ke email ${email}.`)
       setAuthMode('verify_otp')
@@ -444,6 +454,20 @@ export default function LoginPage() {
                       </>
                     )}
                   </button>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (resetEmailInput) setResetTargetEmail(formatEmail(resetEmailInput))
+                        setAuthMode('verify_otp')
+                        setError('')
+                      }}
+                      className="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline cursor-pointer transition-colors"
+                    >
+                      Sudah Terima OTP / Link Email? Masukkan Kode
+                    </button>
+                  </div>
                 </form>
               </div>
             )}
