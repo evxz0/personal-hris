@@ -39,11 +39,17 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const location = useLocation()
 
   const [user, setUser] = useState<{ npp: string; nama: string; uid: string } | null>(null)
-  const [suratOpen, setSuratOpen] = useState(false)
-  const [riwayatOpen, setRiwayatOpen] = useState(false)
 
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
+
+  const [suratOpen, setSuratOpen] = useState(isSuratActive)
+  const [riwayatOpen, setRiwayatOpen] = useState(isRiwayatActive)
+
+  useEffect(() => {
+    if (isSuratActive) setSuratOpen(true)
+    if (isRiwayatActive) setRiwayatOpen(true)
+  }, [location.pathname])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user: authUser } }) => {
@@ -251,13 +257,13 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               {!collapsed && (
                 <ChevronDown
                   size={16}
-                  className={`text-teal-300 transition-transform duration-200 ${riwayatOpen || isRiwayatActive ? 'rotate-180' : ''}`}
+                  className={`text-teal-300 transition-transform duration-200 ${riwayatOpen ? 'rotate-180' : ''}`}
                 />
               )}
             </button>
 
             {/* Sub items when EXPANDED */}
-            {(riwayatOpen || isRiwayatActive) && !collapsed && (
+            {riwayatOpen && !collapsed && (
               <div className="pl-6 space-y-1 text-xs animate-fade-in">
                 {riwayatSubItems.map(sub => (
                   <NavLink
