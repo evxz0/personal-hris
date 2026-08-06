@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, MailCheck } from 'lucide-react'
+import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, Mail } from 'lucide-react'
 
-type AuthMode = 'login' | 'forgot_email' | 'verify_otp' | 'reset_password' | 'success'
+type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success'
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>('login')
@@ -13,10 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   
-  // Reset Password & OTP State
+  // Reset Password State
   const [resetEmailInput, setResetEmailInput] = useState('')
-  const [resetTargetEmail, setResetTargetEmail] = useState('')
-  const [otpCode, setOtpCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -38,7 +36,7 @@ export default function LoginPage() {
     const hashError = hashParams.get('error_description') || searchParams.get('error_description')
     if (hashError) {
       if (hashError.includes('expired') || hashError.includes('invalid')) {
-        setError('Tautan / kode OTP pemulihan telah kadaluarsa. Silakan minta kode OTP / tautan baru di bawah ini.')
+        setError('Tautan pemulihan email telah kadaluarsa atau tidak valid. Silakan minta tautan baru di bawah ini.')
         setAuthMode('forgot_email')
       } else {
         setError(decodeURIComponent(hashError))
@@ -48,13 +46,13 @@ export default function LoginPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setAuthMode('reset_password')
-        setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah.')
+        setInfoMessage('Tautan email terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
       }
     })
 
     if (window.location.hash.includes('type=recovery')) {
       setAuthMode('reset_password')
-      setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah.')
+      setInfoMessage('Tautan email terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
     }
 
     return () => {
@@ -86,18 +84,17 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  // Step 1: Handle Request OTP
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  // Step 1: Send Reset Password Email (Direct Link)
+  const handleRequestResetLink = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setInfoMessage('')
 
     const email = formatEmail(resetEmailInput)
-    setResetTargetEmail(email)
 
     try {
-      // Pass explicit redirectTo parameter matching active origin (e.g. https://personal-hris.github.io/login)
+      // Pass explicit redirectTo parameter matching active site origin
       const redirectUrl = `${window.location.origin}/login`
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
@@ -109,7 +106,7 @@ export default function LoginPage() {
           resetErr.message?.toLowerCase().includes('rate limit') ||
           resetErr.message?.toLowerCase().includes('over_email_send_rate_limit')
         ) {
-          setError('Batas pengiriman email terlampaui (Rate Limit). Supabase membatasi pengiriman email berulang dalam rentang waktu singkat. Silakan tunggu 1 - 2 menit, atau klik tombol "Sudah Punya OTP / Link Email" jika sudah menerima email sebelumnya.')
+          setError('Batas pengiriman email terlampaui (Rate Limit). Supabase membatasi pengiriman email berulang dalam rentang waktu singkat. Silakan periksa inbox/spam email Anda yang telah terkirim sebelumnya, atau tunggu 1 - 2 menit.')
           setLoading(false)
           return
         }
@@ -117,51 +114,17 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      setInfoMessage(`Kode OTP / link pemulihan kata sandi telah dikirimkan ke email ${email}.`)
-      setAuthMode('verify_otp')
+
+      setInfoMessage(`Tautan reset password telah dikirimkan ke email ${email}. Silakan buka email Anda dan klik tombol 'Reset password' untuk membuat kata sandi baru.`)
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Gagal mengirimkan kode OTP. Silakan coba lagi.'
+      const errMsg = err instanceof Error ? err.message : 'Gagal mengirimkan email reset password. Silakan coba lagi.'
       setError(errMsg)
     } finally {
       setLoading(false)
     }
   }
 
-  // Step 2: Handle Verify OTP
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    const cleanOtp = otpCode.trim()
-    if (!cleanOtp || cleanOtp.length < 4) {
-      setError('Masukkan kode OTP valid yang telah dikirim ke email.')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const { error: otpErr } = await supabase.auth.verifyOtp({
-        email: resetTargetEmail,
-        token: cleanOtp,
-        type: 'recovery'
-      })
-
-      if (otpErr) {
-        // If exact token match fails in local dev, allow verification for user workflow
-        console.warn('OTP verification notice:', otpErr.message)
-      }
-
-      setAuthMode('reset_password')
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Kode OTP tidak valid atau telah kadaluarsa.'
-      setError(errMsg)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Step 3: Handle Save New Password
+  // Step 2: Save New Password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -186,13 +149,15 @@ export default function LoginPage() {
       }
 
       setAuthMode('success')
-      setInfoMessage('Kata sandi Anda telah berhasil diperbarui. Email konfirmasi reset kata sandi telah terkirim.')
+      setInfoMessage('Kata sandi Anda telah berhasil diperbarui. Silakan masuk menggunakan kata sandi baru Anda.')
 
       // Auto redirect to login mode after 4 seconds
       setTimeout(() => {
         setAuthMode('login')
         setError('')
         setInfoMessage('')
+        // Clear hash URL
+        window.history.replaceState(null, '', window.location.pathname)
       }, 4000)
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Gagal memperbarui kata sandi. Silakan coba lagi.'
@@ -345,6 +310,7 @@ export default function LoginPage() {
                         onClick={() => {
                           setAuthMode('forgot_email')
                           setError('')
+                          setInfoMessage('')
                         }}
                         className="text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline transition-colors cursor-pointer"
                       >
@@ -403,7 +369,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* MODE 2: Request OTP (Lupa Password) */}
+            {/* MODE 2: Request Reset Password Link */}
             {authMode === 'forgot_email' && (
               <div className="animate-fade-in">
                 <button
@@ -411,6 +377,7 @@ export default function LoginPage() {
                   onClick={() => {
                     setAuthMode('login')
                     setError('')
+                    setInfoMessage('')
                   }}
                   className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 font-bold mb-4 hover:underline transition-colors cursor-pointer"
                 >
@@ -424,11 +391,20 @@ export default function LoginPage() {
                     Lupa Kata Sandi
                   </h2>
                   <p className="text-xs text-[#64748B] mt-1.5">
-                    Masukkan ID Pengguna (NPP) atau Email terdaftar Anda. Kode OTP pemulihan kata sandi akan langsung dikirimkan ke email Anda.
+                    Masukkan ID Pengguna (NPP) atau Email terdaftar Anda. Tautan pemulihan kata sandi akan langsung dikirimkan ke email Anda.
                   </p>
                 </div>
 
-                <form onSubmit={handleRequestOtp} className="space-y-4">
+                {infoMessage && (
+                  <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-xs text-teal-800 font-medium mb-5 animate-fade-in flex items-start gap-2.5 shadow-xs">
+                    <Mail size={18} className="text-teal-600 shrink-0 mt-0.5" />
+                    <div className="leading-relaxed">
+                      <span>{infoMessage}</span>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleRequestResetLink} className="space-y-4">
                   <div>
                     <label htmlFor="resetEmailInput" className="block text-[11px] font-bold text-[#2B3440] uppercase tracking-wider mb-1.5">
                       ID Pengguna (NPP) / Email
@@ -468,98 +444,7 @@ export default function LoginPage() {
                       </svg>
                     ) : (
                       <>
-                        <span>Kirim Kode OTP ke Email</span>
-                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                  </button>
-
-                  <div className="pt-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (resetEmailInput) setResetTargetEmail(formatEmail(resetEmailInput))
-                        setAuthMode('verify_otp')
-                        setError('')
-                      }}
-                      className="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline cursor-pointer transition-colors"
-                    >
-                      Sudah Terima OTP / Link Email? Masukkan Kode
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* MODE 3: Verify OTP (Masukkan Kode OTP) */}
-            {authMode === 'verify_otp' && (
-              <div className="animate-fade-in">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode('forgot_email')
-                    setError('')
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 font-bold mb-4 hover:underline transition-colors cursor-pointer"
-                >
-                  <ArrowLeft size={16} />
-                  <span>Ubah ID / Email</span>
-                </button>
-
-                <div className="mb-6">
-                  <h2 className="text-xl font-black text-[#2B3440] tracking-tight flex items-center gap-2">
-                    <MailCheck size={22} className="text-teal-600" />
-                    Masukkan Kode OTP
-                  </h2>
-                  <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
-                    Kode OTP telah terkirim ke email <span className="font-bold text-teal-800">{resetTargetEmail}</span>. Masukkan 6-digit kode OTP untuk melanjutkan.
-                  </p>
-                </div>
-
-                {infoMessage && (
-                  <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 text-xs text-teal-800 font-medium mb-4 animate-fade-in flex items-start gap-2">
-                    <Sparkles size={16} className="text-teal-600 shrink-0 mt-0.5" />
-                    <span>{infoMessage}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div>
-                    <label htmlFor="otpCode" className="block text-[11px] font-bold text-[#2B3440] uppercase tracking-wider mb-1.5">
-                      Kode OTP (6-Digit)
-                    </label>
-                    <input
-                      id="otpCode"
-                      type="text"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={e => setOtpCode(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
-                      placeholder="Masukkan 6-digit kode OTP"
-                      required
-                      className="w-full text-center tracking-[0.4em] font-mono text-base font-extrabold px-4 py-3 rounded-xl border border-teal-300 text-teal-900 placeholder:tracking-normal placeholder:font-sans placeholder:text-xs placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20 bg-teal-50/20 focus:bg-white transition-all duration-200"
-                    />
-                  </div>
-
-                  {error && (
-                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold animate-fade-in flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                      <span>{error}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading || !otpCode.trim()}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-teal-700 via-teal-800 to-teal-900 hover:from-teal-800 hover:to-teal-950 text-white font-bold text-xs tracking-wide uppercase shadow-lg shadow-teal-900/20 hover:shadow-teal-900/40 transition-all duration-200 active:scale-[0.99] disabled:opacity-60 cursor-pointer group mt-2"
-                  >
-                    {loading ? (
-                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4z"/>
-                      </svg>
-                    ) : (
-                      <>
-                        <span>Verifikasi OTP</span>
+                        <span>Kirim Tautan Reset Password</span>
                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
@@ -568,7 +453,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* MODE 4: Halaman Ganti Password Baru */}
+            {/* MODE 3: Halaman Ganti Password Baru (Diakses Otomatis dari Link Email) */}
             {authMode === 'reset_password' && (
               <div className="animate-fade-in">
                 <div className="mb-6">
@@ -577,9 +462,16 @@ export default function LoginPage() {
                     Buat Kata Sandi Baru
                   </h2>
                   <p className="text-xs text-[#64748B] mt-1.5">
-                    OTP Berhasil diverifikasi. Masukkan kata sandi baru untuk akun Anda.
+                    Tautan email terverifikasi. Masukkan kata sandi baru untuk akun Anda.
                   </p>
                 </div>
+
+                {infoMessage && (
+                  <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 text-xs text-teal-800 font-medium mb-4 animate-fade-in flex items-center gap-2">
+                    <Sparkles size={16} className="text-teal-600 shrink-0" />
+                    <span>{infoMessage}</span>
+                  </div>
+                )}
 
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
@@ -657,7 +549,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* MODE 5: Halaman Sukses Password Berhasil Diperbarui */}
+            {/* MODE 4: Halaman Sukses Password Berhasil Diperbarui */}
             {authMode === 'success' && (
               <div className="animate-fade-in py-4 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
@@ -666,7 +558,7 @@ export default function LoginPage() {
                 <div>
                   <h2 className="text-xl font-black text-[#2B3440] tracking-tight">Kata Sandi Berhasil Diperbarui!</h2>
                   <p className="text-xs text-[#64748B] mt-2 leading-relaxed px-4">
-                    Kata sandi Anda telah berhasil diubah. Email konfirmasi pemberitahuan bahwa kata sandi telah di-reset telah dikirimkan ke email Anda.
+                    Kata sandi Anda telah berhasil diubah. Silakan masuk menggunakan ID Pengguna dan kata sandi baru Anda.
                   </p>
                 </div>
 
@@ -677,6 +569,7 @@ export default function LoginPage() {
                       setAuthMode('login')
                       setError('')
                       setInfoMessage('')
+                      window.history.replaceState(null, '', window.location.pathname)
                     }}
                     className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs tracking-wide uppercase transition-all shadow-md cursor-pointer"
                   >
