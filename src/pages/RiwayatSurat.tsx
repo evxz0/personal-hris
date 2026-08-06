@@ -359,10 +359,10 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <tr><td style="width: 22px; vertical-align: top; padding-bottom: 5px;">6.</td><td style="text-align: justify; vertical-align: top; padding-bottom: 5px;">Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.</td></tr>
       </table>
       <div style="margin-top: 16px; margin-bottom: 24px;">Demikian kami sampaikan untuk dimaklumi.</div>
-      <div style="margin-top: 30px; text-align: left;">
+      <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
-        <br/><br/><br/>
+        <br/><br/>
         ${data.penandatangan?.nama ? `
           <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
@@ -418,10 +418,10 @@ function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
       <p style="text-align: justify; margin: 15px 0 35px 0; line-height: 1.45;">
         Demikianlah Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya, dengan tidak mengikat PT. Bank Negara Indonesia (Persero) Tbk.
       </p>
-      <div style="margin-top: 20px; text-align: left;">
+      <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}</p>
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}</p>
-        <br/><br/><br/>
+        <br/><br/>
         ${data.penandatangan?.nama ? `
           <p><u><b>${data.penandatangan.nama}</b></u></p>
           <p><b>${data.penandatangan.jabatan}</b></p>

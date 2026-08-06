@@ -96,7 +96,7 @@ export const CustomTemplateRenderer = React.forwardRef<HTMLDivElement, Props>(({
 
       {/* Header: Logo BNI on Top Right */}
       {!hideLogo && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', marginBottom: '15px' }}>
+        <div style={{ textAlign: 'right', marginTop: '4px', marginBottom: '8px' }}>
           <img
             src="/logo-kop-bni.jpg"
             alt="BNI Logo"

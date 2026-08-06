@@ -85,7 +85,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
       `}</style>
 
       {/* Header: Logo BNI on Right Header */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '15px' }}>
+      <div style={{ textAlign: 'right', marginTop: '4px', marginBottom: '8px' }}>
         <img
           src="/logo-kop-bni.jpg"
           alt="BNI Logo"
@@ -179,11 +179,11 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
       </div>
 
       {/* Signature Block */}
-      <div style={{ marginTop: '20px', textAlign: 'left' }}>
+      <div style={{ marginTop: '14px', textAlign: 'left' }}>
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>Regional Office 09, Area III, Kalimantan Barat</p>
 
-        <div style={{ height: '70px', width: '100%' }}></div>
+        <div style={{ height: '45px', width: '100%' }}></div>
 
         {pejabatNama ? (
           <>

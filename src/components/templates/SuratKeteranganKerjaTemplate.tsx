@@ -109,7 +109,7 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
       `}</style>
 
       {/* Header: Logo BNI on Top Right */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '15px' }}>
+      <div style={{ textAlign: 'right', marginTop: '4px', marginBottom: '8px' }}>
         <img
           src="/logo-kop-bni.jpg"
           alt="BNI Logo"
@@ -222,7 +222,7 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
       </p>
 
       {/* Signature Block */}
-      <div style={{ marginTop: '20px', textAlign: 'left' }}>
+      <div style={{ marginTop: '14px', textAlign: 'left' }}>
         <p style={{ margin: 0, fontWeight: 'bold' }}>
           {data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}
         </p>
@@ -230,7 +230,7 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
           {data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}
         </p>
 
-        <div style={{ height: '75px', width: '100%' }}></div>
+        <div style={{ height: '45px', width: '100%' }}></div>
 
         {penandatanganNama ? (
           <>
