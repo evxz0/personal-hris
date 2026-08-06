@@ -75,22 +75,17 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         {/* Logo & Toggle Header */}
         <div className={`flex items-center ${collapsed ? 'flex-col gap-2.5 py-4 px-2' : 'justify-between px-4 py-5'} border-b border-teal-600/50 transition-all`}>
           {!collapsed ? (
-            <div className="flex items-center gap-3 animate-fade-in max-w-[170px]">
-              <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-md shrink-0">
-                <span className="text-white font-extrabold text-sm">P</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-extrabold tracking-wide leading-none">P-HRIS</p>
-                <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
-              </div>
+            <div className="animate-fade-in max-w-[180px]">
+              <p className="text-base font-extrabold tracking-wide leading-none text-white">P-HRIS</p>
+              <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
             </div>
           ) : (
             <div
               onClick={() => setCollapsed(false)}
-              className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform"
+              className="cursor-pointer hover:scale-105 transition-transform py-1 px-0.5"
               title="P-HRIS (Klik untuk memperluas sidebar)"
             >
-              <span className="text-white font-extrabold text-base">P</span>
+              <span className="text-white font-extrabold text-xs tracking-tight">P-HRIS</span>
             </div>
           )}
 

@@ -59,15 +59,8 @@ export default function LoginPage() {
 
           {/* Top Brand Header */}
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-orange-400 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <span className="text-white font-black text-xl tracking-tight">P</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-extrabold tracking-wide leading-none text-white">P-HRIS</h1>
-                <p className="text-xs text-teal-200 mt-1 font-medium">PT Bank Negara Indonesia (Persero) Tbk</p>
-              </div>
-            </div>
+            <h1 className="text-2xl font-black tracking-wide text-white">P-HRIS</h1>
+            <p className="text-xs text-teal-200 mt-0.5 font-medium">PT Bank Negara Indonesia (Persero) Tbk</p>
           </div>
 
           {/* Middle Content Showcase */}
@@ -117,12 +110,9 @@ export default function LoginPage() {
           <div>
             {/* Mobile Header Logo */}
             <div className="lg:hidden flex items-center gap-3 mb-6">
-              <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md">
-                <span className="text-white font-extrabold text-base">P</span>
-              </div>
               <div>
-                <h1 className="text-base font-extrabold text-[#2B3440] leading-none">P-HRIS</h1>
-                <p className="text-[11px] text-[#64748B] mt-0.5">Sistem Informasi SDM</p>
+                <h1 className="text-lg font-extrabold text-[#2B3440] leading-none">P-HRIS</h1>
+                <p className="text-[11px] text-[#64748B] mt-0.5">Personal Human Resource Information System</p>
               </div>
             </div>
 

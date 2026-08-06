@@ -21,12 +21,7 @@ export function Layout({ children }: LayoutProps) {
           >
             <Menu size={20} />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center shadow-sm">
-              <span className="text-white font-extrabold text-xs">P</span>
-            </div>
-            <span className="text-sm font-bold tracking-wide">P-HRIS</span>
-          </div>
+          <span className="text-sm font-extrabold tracking-wide">P-HRIS</span>
         </div>
       </header>
 
