@@ -128,7 +128,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1.5 overflow-x-hidden">
+        <nav className="flex-1 overflow-y-auto sidebar-scroll py-4 px-2 space-y-1.5 overflow-x-hidden">
           {navItems.slice(0, 5).map(item => (
             <NavLink
               key={item.to}
@@ -137,19 +137,16 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               onClick={() => setMobileOpen(false)}
               className={({ isActive }) => `
                 flex items-center rounded-xl font-medium text-sm
-                transition-all duration-200 group relative
+                transition-all duration-200 group relative overflow-hidden
                 ${collapsed ? 'justify-center py-3 px-0' : 'gap-3 px-3 py-2.5'}
                 ${isActive
-                  ? 'bg-white/15 text-white shadow-sm font-bold'
+                  ? 'bg-white/20 text-white shadow-sm font-bold border-l-4 border-orange-400'
                   : 'text-teal-200 hover:bg-white/10 hover:text-white'
                 }
               `}
             >
               {({ isActive }) => (
                 <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-400 rounded-r-full" />
-                  )}
                   <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
                     {item.icon}
                   </span>
