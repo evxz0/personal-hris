@@ -367,7 +367,7 @@ export default function SuratBalasanCutiPage() {
                   >
                     <option value="dapat">dapat</option>
                     <option value="Telah">Telah</option>
-                    <option value="tidak dapat">tidak dapat</option>
+                    <option value="Belum">Belum</option>
                   </select>
                 </div>
               </div>
