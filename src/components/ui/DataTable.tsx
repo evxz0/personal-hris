@@ -55,6 +55,8 @@ export function DataTable<T extends Record<string, unknown>>({
 }: DataTableProps<T>) {
   const [page, setPage] = useState(1)
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [kelolaDropdownOpen, setKelolaDropdownOpen] = useState(false)
+  const [showSelectColumn, setShowSelectColumn] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
   const [draggedKey, setDraggedKey] = useState<string | null>(null)
   
@@ -62,7 +64,18 @@ export function DataTable<T extends Record<string, unknown>>({
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null)
 
-  const popoverRef = useRef<HTMLDivElement>(null)
+  const kelolaRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (kelolaRef.current && !kelolaRef.current.contains(e.target as Node)) {
+        setKelolaDropdownOpen(false)
+        setPopoverOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Load custom columns from localStorage
   const [customColumns, setCustomColumns] = useState<Column<T>[]>(() => {
@@ -150,20 +163,21 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }, [columnOrder, tableId])
 
-  // Close popover when clicking outside
+  // Close popovers when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+      if (kelolaRef.current && !kelolaRef.current.contains(e.target as Node)) {
+        setKelolaDropdownOpen(false)
         setPopoverOpen(false)
       }
     }
-    if (popoverOpen) {
+    if (popoverOpen || kelolaDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [popoverOpen])
+  }, [popoverOpen, kelolaDropdownOpen])
 
   // Sort Handler (Ascending -> Descending -> Reset)
   const handleSort = (key: string) => {
@@ -353,7 +367,7 @@ export function DataTable<T extends Record<string, unknown>>({
     )
   }
 
-  const totalCols = activeColumns.length + 1 + (selectable ? 1 : 0) + (actions ? 1 : 0)
+  const totalCols = activeColumns.length + 1 + (selectable && showSelectColumn ? 1 : 0) + (actions ? 1 : 0)
 
   return (
     <div className="space-y-3">
@@ -376,18 +390,69 @@ export function DataTable<T extends Record<string, unknown>>({
           )}
         </div>
 
-        <div className="relative" ref={popoverRef}>
+        <div className="relative" ref={kelolaRef}>
           <button
             type="button"
-            onClick={() => setPopoverOpen(!popoverOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl border border-teal-200 shadow-sm transition-all active:scale-95 cursor-pointer"
+            onClick={() => setKelolaDropdownOpen(prev => !prev)}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-xl border shadow-sm transition-all active:scale-95 cursor-pointer ${
+              showSelectColumn
+                ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+                : 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100'
+            }`}
           >
-            <SlidersHorizontal size={14} className="text-teal-600" />
-            Kelola Kolom
-            <span className="ml-1 px-1.5 py-0.2 bg-teal-200 text-teal-800 text-[10px] rounded-full font-extrabold">
-              {activeColumns.length}
-            </span>
+            <SlidersHorizontal size={14} className={showSelectColumn ? 'text-orange-600' : 'text-teal-600'} />
+            Kelola
+            {showSelectColumn && (
+              <span className="px-1.5 py-0.2 bg-orange-200 text-orange-800 text-[10px] rounded-full font-extrabold">
+                Mode Hapus
+              </span>
+            )}
+            <ChevronDown size={14} className={`transition-transform duration-200 ${kelolaDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
+
+          {/* Dropdown Menu Kelola */}
+          {kelolaDropdownOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-fade-in text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => {
+                  setKelolaDropdownOpen(false)
+                  setPopoverOpen(true)
+                }}
+                className="w-full text-left px-3.5 py-2 hover:bg-teal-50 hover:text-teal-700 flex items-center gap-2.5 transition-colors cursor-pointer text-[#2B3440]"
+              >
+                <SlidersHorizontal size={14} className="text-teal-600 shrink-0" />
+                <div className="flex-1 flex items-center justify-between">
+                  <span>Kelola Kolom</span>
+                  <span className="px-1.5 py-0.2 bg-teal-100 text-teal-800 text-[10px] rounded-full font-extrabold">
+                    {activeColumns.length}
+                  </span>
+                </div>
+              </button>
+
+              {selectable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKelolaDropdownOpen(false)
+                    const nextState = !showSelectColumn
+                    setShowSelectColumn(nextState)
+                    if (!nextState && onSelectionChange) {
+                      onSelectionChange([])
+                    }
+                  }}
+                  className={`w-full text-left px-3.5 py-2 flex items-center gap-2.5 transition-colors cursor-pointer border-t border-gray-100 ${
+                    showSelectColumn
+                      ? 'bg-orange-50/80 text-orange-700 font-bold hover:bg-orange-100/80'
+                      : 'hover:bg-red-50 hover:text-red-700 text-[#2B3440]'
+                  }`}
+                >
+                  <Trash2 size={14} className={showSelectColumn ? 'text-orange-600 shrink-0' : 'text-red-500 shrink-0'} />
+                  <span>{showSelectColumn ? 'Sembunyikan Hapus' : 'Kelola Data (Hapus)'}</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Column Manager Dropdown Popover */}
           {popoverOpen && (
@@ -550,7 +615,7 @@ export function DataTable<T extends Record<string, unknown>>({
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-teal-600 text-white select-none">
-                {selectable && (
+                {selectable && showSelectColumn && (
                   <th className="px-3 py-2 text-center text-[11px] font-semibold w-10">
                     <input
                       type="checkbox"
@@ -620,7 +685,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       key={rowId || i}
                       className={`border-b border-gray-50 hover:bg-teal-50/40 transition-colors duration-150 ${isSelected ? 'bg-teal-50/20' : ''}`}
                     >
-                      {selectable && (
+                      {selectable && showSelectColumn && (
                         <td className="px-3 py-1.5 text-center">
                           <input
                             type="checkbox"
