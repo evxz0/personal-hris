@@ -110,7 +110,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       `}</style>
 
       {/* Header: Logo BNI on Top Right */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'right', marginTop: '4px', marginBottom: '8px' }}>
         <img
           src="/logo-kop-bni.jpg"
           alt="BNI Logo"
@@ -269,25 +269,25 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '5px' }}>Ketiga</td>
-            <td style={{ paddingTop: '5px' }}>:</td>
-            <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
+            <td style={{ paddingTop: '3px' }}>Ketiga</td>
+            <td style={{ paddingTop: '3px' }}>:</td>
+            <td style={{ paddingTop: '3px', textAlign: 'justify' }}>
               Selama penunjukkan pengganti sementara tersebut kepada Sdr. {(data.pegawai.nama || '[NAMA]').toUpperCase()} - NPP.{data.pegawai.npp || '[NPP]'} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan megenai pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.
             </td>
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '5px' }}>Keempat</td>
-            <td style={{ paddingTop: '5px' }}>:</td>
-            <td style={{ paddingTop: '5px' }}>
+            <td style={{ paddingTop: '3px' }}>Keempat</td>
+            <td style={{ paddingTop: '3px' }}>:</td>
+            <td style={{ paddingTop: '3px' }}>
               Surat Keputusan ini berlaku sejak tanggal efektif penunjukkan.
             </td>
           </tr>
 
           <tr>
-            <td style={{ paddingTop: '5px' }}>Kelima</td>
-            <td style={{ paddingTop: '5px' }}>:</td>
-            <td style={{ paddingTop: '5px', textAlign: 'justify' }}>
+            <td style={{ paddingTop: '3px' }}>Kelima</td>
+            <td style={{ paddingTop: '3px' }}>:</td>
+            <td style={{ paddingTop: '3px', textAlign: 'justify' }}>
               Apabila dikemudian hari dari Surat Keputusan ini terdapat kekeliruan, akan diadakan pembetulan sebagaimana mestinya.
             </td>
           </tr>
@@ -295,16 +295,16 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
       </table>
 
       {/* Penutup */}
-      <p style={{ textAlign: 'justify', fontSize: '9pt', marginTop: '10px', lineHeight: '1.35' }}>
+      <p style={{ textAlign: 'justify', fontSize: '9pt', marginTop: '6px', lineHeight: '1.3' }}>
         Surat Keputusan ini disampaikan kepada yang bersangkutan melalui unitnya masing-masing untuk diketahui dan dilaksanakan sebagaimana mestinya, dengan tembusan kepada Unit Organisasi lain yang memerlukan.
       </p>
 
       {/* Signature Block */}
-      <div style={{ marginTop: '20px', textAlign: 'left' }}>
+      <div style={{ marginTop: '14px', textAlign: 'left' }}>
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>Regional Office 09, Area III, Kalimantan Barat</p>
 
-        <div style={{ height: '75px', width: '100%' }}></div>
+        <div style={{ height: '45px', width: '100%' }}></div>
 
         {pejabatNama ? (
           <>
