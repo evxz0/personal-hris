@@ -313,13 +313,13 @@ function renderSkPgsHtml(data: SkPgsData): string {
         </td></tr>
         <tr><td>Kedua</td><td>:</td><td>Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal ${data.penugasan.tanggalMulai} – ${data.penugasan.tanggalSelesai}.</td></tr>
       </table>
-      <div style="margin-top: 30px; text-align: right;">
-        <p><b>PT Bank Negara Indonesia (Persero) Tbk</b></p>
-        <p><b>Regional Office 09, Area III, Kalimantan Barat</b></p>
+      <div style="margin-top: 30px; text-align: left;">
+        <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
+        <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         <br/><br/><br/>
         ${data.penandatangan?.nama ? `
-          <p><u><b>${data.penandatangan.nama}</b></u></p>
-          <p><b>${data.penandatangan.jabatan}</b></p>
+          <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
     </div>
@@ -359,13 +359,13 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <tr><td style="width: 22px; vertical-align: top; padding-bottom: 8px;">6.</td><td style="text-align: justify; vertical-align: top; padding-bottom: 8px;">Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.</td></tr>
       </table>
       <div style="margin-top: 16px; margin-bottom: 24px;">Demikian kami sampaikan untuk dimaklumi.</div>
-      <div style="margin-top: 30px; text-align: right;">
-        <p><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></p>
-        <p><b>REGIONAL OFFICE 09</b></p>
+      <div style="margin-top: 30px; text-align: left;">
+        <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
+        <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         <br/><br/><br/>
         ${data.penandatangan?.nama ? `
-          <p><u><b>${data.penandatangan.nama}</b></u></p>
-          <p><b>${data.penandatangan.jabatan}</b></p>
+          <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
     </div>
