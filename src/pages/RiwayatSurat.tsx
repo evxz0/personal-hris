@@ -316,7 +316,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
-        <br/><br/>
+        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
           <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
@@ -362,7 +362,7 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
-        <br/><br/>
+        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
           <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
@@ -421,7 +421,7 @@ function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}</p>
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}</p>
-        <br/><br/>
+        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
           <p><u><b>${data.penandatangan.nama}</b></u></p>
           <p><b>${data.penandatangan.jabatan}</b></p>

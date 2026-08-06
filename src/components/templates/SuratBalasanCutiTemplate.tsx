@@ -183,7 +183,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>Regional Office 09, Area III, Kalimantan Barat</p>
 
-        <div style={{ height: '45px', width: '100%' }}></div>
+        <div style={{ height: '65px', width: '100%' }}></div>
 
         {pejabatNama ? (
           <>
