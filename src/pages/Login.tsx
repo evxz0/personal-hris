@@ -13,10 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   
-  // Reset Password & OTP State
+  // Reset Password State
   const [resetEmailInput, setResetEmailInput] = useState('')
-  const [otpCode, setOtpCode] = useState('')
-  const [showOtpInput, setShowOtpInput] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -29,52 +27,60 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const isTimeout = new URLSearchParams(window.location.search).get('reason') === 'timeout'
 
-  // Listen for Supabase PASSWORD_RECOVERY event & handle URL token / PKCE / errors
+  // Automatically detect recovery link from email & transition to reset password view
   useEffect(() => {
     const checkAuthCallback = async () => {
       const searchParams = new URLSearchParams(window.location.search)
       const hashStr = window.location.hash.replace('#', '?')
       const hashParams = new URLSearchParams(hashStr)
 
-      // 1. Check for error params in URL
-      const hashError = hashParams.get('error_description') || searchParams.get('error_description')
-      if (hashError) {
-        const decoded = decodeURIComponent(hashError)
-        if (decoded.toLowerCase().includes('expired') || decoded.toLowerCase().includes('invalid')) {
-          setError('Tautan pemulihan email telah kadaluarsa atau tidak valid. Silakan minta tautan baru di bawah ini dan segera buka email paling akhir.')
-          setAuthMode('forgot_email')
-        } else {
-          setError(decoded)
-        }
-        return
-      }
+      const isRecovery =
+        window.location.hash.includes('type=recovery') ||
+        hashParams.get('type') === 'recovery' ||
+        searchParams.get('type') === 'recovery' ||
+        !!searchParams.get('code') ||
+        !!hashParams.get('access_token')
 
-      // 2. Check for PKCE flow auth code in query string (?code=...)
+      // 1. Check for PKCE flow auth code (?code=...)
       const code = searchParams.get('code')
       if (code) {
         setLoading(true)
         const { data, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
         setLoading(false)
         if (!exchangeErr && data.session) {
+          setError('')
           setAuthMode('reset_password')
-          setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
+          setInfoMessage('Tautan pemulihan terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
           return
         }
       }
 
-      // 3. Check for implicit hash fragment (#type=recovery or access_token)
-      if (window.location.hash.includes('type=recovery') || hashParams.get('access_token')) {
-        setAuthMode('reset_password')
-        setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
+      // 2. Check for implicit hash fragment or active recovery session
+      if (isRecovery) {
+        const { data } = await supabase.auth.getSession()
+        if (data.session || hashParams.get('access_token')) {
+          setError('')
+          setAuthMode('reset_password')
+          setInfoMessage('Tautan pemulihan terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
+          return
+        }
+      }
+
+      // 3. Check for URL error parameters
+      const hashError = hashParams.get('error_description') || searchParams.get('error_description')
+      if (hashError && !isRecovery) {
+        const decoded = decodeURIComponent(hashError)
+        setError(decoded)
       }
     }
 
     checkAuthCallback()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && window.location.hash.includes('type=recovery'))) {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && (window.location.hash.includes('type=recovery') || window.location.search.includes('code=')))) {
+        setError('')
         setAuthMode('reset_password')
-        setInfoMessage('Tautan pemulihan email terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
+        setInfoMessage('Tautan pemulihan terverifikasi. Silakan buat kata sandi baru Anda di bawah ini.')
       }
     })
 
@@ -138,46 +144,9 @@ export default function LoginPage() {
         return
       }
 
-      setInfoMessage(`Tautan reset password telah dikirimkan ke email ${email}. Silakan buka email Anda dan klik tombol 'Reset password', atau masukkan kode token dari email di bawah jika link tidak dapat dibuka.`)
+      setInfoMessage(`Tautan reset password telah dikirimkan ke email ${email}. Silakan periksa inbox atau folder spam email Anda dan klik tombol 'Reset password' untuk membuat kata sandi baru.`)
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Gagal mengirimkan email reset password. Silakan coba lagi.'
-      setError(errMsg)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Step 1b: Verify OTP Code directly
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setInfoMessage('')
-
-    const email = formatEmail(resetEmailInput)
-    if (!otpCode.trim()) {
-      setError('Masukkan kode token / 6-digit OTP dari email Anda.')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const { data, error: verifyErr } = await supabase.auth.verifyOtp({
-        email,
-        token: otpCode.trim(),
-        type: 'recovery'
-      })
-
-      if (verifyErr || !data.session) {
-        setError(verifyErr?.message || 'Kode token tidak valid atau telah kadaluarsa. Silakan minta tautan baru.')
-        setLoading(false)
-        return
-      }
-
-      setAuthMode('reset_password')
-      setInfoMessage('Kode verifikasi berhasil. Silakan buat kata sandi baru Anda di bawah ini.')
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Gagal memverifikasi kode token. Silakan coba lagi.'
       setError(errMsg)
     } finally {
       setLoading(false)
@@ -519,55 +488,6 @@ export default function LoginPage() {
                     )}
                   </button>
                 </form>
-
-                {/* Option to Verify Token/OTP Directly */}
-                <div className="mt-5 pt-4 border-t border-gray-100">
-                  {!showOtpInput ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowOtpInput(true)}
-                      className="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline transition-colors flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <KeyRound size={14} /> Memiliki Kode Token / OTP 6-Digit dari Email? Klik di sini
-                    </button>
-                  ) : (
-                    <form onSubmit={handleVerifyOtp} className="space-y-3 bg-teal-50/50 p-4 rounded-2xl border border-teal-100 animate-fade-in">
-                      <div className="flex items-center justify-between">
-                        <label htmlFor="otpCode" className="block text-[11px] font-bold text-teal-900 uppercase tracking-wider">
-                          Masukkan Kode Token / OTP 6-Digit
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowOtpInput(false)}
-                          className="text-[10px] text-gray-500 hover:text-teal-700 font-semibold cursor-pointer"
-                        >
-                          Tutup
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                          <KeyRound size={18} />
-                        </div>
-                        <input
-                          id="otpCode"
-                          type="text"
-                          value={otpCode}
-                          onChange={e => setOtpCode(e.target.value)}
-                          placeholder="Masukkan kode 6 digit..."
-                          required
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-teal-200 text-xs font-bold text-teal-900 placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20 bg-white"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={loading || !otpCode.trim()}
-                        className="w-full py-2.5 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-bold text-xs transition-colors cursor-pointer"
-                      >
-                        Verifikasi Kode Token
-                      </button>
-                    </form>
-                  )}
-                </div>
               </div>
             )}
 
