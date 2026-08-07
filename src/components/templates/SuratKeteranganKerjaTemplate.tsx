@@ -122,26 +122,24 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
         {kotaText}, {data.tanggalSurat}
       </div>
 
-      {/* Metadata Table */}
-      <table className="table-meta" style={{ width: '60%', marginBottom: '20px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '70px' }}>Nomor</td>
-            <td style={{ width: '15px' }}>:</td>
-            <td>{fullNomor}</td>
-          </tr>
-          <tr>
-            <td>Hal</td>
-            <td>:</td>
-            <td>{data.halSurat || 'Keterangan Bekerja'}</td>
-          </tr>
-          <tr>
-            <td>Lamp</td>
-            <td>:</td>
-            <td>{data.lampiran || '---'}</td>
-          </tr>
-        </tbody>
-      </table>
+      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
+      <div style={{ marginBottom: '15px', fontSize: '9.5pt', lineHeight: '1.3' }}>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '70px', display: 'inline-block' }}>Nomor</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>{fullNomor}</span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '70px', display: 'inline-block' }}>Hal</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>{data.halSurat || 'Keterangan Bekerja'}</span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '70px', display: 'inline-block' }}>Lamp</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>{data.lampiran || '---'}</span>
+        </div>
+      </div>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginTop: '15px', marginBottom: '20px' }}>

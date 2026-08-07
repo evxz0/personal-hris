@@ -284,12 +284,12 @@ function renderSkPgsHtml(data: SkPgsData): string {
       <div style="text-align: right; margin-bottom: 10px;">
         <img src="/logo-kop-bni.jpg" style="height: 1.25cm; width: 4.09cm; object-fit: contain;" />
       </div>
-      <table style="width: 58%; margin-bottom: 12px;">
-        <tr><td style="width: 85px;">Putusan</td><td style="width: 15px;">:</td><td>REGIONAL OFFICE 09</td></tr>
-        <tr><td>Nomor</td><td>:</td><td>${data.nomorSurat || ''}</td></tr>
-        <tr><td>Tanggal</td><td>:</td><td>${data.tanggalSurat || ''}</td></tr>
-        <tr><td>Hal</td><td>:</td><td>Pengganti Sementara</td></tr>
-      </table>
+      <div style="margin-bottom: 10px; font-size: 9.5pt; line-height: 1.3;">
+        <div><span style="display: inline-block; width: 85px;">Putusan</span>: REGIONAL OFFICE 09</div>
+        <div><span style="display: inline-block; width: 85px;">Nomor</span>: ${data.nomorSurat || ''}</div>
+        <div><span style="display: inline-block; width: 85px;">Tanggal</span>: ${data.tanggalSurat || ''}</div>
+        <div><span style="display: inline-block; width: 85px;">Hal</span>: Pengganti Sementara</div>
+      </div>
       <div style="text-align: center; margin-bottom: 12px;">
         <h3 style="margin: 0; font-size: 11pt;"><b>SURAT KEPUTUSAN</b></h3>
         <h4 style="margin: 0; font-size: 10pt;"><b>REGIONAL OFFICE 09</b></h4>
@@ -342,7 +342,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; margin-top: 45px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 35px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -358,10 +358,10 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <img src="/logo-kop-bni.jpg" style="height: 1.25cm; width: 4.09cm; object-fit: contain;" />
       </div>
       <div style="margin-bottom: 14px;">Pontianak, <b>${data.tanggalSurat}</b></div>
-      <table style="width: 100%; margin-bottom: 14px;">
-        <tr><td style="width: 50px;">No.</td><td style="width: 15px;">:</td><td><b>${data.nomorSurat}</b></td></tr>
-        <tr><td>Lamp.</td><td>:</td><td>-</td></tr>
-      </table>
+      <div style="margin-bottom: 10px; font-size: 9.5pt; line-height: 1.3;">
+        <div><span style="display: inline-block; width: 60px;">No.</span>: <b>${data.nomorSurat}</b></div>
+        <div><span style="display: inline-block; width: 60px;">Lamp.</span>: -</div>
+      </div>
       <div style="margin-bottom: 16px;">
         Kepada :<br/>
         <b>Sdr/i. ${data.pegawai.nama} – NPP. ${data.pegawai.npp}</b><br/>
@@ -387,7 +387,7 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; margin-top: 45px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 35px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -406,11 +406,11 @@ function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
         <img src="/logo-kop-bni.jpg" style="height: 1.25cm; width: 4.09cm; object-fit: contain;" />
       </div>
       <div style="margin-bottom: 10px;">${kotaText}, ${data.tanggalSurat}</div>
-      <table style="width: 60%; margin-bottom: 20px;">
-        <tr><td style="width: 70px;">Nomor</td><td style="width: 15px;">:</td><td>${fullNomor}</td></tr>
-        <tr><td>Hal</td><td>:</td><td>${data.halSurat || 'Keterangan Bekerja'}</td></tr>
-        <tr><td>Lamp</td><td>:</td><td>${data.lampiran || '---'}</td></tr>
-      </table>
+      <div style="margin-bottom: 15px; font-size: 9.5pt; line-height: 1.3;">
+        <div><span style="display: inline-block; width: 70px;">Nomor</span>: ${fullNomor}</div>
+        <div><span style="display: inline-block; width: 70px;">Hal</span>: ${data.halSurat || 'Keterangan Bekerja'}</div>
+        <div><span style="display: inline-block; width: 70px;">Lamp</span>: ${data.lampiran || '---'}</div>
+      </div>
       <div style="text-align: center; margin: 15px 0 20px 0;">
         <h3 style="margin: 0; font-size: 11pt; text-decoration: underline;"><b>SURAT KETERANGAN</b></h3>
       </div>

@@ -98,21 +98,19 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         Pontianak, <b>{data.tanggalSurat || '28 Juli 2026'}</b>
       </div>
 
-      {/* Metadata & Receiver */}
-      <table className="table-balasan-meta" style={{ width: '100%', marginBottom: '14px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '60px' }}>No.</td>
-            <td style={{ width: '15px' }}>:</td>
-            <td><b>{data.nomorSurat || 'W09/10.3/014/2026'}</b></td>
-          </tr>
-          <tr>
-            <td>Lamp.</td>
-            <td>:</td>
-            <td>-</td>
-          </tr>
-        </tbody>
-      </table>
+      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
+      <div style={{ marginBottom: '10px', fontSize: '9.5pt', lineHeight: '1.3' }}>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '60px', display: 'inline-block' }}>No.</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span><b>{data.nomorSurat || 'W09/10.3/014/2026'}</b></span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '60px', display: 'inline-block' }}>Lamp.</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>-</span>
+        </div>
+      </div>
 
       {/* Kepada & Hal */}
       <div style={{ marginBottom: '16px', lineHeight: '1.4' }}>

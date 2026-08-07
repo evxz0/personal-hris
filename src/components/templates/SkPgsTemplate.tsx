@@ -118,31 +118,29 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         />
       </div>
 
-      {/* Metadata Table */}
-      <table className="table-meta" style={{ width: '58%', marginBottom: '12px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '85px' }}>Putusan</td>
-            <td style={{ width: '15px' }}>:</td>
-            <td>REGIONAL OFFICE 09</td>
-          </tr>
-          <tr>
-            <td>Nomor</td>
-            <td>:</td>
-            <td>{data.nomorSurat || 'KP/.../...'}</td>
-          </tr>
-          <tr>
-            <td>Tanggal</td>
-            <td>:</td>
-            <td>{data.tanggalSurat || '-'}</td>
-          </tr>
-          <tr>
-            <td>Hal</td>
-            <td>:</td>
-            <td>Pengganti Sementara</td>
-          </tr>
-        </tbody>
-      </table>
+      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
+      <div style={{ marginBottom: '10px', fontSize: '9.5pt', lineHeight: '1.3' }}>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '85px', display: 'inline-block' }}>Putusan</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>REGIONAL OFFICE 09</span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '85px', display: 'inline-block' }}>Nomor</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>{data.nomorSurat || 'KP/.../...'}</span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '85px', display: 'inline-block' }}>Tanggal</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>{data.tanggalSurat || '-'}</span>
+        </div>
+        <div style={{ display: 'flex' }}>
+          <span style={{ width: '85px', display: 'inline-block' }}>Hal</span>
+          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
+          <span>Pengganti Sementara</span>
+        </div>
+      </div>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: '12px' }}>
