@@ -109,15 +109,17 @@ export async function exportElementToWord(element: HTMLElement, fileName: string
         body {
           font-family: Arial, Helvetica, sans-serif;
           font-size: 9.5pt;
-          line-height: 1.4;
+          line-height: 1.35;
           color: #000;
+          margin: 0;
+          padding: 0;
         }
         table { border-collapse: collapse; width: 100%; }
-        td, th { vertical-align: top; padding: 2px 0; }
+        td, th { vertical-align: top; padding: 1px 0; }
         b, strong { font-weight: bold; }
         u { text-decoration: underline; }
         img { max-width: 100%; height: auto; display: inline-block; }
-        p { margin: 0 0 10px 0; }
+        p { margin: 0; padding: 0; line-height: 1.35; }
       </style>
     </head>
     <body>

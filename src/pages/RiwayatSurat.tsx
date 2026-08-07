@@ -285,17 +285,34 @@ function renderSkPgsHtml(data: SkPgsData): string {
         <img src="/logo-kop-bni.jpg" style="height: 1.25cm; width: 4.09cm; object-fit: contain;" />
       </div>
       <table style="width: 58%; margin-bottom: 12px;">
-        <tr><td style="width: 85px;">Putusan</td><td>: REGIONAL OFFICE 09</td></tr>
-        <tr><td>Nomor</td><td>: ${data.nomorSurat || ''}</td></tr>
-        <tr><td>Tanggal</td><td>: ${data.tanggalSurat || ''}</td></tr>
-        <tr><td>Hal</td><td>: Pengganti Sementara</td></tr>
+        <tr><td style="width: 85px;">Putusan</td><td style="width: 15px;">:</td><td>REGIONAL OFFICE 09</td></tr>
+        <tr><td>Nomor</td><td>:</td><td>${data.nomorSurat || ''}</td></tr>
+        <tr><td>Tanggal</td><td>:</td><td>${data.tanggalSurat || ''}</td></tr>
+        <tr><td>Hal</td><td>:</td><td>Pengganti Sementara</td></tr>
       </table>
       <div style="text-align: center; margin-bottom: 12px;">
         <h3 style="margin: 0; font-size: 11pt;"><b>SURAT KEPUTUSAN</b></h3>
         <h4 style="margin: 0; font-size: 10pt;"><b>REGIONAL OFFICE 09</b></h4>
         <h4 style="margin: 0; font-size: 10pt;"><b>PT. BANK NEGARA INDONESIA (PERSERO) Tbk</b></h4>
       </div>
+
+      <table style="width: 100%; margin-bottom: 5px;">
+        <tr><td style="width: 110px;">Menimbang</td><td style="width: 15px;">:</td><td style="width: 20px;">1.</td><td style="text-align: justify;">Bahwa untuk kepentingan pengisian posisi kosong dikarenakan Pejabat Definitif berhalangan melaksanakan pekerjaan (cuti besar, cuti tahunan, izin, sakit, dll) maka perlu ditunjuk Pengganti Sementara (Pgs).</td></tr>
+        <tr><td></td><td></td><td>2.</td><td style="text-align: justify;">Bahwa penunjukkan Pgs tersebut merupakan bagian dari pengembangan pegawai untuk meningkatkan kompetensi dan kapabilitas pegawai.</td></tr>
+        <tr><td></td><td></td><td>3.</td><td style="text-align: justify;">Bahwa untuk maksud tersebut di atas, telah dilakukan pertimbangan secara seksama dan perlu diterbitkan Surat Keputusannya.</td></tr>
+      </table>
+
+      <table style="width: 100%; margin-bottom: 5px;">
+        <tr><td style="width: 110px;">Mengingat</td><td style="width: 15px;">:</td><td style="width: 20px;">1.</td><td>Buku Pedoman Kepegawaian PT. Bank Negara Indonesia (Persero) Tbk.</td></tr>
+        <tr><td></td><td></td><td>2.</td><td>Peraturan yang berlaku di PT. Bank Negara Indonesia (Persero) Tbk.</td></tr>
+      </table>
+
+      <table style="width: 100%; margin-bottom: 8px;">
+        <tr><td style="width: 110px;">Memperhatikan</td><td style="width: 15px;">:</td><td colspan="2">Keputusan Area Head - W09.</td></tr>
+      </table>
+
       <div style="text-align: center; font-weight: bold; margin: 8px 0;">MEMUTUSKAN</div>
+
       <table style="width: 100%; margin-bottom: 8px;">
         <tr><td style="width: 110px;">Menetapkan</td><td style="width: 15px;">:</td><td></td></tr>
         <tr><td>Pertama</td><td>:</td><td>
@@ -311,14 +328,21 @@ function renderSkPgsHtml(data: SkPgsData): string {
             <tr><td>Lokasi</td><td>:</td><td><b>${data.penugasan.lokasiPgs}</b></td></tr>
           </table>
         </td></tr>
-        <tr><td>Kedua</td><td>:</td><td>Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal ${data.penugasan.tanggalMulai} – ${data.penugasan.tanggalSelesai}.</td></tr>
+        <tr><td style="padding-top: 5px;">Kedua</td><td style="padding-top: 5px;">:</td><td style="padding-top: 5px; text-align: justify;">Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal ${data.penugasan.tanggalMulai || '...'} – ${data.penugasan.tanggalSelesai || '...'}.</td></tr>
+        <tr><td style="padding-top: 3px;">Ketiga</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px; text-align: justify;">Selama penunjukkan pengganti sementara tersebut kepada Sdr. ${(data.pegawai.nama || '').toUpperCase()} - NPP.${data.pegawai.npp || ''} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan megenai pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.</td></tr>
+        <tr><td style="padding-top: 3px;">Keempat</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px;">Surat Keputusan ini berlaku sejak tanggal efektif penunjukkan.</td></tr>
+        <tr><td style="padding-top: 3px;">Kelima</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px; text-align: justify;">Apabila dikemudian hari dari Surat Keputusan ini terdapat kekeliruan, akan diadakan pembetulan sebagaimana mestinya.</td></tr>
       </table>
+
+      <p style="text-align: justify; font-size: 9pt; margin-top: 6px; line-height: 1.3;">
+        Surat Keputusan ini disampaikan kepada yang bersangkutan melalui unitnya masing-masing untuk diketahui dan dilaksanakan sebagaimana mestinya, dengan tembusan kepada Unit Organisasi lain yang memerlukan.
+      </p>
+
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
-        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 45px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -362,9 +386,8 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
-        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 45px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -421,10 +444,9 @@ function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
       <div style="margin-top: 14px; text-align: left;">
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}</p>
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}</p>
-        <br/><br/><br/><br/>
         ${data.penandatangan?.nama ? `
-          <p><u><b>${data.penandatangan.nama}</b></u></p>
-          <p><b>${data.penandatangan.jabatan}</b></p>
+          <p style="margin: 0; margin-top: 45px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
     </div>

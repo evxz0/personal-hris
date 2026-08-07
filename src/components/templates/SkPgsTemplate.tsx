@@ -304,18 +304,18 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         <p style={{ margin: 0, fontWeight: 'bold' }}>PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style={{ margin: 0, fontWeight: 'bold' }}>Regional Office 09, Area III, Kalimantan Barat</p>
 
-        <div style={{ height: '65px', width: '100%' }}></div>
-
         {pejabatNama ? (
           <>
-            <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
+            <p style={{ margin: 0, marginTop: '45px', fontWeight: 'bold', textDecoration: 'underline' }}>
               {pejabatNama}
             </p>
             <p style={{ margin: 0, fontWeight: 'bold' }}>
               {pejabatJabatan}
             </p>
           </>
-        ) : null}
+        ) : (
+          <div style={{ height: '45px' }} />
+        )}
       </div>
     </div>
   );

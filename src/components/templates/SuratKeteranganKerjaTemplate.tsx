@@ -230,18 +230,18 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
           {data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}
         </p>
 
-        <div style={{ height: '65px', width: '100%' }}></div>
-
         {penandatanganNama ? (
           <>
-            <p style={{ margin: 0, fontWeight: 'bold', textDecoration: 'underline' }}>
+            <p style={{ margin: 0, marginTop: '45px', fontWeight: 'bold', textDecoration: 'underline' }}>
               {penandatanganNama}
             </p>
             <p style={{ margin: 0, fontWeight: 'bold' }}>
               {penandatanganJabatan}
             </p>
           </>
-        ) : null}
+        ) : (
+          <div style={{ height: '45px' }} />
+        )}
       </div>
     </div>
   );
