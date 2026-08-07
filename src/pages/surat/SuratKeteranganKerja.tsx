@@ -7,6 +7,8 @@ import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDr
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { Printer, FileText, UserCheck, Award } from 'lucide-react'
+import { getTodayIndonesian } from '../../lib/dateUtils'
+import { DatePickerInput } from '../../components/ui/DocumentFormControls'
 
 export default function SuratKeteranganKerjaPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -27,7 +29,7 @@ export default function SuratKeteranganKerjaPage() {
   // State for Surat Data
   const [formData, setFormData] = useState<SuratKeteranganKerjaData>({
     kotaSurat: 'Pontianak',
-    tanggalSurat: '05 Agustus 2026',
+    tanggalSurat: getTodayIndonesian(),
     nomorSurat: 'PNK / 12 / 145 / H-R',
     halSurat: 'Keterangan Bekerja',
     lampiran: '---',
@@ -48,7 +50,7 @@ export default function SuratKeteranganKerjaPage() {
     },
     keterangan: {
       tanggalMulai: '01 Januari 2020',
-      tanggalSelesai: '31 Juli 2026',
+      tanggalSelesai: getTodayIndonesian(),
       posisiTerakhir: 'PROGRAM RELATIONSHIP MANAGER'
     },
     penandatangan: {
@@ -247,18 +249,14 @@ export default function SuratKeteranganKerjaPage() {
                   type="text"
                   value={formData.kotaSurat}
                   onChange={e => setFormData({ ...formData, kotaSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                 />
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Surat</label>
-                <input
-                  type="text"
-                  value={formData.tanggalSurat}
-                  onChange={e => setFormData({ ...formData, tanggalSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <DatePickerInput
+                label="Tanggal Surat"
+                value={formData.tanggalSurat}
+                onChange={val => setFormData({ ...formData, tanggalSurat: val })}
+              />
             </div>
 
             <div>
@@ -385,24 +383,16 @@ export default function SuratKeteranganKerjaPage() {
             </p>
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Mulai Kerja</label>
-                  <input
-                    type="text"
-                    value={formData.keterangan.tanggalMulai}
-                    onChange={e => setFormData({ ...formData, keterangan: { ...formData.keterangan, tanggalMulai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Selesai Kerja</label>
-                  <input
-                    type="text"
-                    value={formData.keterangan.tanggalSelesai}
-                    onChange={e => setFormData({ ...formData, keterangan: { ...formData.keterangan, tanggalSelesai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <DatePickerInput
+                  label="Tanggal Mulai Kerja"
+                  value={formData.keterangan.tanggalMulai}
+                  onChange={val => setFormData({ ...formData, keterangan: { ...formData.keterangan, tanggalMulai: val } })}
+                />
+                <DatePickerInput
+                  label="Tanggal Selesai Kerja"
+                  value={formData.keterangan.tanggalSelesai}
+                  onChange={val => setFormData({ ...formData, keterangan: { ...formData.keterangan, tanggalSelesai: val } })}
+                />
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-[#64748B]">Posisi Terakhir</label>

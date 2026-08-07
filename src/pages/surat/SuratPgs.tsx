@@ -9,6 +9,8 @@ import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { useReferensi } from '../../hooks/useReferensi'
+import { getTodayIndonesian } from '../../lib/dateUtils'
+import { DatePickerInput, UnitSelectInput, JenjangSelect, GradeSelect } from '../../components/ui/DocumentFormControls'
 
 export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -32,7 +34,7 @@ export default function SuratPgsPage() {
   // State for Surat Data
   const [formData, setFormData] = useState<SkPgsData>({
     nomorSurat: 'KP/015/7.3/H-R',
-    tanggalSurat: '27 Juli 2026',
+    tanggalSurat: getTodayIndonesian(),
     pegawai: {
       nama: 'TIARA TESALONIKA PASARIBU',
       npp: 'K070341',
@@ -48,8 +50,8 @@ export default function SuratPgsPage() {
       unitPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       unitDiktum: 'PONTIANAK BRANCH OFFICE',
       lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
-      tanggalMulai: '27 Juli 2026',
-      tanggalSelesai: '31 Juli 2026'
+      tanggalMulai: getTodayIndonesian(),
+      tanggalSelesai: getTodayIndonesian()
     },
     penandatangan: {
       nama: 'NOVACHRISTO JOSEPH SILANGEN',
@@ -191,16 +193,14 @@ export default function SuratPgsPage() {
                   type="text"
                   value={formData.nomorSurat}
                   onChange={e => setFormData({ ...formData, nomorSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1 font-medium"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Surat</label>
-                <input
-                  type="text"
+                <DatePickerInput
+                  label="Tanggal Surat"
                   value={formData.tanggalSurat}
-                  onChange={e => setFormData({ ...formData, tanggalSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1"
+                  onChange={val => setFormData({ ...formData, tanggalSurat: val })}
                 />
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function SuratPgsPage() {
                   type="text"
                   value={formData.pegawai.nama}
                   onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, nama: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -228,7 +228,7 @@ export default function SuratPgsPage() {
                     type="text"
                     value={formData.pegawai.npp}
                     onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, npp: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
                 <div>
@@ -237,50 +237,28 @@ export default function SuratPgsPage() {
                     type="text"
                     value={formData.pegawai.jabatanAsal}
                     onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, jabatanAsal: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Jenjang Asal (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="misal: ASST"
-                    value={formData.pegawai.jenjangAsal || ''}
-                    onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, jenjangAsal: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Grade Asal</label>
-                  <input
-                    type="text"
-                    placeholder="misal: GRADE 6"
-                    value={formData.pegawai.gradeAsal}
-                    onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, gradeAsal: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <JenjangSelect
+                  label="Jenjang Asal"
+                  value={formData.pegawai.jenjangAsal || ''}
+                  onChange={val => setFormData({ ...formData, pegawai: { ...formData.pegawai, jenjangAsal: val } })}
+                />
+                <GradeSelect
+                  label="Grade Asal"
+                  value={formData.pegawai.gradeAsal || ''}
+                  onChange={val => setFormData({ ...formData, pegawai: { ...formData.pegawai, gradeAsal: val } })}
+                />
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Unit Pegawai (Tampil di bagian 'Menunjuk')</label>
-                <select
-                  value={formData.pegawai.unitAsal ?? ''}
-                  onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-                >
-                  <option value="">-- Kosong (Tanpa Unit) --</option>
-                  {formData.pegawai.unitAsal && !outlets.some(o => o.nama_referensi === formData.pegawai.unitAsal) && (
-                    <option value={formData.pegawai.unitAsal}>{formData.pegawai.unitAsal}</option>
-                  )}
-                  {outlets.map(o => (
-                    <option key={o.id} value={o.nama_referensi}>
-                      {o.nama_referensi}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <UnitSelectInput
+                label="Unit Pegawai (Tampil di bagian 'Menunjuk')"
+                value={formData.pegawai.unitAsal || ''}
+                onChange={val => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: val } })}
+                outlets={outlets}
+              />
             </div>
           </div>
 
@@ -296,104 +274,52 @@ export default function SuratPgsPage() {
                   type="text"
                   value={formData.penugasan.jabatanPgs}
                   onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, jabatanPgs: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Jenjang PGS</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.jenjangPgs}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, jenjangPgs: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Grade PGS</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.gradePgs}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, gradePgs: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <JenjangSelect
+                  label="Jenjang PGS"
+                  value={formData.penugasan.jenjangPgs || ''}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, jenjangPgs: val } })}
+                />
+                <GradeSelect
+                  label="Grade PGS"
+                  value={formData.penugasan.gradePgs || ''}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, gradePgs: val } })}
+                />
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Unit PGS (Untuk 'Sebagai')</label>
-                <select
-                  value={formData.penugasan.unitPgs ?? formData.penugasan.lokasiPgs ?? ''}
-                  onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-                >
-                  <option value="">-- Kosong (Tanpa Unit) --</option>
-                  {formData.penugasan.unitPgs && !outlets.some(o => o.nama_referensi === formData.penugasan.unitPgs) && (
-                    <option value={formData.penugasan.unitPgs}>{formData.penugasan.unitPgs}</option>
-                  )}
-                  {outlets.map(o => (
-                    <option key={o.id} value={o.nama_referensi}>
-                      {o.nama_referensi}
-                    </option>
-                  ))}
-                </select>
+              <UnitSelectInput
+                label="Unit PGS (Untuk 'Sebagai')"
+                value={formData.penugasan.unitPgs || ''}
+                onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitPgs: val } })}
+                outlets={outlets}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <UnitSelectInput
+                  label="Unit (Untuk Diktum 'Unit')"
+                  value={formData.penugasan.unitDiktum || ''}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitDiktum: val } })}
+                  outlets={outlets}
+                />
+                <UnitSelectInput
+                  label="Lokasi PGS (Untuk 'Lokasi')"
+                  value={formData.penugasan.lokasiPgs || ''}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, lokasiPgs: val } })}
+                  outlets={outlets}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Unit (Untuk Diktum 'Unit')</label>
-                  <select
-                    value={formData.penugasan.unitDiktum ?? formData.pegawai.unitAsal ?? ''}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, unitDiktum: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-                  >
-                    <option value="">-- Kosong (Tanpa Unit) --</option>
-                    {formData.penugasan.unitDiktum && !outlets.some(o => o.nama_referensi === formData.penugasan.unitDiktum) && (
-                      <option value={formData.penugasan.unitDiktum}>{formData.penugasan.unitDiktum}</option>
-                    )}
-                    {outlets.map(o => (
-                      <option key={o.id} value={o.nama_referensi}>
-                        {o.nama_referensi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Lokasi PGS (Untuk 'Lokasi')</label>
-                  <select
-                    value={formData.penugasan.lokasiPgs ?? ''}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, lokasiPgs: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-                  >
-                    <option value="">-- Kosong (Tanpa Lokasi) --</option>
-                    {formData.penugasan.lokasiPgs && !outlets.some(o => o.nama_referensi === formData.penugasan.lokasiPgs) && (
-                      <option value={formData.penugasan.lokasiPgs}>{formData.penugasan.lokasiPgs}</option>
-                    )}
-                    {outlets.map(o => (
-                      <option key={o.id} value={o.nama_referensi}>
-                        {o.nama_referensi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Mulai</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.tanggalMulai}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, tanggalMulai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Selesai</label>
-                  <input
-                    type="text"
-                    value={formData.penugasan.tanggalSelesai}
-                    onChange={e => setFormData({ ...formData, penugasan: { ...formData.penugasan, tanggalSelesai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <DatePickerInput
+                  label="Tanggal Mulai"
+                  value={formData.penugasan.tanggalMulai}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, tanggalMulai: val } })}
+                />
+                <DatePickerInput
+                  label="Tanggal Selesai"
+                  value={formData.penugasan.tanggalSelesai}
+                  onChange={val => setFormData({ ...formData, penugasan: { ...formData.penugasan, tanggalSelesai: val } })}
+                />
               </div>
             </div>
           </div>

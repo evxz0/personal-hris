@@ -8,6 +8,8 @@ import { exportElementToPDF, exportElementToWord } from '../../lib/documentExpor
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { useReferensi } from '../../hooks/useReferensi'
 import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
+import { getTodayIndonesian } from '../../lib/dateUtils'
+import { DatePickerInput, UnitSelectInput } from '../../components/ui/DocumentFormControls'
 
 // Helper function to convert numbers to Indonesian words (Terbilang)
 function terbilang(n: number | string): string {
@@ -47,7 +49,7 @@ export default function SuratBalasanCutiPage() {
 
   // State for Surat Balasan Cuti Data
   const [formData, setFormData] = useState<SuratBalasanCutiData>({
-    tanggalSurat: '28 Juli 2026',
+    tanggalSurat: getTodayIndonesian(),
     nomorSurat: 'W09/10.3/014/2026',
     pegawai: {
       nama: 'Feri Wahyudi',
@@ -55,16 +57,16 @@ export default function SuratBalasanCutiPage() {
       unitAsal: 'Pontianak Branch Office',
       kotaUnit: 'PONTIANAK'
     },
-    tahunCuti: '2026',
-    tanggalPermohonan: '16 Juli 2026',
+    tahunCuti: new Date().getFullYear().toString(),
+    tanggalPermohonan: getTodayIndonesian(),
     cuti: {
       jumlahHari: '5',
       jumlahHariTerbilang: 'lima',
-      tanggalMulai: '03 Agustus 2026',
-      tanggalSelesai: '07 Agustus 2026',
-      tanggalAktif: '10 Agustus 2026',
-      sisaCuti: '5',
-      sisaCutiTerbilang: 'lima',
+      tanggalMulai: getTodayIndonesian(),
+      tanggalSelesai: getTodayIndonesian(),
+      tanggalAktif: getTodayIndonesian(),
+      sisaCuti: '7',
+      sisaCutiTerbilang: 'tujuh',
       statusOpct: 'dapat'
     },
     penandatangan: {
@@ -192,22 +194,18 @@ export default function SuratBalasanCutiPage() {
               1. Metadata Surat
             </p>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Surat</label>
-                <input
-                  type="text"
-                  value={formData.tanggalSurat}
-                  onChange={e => setFormData({ ...formData, tanggalSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1"
-                />
-              </div>
+              <DatePickerInput
+                label="Tanggal Surat"
+                value={formData.tanggalSurat}
+                onChange={val => setFormData({ ...formData, tanggalSurat: val })}
+              />
               <div>
                 <label className="text-[11px] font-semibold text-[#64748B]">Nomor Surat</label>
                 <input
                   type="text"
                   value={formData.nomorSurat}
                   onChange={e => setFormData({ ...formData, nomorSurat: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 mt-1 font-medium"
                 />
               </div>
             </div>
@@ -218,18 +216,14 @@ export default function SuratBalasanCutiPage() {
                   type="text"
                   value={formData.tahunCuti}
                   onChange={e => setFormData({ ...formData, tahunCuti: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                 />
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Permohonan</label>
-                <input
-                  type="text"
-                  value={formData.tanggalPermohonan}
-                  onChange={e => setFormData({ ...formData, tanggalPermohonan: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                />
-              </div>
+              <DatePickerInput
+                label="Tanggal Permohonan"
+                value={formData.tanggalPermohonan}
+                onChange={val => setFormData({ ...formData, tanggalPermohonan: val })}
+              />
             </div>
           </div>
 
@@ -245,7 +239,7 @@ export default function SuratBalasanCutiPage() {
                   type="text"
                   value={formData.pegawai.nama}
                   onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, nama: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -255,7 +249,7 @@ export default function SuratBalasanCutiPage() {
                     type="text"
                     value={formData.pegawai.npp}
                     onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, npp: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
                 <div>
@@ -264,28 +258,16 @@ export default function SuratBalasanCutiPage() {
                     type="text"
                     value={formData.pegawai.kotaUnit}
                     onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, kotaUnit: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-[#64748B]">Unit / Kantor Asal</label>
-                <select
-                  value={formData.pegawai.unitAsal ?? ''}
-                  onChange={e => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: e.target.value } })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-                >
-                  <option value="">-- Kosong (Tanpa Unit) --</option>
-                  {formData.pegawai.unitAsal && !outlets.some(o => o.nama_referensi === formData.pegawai.unitAsal) && (
-                    <option value={formData.pegawai.unitAsal}>{formData.pegawai.unitAsal}</option>
-                  )}
-                  {outlets.map(o => (
-                    <option key={o.id} value={o.nama_referensi}>
-                      {o.nama_referensi}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <UnitSelectInput
+                label="Unit / Kantor Asal"
+                value={formData.pegawai.unitAsal || ''}
+                onChange={val => setFormData({ ...formData, pegawai: { ...formData.pegawai, unitAsal: val } })}
+                outlets={outlets}
+              />
             </div>
           </div>
 
@@ -314,7 +296,7 @@ export default function SuratBalasanCutiPage() {
                         }
                       })
                     }}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
                 <div>
@@ -324,40 +306,28 @@ export default function SuratBalasanCutiPage() {
                     placeholder="misal: lima"
                     value={formData.cuti.jumlahHariTerbilang}
                     onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, jumlahHariTerbilang: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
+                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Mulai Cuti</label>
-                  <input
-                    type="text"
-                    value={formData.cuti.tanggalMulai}
-                    onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalMulai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Selesai Cuti</label>
-                  <input
-                    type="text"
-                    value={formData.cuti.tanggalSelesai}
-                    onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalSelesai: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <DatePickerInput
+                  label="Tanggal Mulai Cuti"
+                  value={formData.cuti.tanggalMulai}
+                  onChange={val => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalMulai: val } })}
+                />
+                <DatePickerInput
+                  label="Tanggal Selesai Cuti"
+                  value={formData.cuti.tanggalSelesai}
+                  onChange={val => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalSelesai: val } })}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#64748B]">Tanggal Aktif Bekerja</label>
-                  <input
-                    type="text"
-                    value={formData.cuti.tanggalAktif}
-                    onChange={e => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalAktif: e.target.value } })}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <DatePickerInput
+                  label="Tanggal Aktif Bekerja"
+                  value={formData.cuti.tanggalAktif}
+                  onChange={val => setFormData({ ...formData, cuti: { ...formData.cuti, tanggalAktif: val } })}
+                />
                 <div>
                   <label className="text-[11px] font-semibold text-[#64748B]">Status Pencairan OPCT</label>
                   <select
