@@ -98,19 +98,21 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         Pontianak, <b>{data.tanggalSurat || '28 Juli 2026'}</b>
       </div>
 
-      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
-      <div style={{ marginBottom: '10px', fontSize: '9.5pt', lineHeight: '1.3' }}>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '60px', display: 'inline-block' }}>No.</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span><b>{data.nomorSurat || 'W09/10.3/014/2026'}</b></span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '60px', display: 'inline-block' }}>Lamp.</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>-</span>
-        </div>
-      </div>
+      {/* Metadata Table (Ultra Compact) */}
+      <table className="table-balasan-meta" style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '60px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>No.</td>
+            <td style={{ width: '15px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}><b>{data.nomorSurat || 'W09/10.3/014/2026'}</b></td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Lamp.</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>-</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Kepada & Hal */}
       <div style={{ marginBottom: '16px', lineHeight: '1.4' }}>

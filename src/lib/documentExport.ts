@@ -94,6 +94,19 @@ export async function exportElementToWord(element: HTMLElement, fileName: string
   const clone = element.cloneNode(true) as HTMLElement
   await convertImagesToBase64(clone)
 
+  // Find BNI Header Logo image
+  const logoImg = clone.querySelector('img[alt="BNI Logo"]') || clone.querySelector('img[src*="logo"]')
+  let logoHtml = ''
+  if (logoImg) {
+    logoHtml = logoImg.outerHTML
+    const parent = logoImg.parentElement
+    if (parent && (parent.tagName === 'DIV' || parent.tagName === 'P')) {
+      parent.remove()
+    } else {
+      logoImg.remove()
+    }
+  }
+
   const content = clone.innerHTML
   const html = `
     <!DOCTYPE html>
@@ -101,10 +114,31 @@ export async function exportElementToWord(element: HTMLElement, fileName: string
     <head>
       <meta charset="utf-8">
       <title>${fileName}</title>
+      <!--[if gte mso 9]>
+      <xml>
+        <w:WordDocument>
+          <w:View>Print</w:View>
+          <w:Zoom>100</w:Zoom>
+          <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+      </xml>
+      <![endif]-->
       <style>
-        @page {
+        @page Section1 {
           size: A4 portrait;
           margin: 0.75in 0.5in 0.5in 0.75in;
+          mso-header-margin: 0.3in;
+          mso-header: h1;
+        }
+        div.Section1 {
+          page: Section1;
+        }
+        div.MsoHeader {
+          mso-element: header;
+          id: h1;
+          margin: 0;
+          padding: 0;
+          text-align: right;
         }
         body {
           font-family: Arial, Helvetica, sans-serif;
@@ -115,15 +149,27 @@ export async function exportElementToWord(element: HTMLElement, fileName: string
           padding: 0;
         }
         table { border-collapse: collapse; width: 100%; }
-        td, th { vertical-align: top; padding: 1px 0; }
+        td, th { vertical-align: top; padding: 1px 2px; }
         b, strong { font-weight: bold; }
         u { text-decoration: underline; }
         img { max-width: 100%; height: auto; display: inline-block; }
         p { margin: 0; padding: 0; line-height: 1.35; }
+        .table-meta { width: 58% !important; margin-bottom: 8px !important; }
+        .table-meta td { padding: 0px 2px !important; line-height: 1.2 !important; vertical-align: top !important; }
+        .table-diktum td { padding: 1px 2px !important; line-height: 1.3 !important; }
       </style>
     </head>
     <body>
-      ${content}
+      <div class="Section1">
+        ${logoHtml ? `
+        <div class="MsoHeader" id="h1" style="mso-element: header; text-align: right;">
+          <p style="text-align: right; margin: 0; padding: 0;">
+            ${logoHtml}
+          </p>
+        </div>
+        ` : ''}
+        ${content}
+      </div>
     </body>
     </html>
   `

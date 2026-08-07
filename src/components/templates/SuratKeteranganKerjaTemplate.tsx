@@ -122,24 +122,26 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
         {kotaText}, {data.tanggalSurat}
       </div>
 
-      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
-      <div style={{ marginBottom: '15px', fontSize: '9.5pt', lineHeight: '1.3' }}>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '70px', display: 'inline-block' }}>Nomor</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>{fullNomor}</span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '70px', display: 'inline-block' }}>Hal</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>{data.halSurat || 'Keterangan Bekerja'}</span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '70px', display: 'inline-block' }}>Lamp</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>{data.lampiran || '---'}</span>
-        </div>
-      </div>
+      {/* Metadata Table (Ultra Compact) */}
+      <table className="table-meta" style={{ width: '60%', marginBottom: '12px', borderCollapse: 'collapse' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '70px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Nomor</td>
+            <td style={{ width: '15px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>{fullNomor}</td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Hal</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>{data.halSurat || 'Keterangan Bekerja'}</td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Lamp</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>{data.lampiran || '---'}</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginTop: '15px', marginBottom: '20px' }}>

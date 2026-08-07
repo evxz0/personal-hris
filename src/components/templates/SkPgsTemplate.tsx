@@ -118,29 +118,31 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
         />
       </div>
 
-      {/* Metadata (Plain Layout without Table to prevent Word gridlines & page overflow) */}
-      <div style={{ marginBottom: '10px', fontSize: '9.5pt', lineHeight: '1.3' }}>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '85px', display: 'inline-block' }}>Putusan</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>REGIONAL OFFICE 09</span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '85px', display: 'inline-block' }}>Nomor</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>{data.nomorSurat || 'KP/.../...'}</span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '85px', display: 'inline-block' }}>Tanggal</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>{data.tanggalSurat || '-'}</span>
-        </div>
-        <div style={{ display: 'flex' }}>
-          <span style={{ width: '85px', display: 'inline-block' }}>Hal</span>
-          <span style={{ width: '15px', display: 'inline-block' }}>:</span>
-          <span>Pengganti Sementara</span>
-        </div>
-      </div>
+      {/* Metadata Table (Ultra Compact without excessive line spacing) */}
+      <table className="table-meta" style={{ width: '58%', marginBottom: '8px', borderCollapse: 'collapse' }}>
+        <tbody>
+          <tr>
+            <td style={{ width: '85px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Putusan</td>
+            <td style={{ width: '15px', padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>REGIONAL OFFICE 09</td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Nomor</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>{data.nomorSurat || 'KP/.../...'}</td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Tanggal</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>{data.tanggalSurat || '-'}</td>
+          </tr>
+          <tr>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Hal</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>:</td>
+            <td style={{ padding: '0px 2px', verticalAlign: 'top', lineHeight: '1.2' }}>Pengganti Sementara</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: '12px' }}>
