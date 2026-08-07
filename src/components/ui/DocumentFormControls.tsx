@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Calendar } from 'lucide-react'
 import { formatIsoToIndonesian, formatIndonesianToIso } from '../../lib/dateUtils'
 
@@ -6,16 +6,16 @@ export const JENJANG_OPTIONS = ['', 'VP', 'AVP', 'MGR', 'AMGR', 'ASST']
 
 export const GRADE_OPTIONS = [
   '',
-  'GRADE 12',
-  'GRADE 11',
-  'GRADE 10',
-  'GRADE 9',
-  'GRADE 8',
-  'GRADE 7',
-  'GRADE 6',
-  'GRADE 5',
-  'GRADE 4',
-  'NON GRADE'
+  '.GRADE.12',
+  '.GRADE.11',
+  '.GRADE.10',
+  '.GRADE.9',
+  '.GRADE.8',
+  '.GRADE.7',
+  '.GRADE.6',
+  '.GRADE.5',
+  '.GRADE.4',
+  '.NON.GRADE'
 ]
 
 interface DatePickerInputProps {
@@ -27,22 +27,37 @@ interface DatePickerInputProps {
 
 export function DatePickerInput({ label, value, onChange, placeholder = "misal: 27 Juli 2026" }: DatePickerInputProps) {
   const isoValue = formatIndonesianToIso(value)
+  const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const handleOpenPicker = () => {
+    try {
+      if (dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
+        dateInputRef.current.showPicker()
+      }
+    } catch {
+      // Fallback for browsers that block trigger
+    }
+  }
 
   return (
     <div>
       <label className="text-[11px] font-semibold text-[#64748B]">{label}</label>
-      <div className="relative flex items-center mt-1">
+      <div
+        className="relative flex items-center mt-1 cursor-pointer group"
+        onClick={handleOpenPicker}
+      >
         <input
           type="text"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-3 pr-9 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
+          className="w-full pl-3 pr-9 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium cursor-pointer"
         />
-        <div className="absolute right-2 flex items-center justify-center text-gray-400 hover:text-teal-600 cursor-pointer pointer-events-none">
+        <div className="absolute right-2.5 flex items-center justify-center text-gray-400 group-hover:text-teal-600 pointer-events-none">
           <Calendar size={15} />
         </div>
         <input
+          ref={dateInputRef}
           type="date"
           value={isoValue}
           onChange={e => {
@@ -50,7 +65,7 @@ export function DatePickerInput({ label, value, onChange, placeholder = "misal: 
               onChange(formatIsoToIndonesian(e.target.value))
             }
           }}
-          className="absolute right-1 w-7 h-7 opacity-0 cursor-pointer bg-transparent border-none accent-teal-600 focus:outline-none"
+          className="absolute right-1 w-7 h-7 opacity-0 cursor-pointer pointer-events-auto"
           title="Pilih Tanggal dari Kalender"
         />
       </div>
@@ -99,7 +114,7 @@ export function UnitSelectInput({
             {o.nama_referensi}
           </option>
         ))}
-        <option value="__MANUAL__">✏️ -- Isi Manual / Custom Unit --</option>
+        <option value="__MANUAL__">-- Isi Manual / Custom Unit --</option>
       </select>
 
       {(isManualMode || isCustom) && (

@@ -40,13 +40,13 @@ export default function SuratPgsPage() {
       npp: 'K070341',
       jabatanAsal: 'PROGRAM RELATIONSHIP MANAGER',
       jenjangAsal: '',
-      gradeAsal: 'NON GRADE',
+      gradeAsal: '.NON.GRADE',
       unitAsal: 'PONTIANAK BRANCH OFFICE'
     },
     penugasan: {
       jabatanPgs: 'PGS PROGRAM RELATIONSHIP MANAGER',
       jenjangPgs: 'ASST',
-      gradePgs: 'NON GRADE',
+      gradePgs: '.NON.GRADE',
       unitPgs: 'SUNGAI PINYUH BRANCH OFFICE',
       unitDiktum: 'PONTIANAK BRANCH OFFICE',
       lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
@@ -79,7 +79,17 @@ export default function SuratPgsPage() {
     const emp = karyawanList.find(k => k.npp === npp)
     if (emp) {
       const rawGrade = emp.grade !== null && emp.grade !== undefined ? String(emp.grade).trim() : ''
-      const gradeStr = rawGrade ? (rawGrade.toUpperCase().includes('GRADE') ? rawGrade : `GRADE ${rawGrade}`) : 'NON GRADE'
+      let gradeStr = '.NON.GRADE'
+      if (rawGrade) {
+        const digits = rawGrade.match(/\d+/)
+        if (digits) {
+          gradeStr = `.GRADE.${digits[0]}`
+        } else if (rawGrade.toUpperCase().includes('NON')) {
+          gradeStr = '.NON.GRADE'
+        } else {
+          gradeStr = rawGrade.startsWith('.') ? rawGrade : `.${rawGrade.replace(/\s+/g, '.')}`
+        }
+      }
       const unitVal = emp.outlet || (emp as any).departemen || 'REGIONAL OFFICE 09'
       setFormData(prev => ({
         ...prev,
@@ -88,7 +98,7 @@ export default function SuratPgsPage() {
           npp: emp.npp || '',
           jabatanAsal: (emp.jabatan || 'STAFF').toUpperCase(),
           jenjangAsal: (emp.jenjang || '').toUpperCase(),
-          gradeAsal: gradeStr.toUpperCase(),
+          gradeAsal: gradeStr,
           unitAsal: (unitVal || '').toUpperCase()
         },
         penugasan: {
