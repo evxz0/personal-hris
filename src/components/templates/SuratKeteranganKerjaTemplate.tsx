@@ -232,7 +232,7 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
 
         {penandatanganNama ? (
           <>
-            <p style={{ margin: 0, marginTop: '45px', fontWeight: 'bold', textDecoration: 'underline' }}>
+            <p style={{ margin: 0, marginTop: '65px', fontWeight: 'bold', textDecoration: 'underline' }}>
               {penandatanganNama}
             </p>
             <p style={{ margin: 0, fontWeight: 'bold' }}>
@@ -240,7 +240,7 @@ export const SuratKeteranganKerjaTemplate = React.forwardRef<HTMLDivElement, Pro
             </p>
           </>
         ) : (
-          <div style={{ height: '45px' }} />
+          <div style={{ height: '65px' }} />
         )}
       </div>
     </div>
