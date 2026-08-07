@@ -133,41 +133,41 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
         Menunjuk perihal pada pokok surat, dengan ini kami sampaikan sebagai berikut :
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px', lineHeight: '1.35' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px', lineHeight: '1.25' }}>
         <tbody>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>1.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>1.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Pelaksanaan cuti tahunan Saudara tahun {data.tahunCuti || '2026'} dapat dilaksanakan selama <b>{String(data.cuti.jumlahHari || '5').padStart(2, '0')} ({data.cuti.jumlahHariTerbilang || 'lima'})</b> hari kerja terhitung sejak tanggal <b>{data.cuti.tanggalMulai || '03 Agustus 2026'} s/d {data.cuti.tanggalSelesai || '07 Agustus 2026'}</b> dan aktif kembali bekerja pada tanggal <b>{data.cuti.tanggalAktif || '10 Agustus 2026'}</b>
             </td>
           </tr>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>2.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>2.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Dengan dilaksanakan cuti tersebut diatas, maka sisa cuti tahunan Saudara untuk tahun {data.tahunCuti || '2026'} adalah <b>{data.cuti.sisaCuti || '5'} ({data.cuti.sisaCutiTerbilang || 'lima'})</b> hari kerja.
             </td>
           </tr>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>3.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>3.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Ongkos Perjalanan Cuti Tahunan (OPCT) {data.tahunCuti || '2026'} Saudara <u><b>{data.cuti.statusOpct || 'dapat'}</b></u> dibayarkan. Pengajuan pencairan OPCT tahun {data.tahunCuti || '2026'} dapat saudara ajukan melalui aplikasi DigiHc.
             </td>
           </tr>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>4.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>4.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Sebelum pelaksanaan cuti tersebut, harap Saudara mengisi form rencana ketidakhadiran pada aplikasi DigiHc.
             </td>
           </tr>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>5.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>5.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Jika diperlukan Saudara bersedia kami panggil dan Sisa Cuti Saudara akan kami perhitungkan kembali.
             </td>
           </tr>
           <tr>
-            <td style={{ width: '26px', minWidth: '26px', verticalAlign: 'top', paddingBottom: '6px' }}>6.</td>
-            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '6px' }}>
+            <td style={{ width: '24px', minWidth: '24px', verticalAlign: 'top', paddingBottom: '2px' }}>6.</td>
+            <td style={{ textAlign: 'justify', verticalAlign: 'top', paddingBottom: '2px' }}>
               Untuk selanjutnya selamat melaksanakan Cuti, semoga dapat dimanfaatkan sebaik-baiknya dengan harapan sekembalinya dari Cuti, Saudara akan bekerja lebih baik lagi.
             </td>
           </tr>
