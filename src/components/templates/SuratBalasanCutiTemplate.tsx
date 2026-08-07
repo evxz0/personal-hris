@@ -185,7 +185,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
 
         {pejabatNama ? (
           <>
-            <p style={{ margin: 0, marginTop: '65px', fontWeight: 'bold', textDecoration: 'underline' }}>
+            <p style={{ margin: 0, marginTop: '90px', fontWeight: 'bold', textDecoration: 'underline' }}>
               {pejabatNama}
             </p>
             <p style={{ margin: 0, fontWeight: 'bold' }}>
@@ -193,7 +193,7 @@ export const SuratBalasanCutiTemplate = React.forwardRef<HTMLDivElement, Props>(
             </p>
           </>
         ) : (
-          <div style={{ height: '65px' }} />
+          <div style={{ height: '90px' }} />
         )}
       </div>
     </div>

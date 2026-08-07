@@ -342,7 +342,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; margin-top: 65px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 90px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -387,7 +387,7 @@ function renderBalasanCutiHtml(data: SuratBalasanCutiData): string {
         <p style="margin: 0; font-weight: bold;">PT Bank Negara Indonesia (Persero) Tbk</p>
         <p style="margin: 0; font-weight: bold;">Regional Office 09, Area III, Kalimantan Barat</p>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; margin-top: 65px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 90px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
@@ -445,7 +445,7 @@ function renderKeteranganKerjaHtml(data: SuratKeteranganKerjaData): string {
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader1 || 'PT. Bank Negara Indonesia (Persero) Tbk.'}</p>
         <p style="margin: 0; font-weight: bold;">${data.penandatangan?.unitHeader2 || 'Pontianak Branch Office, Area III, Kalimantan Barat'}</p>
         ${data.penandatangan?.nama ? `
-          <p style="margin: 0; margin-top: 65px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
+          <p style="margin: 0; margin-top: 90px; font-weight: bold;"><u><b>${data.penandatangan.nama}</b></u></p>
           <p style="margin: 0; font-weight: bold;"><b>${data.penandatangan.jabatan}</b></p>
         ` : ''}
       </div>
