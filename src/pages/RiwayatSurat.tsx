@@ -278,6 +278,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
   const gradeStr = data.penugasan.jenjangPgs && data.penugasan.gradePgs ? `(${data.penugasan.jenjangPgs} / ${data.penugasan.gradePgs})` : data.penugasan.gradePgs ? `(${data.penugasan.gradePgs})` : ''
   const unitText = data.penugasan.unitPgs || data.penugasan.lokasiPgs || ''
   const unitDiktumText = data.penugasan.unitDiktum || data.pegawai.unitAsal || ''
+  const toTitleCase = (str: string) => str ? str.toLowerCase().replace(/(?:^|\s|-|\/)\S/g, m => m.toUpperCase()) : ''
 
   return `
     <div style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.35;">
@@ -329,7 +330,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
           </table>
         </td></tr>
         <tr><td style="padding-top: 5px;">Kedua</td><td style="padding-top: 5px;">:</td><td style="padding-top: 5px; text-align: justify;">Penunjukkan pengganti sementara pada diktum Pertama berlaku tanggal ${data.penugasan.tanggalMulai || '...'} – ${data.penugasan.tanggalSelesai || '...'}.</td></tr>
-        <tr><td style="padding-top: 3px;">Ketiga</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px; text-align: justify;">Selama penunjukkan pengganti sementara tersebut kepada Sdr. ${(data.pegawai.nama || '').toUpperCase()} - NPP.${data.pegawai.npp || ''} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan megenai pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.</td></tr>
+        <tr><td style="padding-top: 3px;">Ketiga</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px; text-align: justify;">Selama penunjukkan pengganti sementara tersebut kepada Sdr. ${toTitleCase(data.pegawai.nama || '')} - NPP.${data.pegawai.npp || ''} diberikan kewenangan untuk mengurus, melakukan pekerjaan dan menandatangani segala sesuatu yang berhubungan megenai pekerjaan pada posisi yang ditugaskan sementara tersebut dengan tetap memperhatikan ketentuan yang berlaku di BNI.</td></tr>
         <tr><td style="padding-top: 3px;">Keempat</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px;">Surat Keputusan ini berlaku sejak tanggal efektif penunjukkan.</td></tr>
         <tr><td style="padding-top: 3px;">Kelima</td><td style="padding-top: 3px;">:</td><td style="padding-top: 3px; text-align: justify;">Apabila dikemudian hari dari Surat Keputusan ini terdapat kekeliruan, akan diadakan pembetulan sebagaimana mestinya.</td></tr>
       </table>
