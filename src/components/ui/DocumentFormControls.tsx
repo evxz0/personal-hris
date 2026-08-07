@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Calendar } from 'lucide-react'
 import { formatIsoToIndonesian, formatIndonesianToIso } from '../../lib/dateUtils'
 
@@ -27,37 +27,22 @@ interface DatePickerInputProps {
 
 export function DatePickerInput({ label, value, onChange, placeholder = "misal: 27 Juli 2026" }: DatePickerInputProps) {
   const isoValue = formatIndonesianToIso(value)
-  const dateInputRef = useRef<HTMLInputElement>(null)
-
-  const handleOpenPicker = () => {
-    try {
-      if (dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
-        dateInputRef.current.showPicker()
-      }
-    } catch {
-      // Fallback for browsers that block trigger
-    }
-  }
 
   return (
     <div>
       <label className="text-[11px] font-semibold text-[#64748B]">{label}</label>
-      <div
-        className="relative flex items-center mt-1 cursor-pointer group"
-        onClick={handleOpenPicker}
-      >
+      <div className="relative flex items-center mt-1">
         <input
           type="text"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-3 pr-9 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium cursor-pointer"
+          className="w-full pl-3 pr-9 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
         />
-        <div className="absolute right-2.5 flex items-center justify-center text-gray-400 group-hover:text-teal-600 pointer-events-none">
+        <div className="absolute right-2 flex items-center justify-center text-gray-400 hover:text-teal-600 cursor-pointer pointer-events-none">
           <Calendar size={15} />
         </div>
         <input
-          ref={dateInputRef}
           type="date"
           value={isoValue}
           onChange={e => {
@@ -65,7 +50,7 @@ export function DatePickerInput({ label, value, onChange, placeholder = "misal: 
               onChange(formatIsoToIndonesian(e.target.value))
             }
           }}
-          className="absolute right-1 w-7 h-7 opacity-0 cursor-pointer pointer-events-auto"
+          className="absolute right-1 w-7 h-7 opacity-0 cursor-pointer bg-transparent border-none accent-teal-600 focus:outline-none"
           title="Pilih Tanggal dari Kalender"
         />
       </div>

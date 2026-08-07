@@ -81,13 +81,18 @@ export default function SuratPgsPage() {
       const rawGrade = emp.grade !== null && emp.grade !== undefined ? String(emp.grade).trim() : ''
       let gradeStr = '.NON.GRADE'
       if (rawGrade) {
-        const digits = rawGrade.match(/\d+/)
-        if (digits) {
-          gradeStr = `.GRADE.${digits[0]}`
-        } else if (rawGrade.toUpperCase().includes('NON')) {
+        const upper = rawGrade.toUpperCase()
+        if (upper.includes('NON')) {
           gradeStr = '.NON.GRADE'
         } else {
-          gradeStr = rawGrade.startsWith('.') ? rawGrade : `.${rawGrade.replace(/\s+/g, '.')}`
+          const numMatch = upper.match(/\d+/)
+          if (numMatch) {
+            gradeStr = `.GRADE.${numMatch[0]}`
+          } else if (upper.startsWith('.')) {
+            gradeStr = upper
+          } else {
+            gradeStr = `.GRADE.${upper.replace(/^GRADE\s*/, '')}`
+          }
         }
       }
       const unitVal = emp.outlet || (emp as any).departemen || 'REGIONAL OFFICE 09'
