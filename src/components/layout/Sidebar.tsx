@@ -76,7 +76,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         <div className={`flex items-center ${collapsed ? 'flex-col gap-2.5 py-4 px-2' : 'justify-between px-4 py-5'} border-b border-teal-600/50 transition-all`}>
           {!collapsed ? (
             <div className="flex items-center gap-2.5 animate-fade-in max-w-[190px]">
-              <img src="/logo-bni.png" alt="BNI Logo" className="h-7 w-auto object-contain shrink-0 bg-white/95 px-1.5 py-0.5 rounded-lg shadow-sm" />
+              <img src="/logo-bni.png" alt="BNI Logo" className="h-8 w-auto object-contain shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-base font-extrabold tracking-wide leading-none text-white">P-HRIS</p>
                 <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
@@ -88,7 +88,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               className="cursor-pointer hover:scale-105 transition-transform flex flex-col items-center gap-1 py-1"
               title="P-HRIS (Klik untuk memperluas sidebar)"
             >
-              <img src="/logo-bni.png" alt="BNI Logo" className="h-5 w-auto object-contain bg-white/95 px-1 py-0.5 rounded-md shadow-xs" />
+              <img src="/logo-bni.png" alt="BNI Logo" className="h-6 w-auto object-contain" />
               <span className="text-white font-extrabold text-[10px] tracking-tight">P-HRIS</span>
             </div>
           )}

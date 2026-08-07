@@ -22,7 +22,7 @@ export function Layout({ children }: LayoutProps) {
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo-bni.png" alt="BNI Logo" className="h-6 w-auto object-contain bg-white/95 px-1.5 py-0.5 rounded-md shadow-xs" />
+            <img src="/logo-bni.png" alt="BNI Logo" className="h-7 w-auto object-contain" />
             <span className="text-sm font-extrabold tracking-wide">P-HRIS</span>
           </div>
         </div>
