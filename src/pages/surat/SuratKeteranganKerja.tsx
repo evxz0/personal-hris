@@ -30,39 +30,39 @@ export default function SuratKeteranganKerjaPage() {
   const [formData, setFormData] = useState<SuratKeteranganKerjaData>({
     kotaSurat: 'Pontianak',
     tanggalSurat: getTodayIndonesian(),
-    nomorSurat: 'PNK / 12 / 145 / H-R',
+    nomorSurat: '',
     halSurat: 'Keterangan Bekerja',
     lampiran: '---',
     pejabat: {
-      nama: 'RINNA ELVIANTY',
-      npp: 'P054321',
-      jabatan: 'Pj. Branch Manager',
+      nama: '',
+      npp: '',
+      jabatan: '',
       unitOrgLine1: 'PT. Bank Negara Indonesia (Persero) Tbk.',
       unitOrgLine2: 'Pontianak Branch Office'
     },
     pegawai: {
-      nama: 'TIARA TESALONIKA PASARIBU',
-      npp: 'K070341',
-      ttl: 'Pontianak, 15 Mei 1995',
-      posisi: 'PROGRAM RELATIONSHIP MANAGER',
+      nama: '',
+      npp: '',
+      ttl: '',
+      posisi: '',
       unitOrgLine1: 'PT. Bank Negara Indonesia (Persero) Tbk',
       unitOrgLine2: 'Pontianak Branch Office'
     },
     keterangan: {
-      tanggalMulai: '01 Januari 2020',
-      tanggalSelesai: getTodayIndonesian(),
-      posisiTerakhir: 'PROGRAM RELATIONSHIP MANAGER'
+      tanggalMulai: '',
+      tanggalSelesai: '',
+      posisiTerakhir: ''
     },
     penandatangan: {
-      nama: 'Rinna Elvianty',
-      jabatan: 'Pj. Branch Manager',
+      nama: '',
+      jabatan: '',
       unitHeader1: 'PT. Bank Negara Indonesia (Persero) Tbk.',
       unitHeader2: 'Pontianak Branch Office, Area III, Kalimantan Barat'
     }
   })
 
   const [selectedKaryawanId, setSelectedKaryawanId] = useState<string>('')
-  const [selectedPenandatanganType, setSelectedPenandatanganType] = useState<string>('rinna')
+  const [selectedPenandatanganType, setSelectedPenandatanganType] = useState<string>('kosong')
 
   // Auto-fill form when employee selected
   const handleSelectKaryawan = (id: string) => {

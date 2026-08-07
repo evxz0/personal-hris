@@ -33,29 +33,29 @@ export default function SuratPgsPage() {
 
   // State for Surat Data
   const [formData, setFormData] = useState<SkPgsData>({
-    nomorSurat: 'KP/015/7.3/H-R',
+    nomorSurat: '',
     tanggalSurat: getTodayIndonesian(),
     pegawai: {
-      nama: 'TIARA TESALONIKA PASARIBU',
-      npp: 'K070341',
-      jabatanAsal: 'PROGRAM RELATIONSHIP MANAGER',
+      nama: '',
+      npp: '',
+      jabatanAsal: '',
       jenjangAsal: '',
-      gradeAsal: '.NON.GRADE',
-      unitAsal: 'PONTIANAK BRANCH OFFICE'
+      gradeAsal: '',
+      unitAsal: ''
     },
     penugasan: {
-      jabatanPgs: 'PGS PROGRAM RELATIONSHIP MANAGER',
-      jenjangPgs: 'ASST',
-      gradePgs: '.NON.GRADE',
-      unitPgs: 'SUNGAI PINYUH BRANCH OFFICE',
-      unitDiktum: 'PONTIANAK BRANCH OFFICE',
-      lokasiPgs: 'SUNGAI PINYUH BRANCH OFFICE',
-      tanggalMulai: getTodayIndonesian(),
-      tanggalSelesai: getTodayIndonesian()
+      jabatanPgs: '',
+      jenjangPgs: '',
+      gradePgs: '',
+      unitPgs: '',
+      unitDiktum: '',
+      lokasiPgs: '',
+      tanggalMulai: '',
+      tanggalSelesai: ''
     },
     penandatangan: {
-      nama: 'NOVACHRISTO JOSEPH SILANGEN',
-      jabatan: 'AREA HEAD'
+      nama: '',
+      jabatan: ''
     }
   })
 

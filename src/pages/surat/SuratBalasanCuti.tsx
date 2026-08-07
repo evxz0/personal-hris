@@ -50,28 +50,28 @@ export default function SuratBalasanCutiPage() {
   // State for Surat Balasan Cuti Data
   const [formData, setFormData] = useState<SuratBalasanCutiData>({
     tanggalSurat: getTodayIndonesian(),
-    nomorSurat: 'W09/10.3/014/2026',
+    nomorSurat: '',
     pegawai: {
-      nama: 'Feri Wahyudi',
-      npp: 'P036191',
-      unitAsal: 'Pontianak Branch Office',
+      nama: '',
+      npp: '',
+      unitAsal: '',
       kotaUnit: 'PONTIANAK'
     },
     tahunCuti: new Date().getFullYear().toString(),
-    tanggalPermohonan: getTodayIndonesian(),
+    tanggalPermohonan: '',
     cuti: {
-      jumlahHari: '5',
-      jumlahHariTerbilang: 'lima',
-      tanggalMulai: getTodayIndonesian(),
-      tanggalSelesai: getTodayIndonesian(),
-      tanggalAktif: getTodayIndonesian(),
-      sisaCuti: '7',
-      sisaCutiTerbilang: 'tujuh',
+      jumlahHari: '',
+      jumlahHariTerbilang: '',
+      tanggalMulai: '',
+      tanggalSelesai: '',
+      tanggalAktif: '',
+      sisaCuti: '',
+      sisaCutiTerbilang: '',
       statusOpct: 'dapat'
     },
     penandatangan: {
-      nama: 'Ucok P. Sianipar',
-      jabatan: 'ABS Team Leader'
+      nama: '',
+      jabatan: ''
     }
   })
 
