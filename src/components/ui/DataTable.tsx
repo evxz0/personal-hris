@@ -37,6 +37,7 @@ interface DataTableProps<T extends Record<string, unknown>> {
   selectable?: boolean
   selectedIds?: string[]
   onSelectionChange?: (ids: string[]) => void
+  onBulkDelete?: (selectedIds: string[]) => void
   tableId?: string // Unique identifier to persist column customization in localStorage
 }
 
@@ -51,6 +52,7 @@ export function DataTable<T extends Record<string, unknown>>({
   selectable = false,
   selectedIds = [],
   onSelectionChange,
+  onBulkDelete,
   tableId = 'default_table'
 }: DataTableProps<T>) {
   const [page, setPage] = useState(1)
@@ -610,6 +612,39 @@ export function DataTable<T extends Record<string, unknown>>({
           )}
         </div>
       </div>
+
+      {/* Bulk Delete Selection Bar */}
+      {selectable && showSelectColumn && selectedIds.length > 0 && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2.5 rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <Trash2 size={16} className="text-red-600 shrink-0" />
+            <span>Terpilih <span className="underline font-extrabold text-red-950">{selectedIds.length}</span> data untuk dihapus</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (onSelectionChange) onSelectionChange([])
+              }}
+              className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-lg transition-colors cursor-pointer"
+            >
+              Batal Pilih
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onBulkDelete) {
+                  onBulkDelete(selectedIds)
+                }
+              }}
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Trash2 size={14} />
+              Hapus ({selectedIds.length}) Data
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Table */}
       <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">

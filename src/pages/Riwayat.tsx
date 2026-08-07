@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search, Trash2, FileDown, FileText, ArrowRightLeft } from 'lucide-react'
-import { useMutasi, useDeleteMutasi } from '../hooks/useMutasi'
+import { useMutasi, useDeleteMutasi, useBulkDeleteMutasi } from '../hooks/useMutasi'
 import { useReferensi } from '../hooks/useReferensi'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
@@ -16,11 +16,13 @@ export default function RiwayatPage() {
   const [filterJabatan, setFilterJabatan] = useState<string[]>([])
   const [filterGrade, setFilterGrade] = useState<string[]>([])
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const { data = [], isLoading } = useMutasi(search)
   const { data: outlets = [] } = useReferensi('OUTLET')
   const { data: jabatans = [] } = useReferensi('JABATAN_KARYAWAN')
   const deleteMutation = useDeleteMutasi()
+  const bulkDeleteMutation = useBulkDeleteMutasi()
 
   // Apply filters client-side
   const filtered = data.filter(k => {
@@ -35,6 +37,13 @@ export default function RiwayatPage() {
     if (deleteId) {
       await deleteMutation.mutateAsync(deleteId)
       setDeleteId(null)
+    }
+  }
+
+  const handleBulkDelete = async (ids: string[]) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus ${ids.length} data riwayat terpilih?`)) {
+      await bulkDeleteMutation.mutateAsync(ids)
+      setSelectedIds([])
     }
   }
 
@@ -147,6 +156,10 @@ export default function RiwayatPage() {
         loading={isLoading}
         emptyMessage="Belum ada riwayat"
         emptyIcon={<ArrowRightLeft size={40} className="text-gray-200" />}
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onBulkDelete={handleBulkDelete}
         columns={[
           { key: 'npp', header: 'NPP', width: 'w-28' },
           { key: 'nama', header: 'Nama', render: (r) => <span className="font-semibold">{String(r.nama)}</span> },

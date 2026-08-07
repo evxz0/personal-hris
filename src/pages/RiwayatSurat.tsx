@@ -16,9 +16,7 @@ export default function RiwayatSuratPage() {
   const [search, setSearch] = useState('')
   const [filterJenis, setFilterJenis] = useState<string>('ALL')
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [deleteMode, setDeleteMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   
   // Preview Modal state
   const [previewItem, setPreviewItem] = useState<RiwayatSurat | null>(null)
@@ -47,11 +45,10 @@ export default function RiwayatSuratPage() {
     }
   }
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length > 0) {
-      await bulkDeleteMutation.mutateAsync(selectedIds)
+  const handleBulkDelete = async (ids: string[]) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus ${ids.length} riwayat surat terpilih?`)) {
+      await bulkDeleteMutation.mutateAsync(ids)
       setSelectedIds([])
-      setBulkDeleteOpen(false)
     }
   }
 
@@ -87,6 +84,7 @@ export default function RiwayatSuratPage() {
 
   // Trigger Word download from history item payload
   const handleDownloadWordFromHistory = async (item: RiwayatSurat) => {
+    // Render document in a hidden temporary container
     const container = document.createElement('div')
     container.style.position = 'fixed'
     container.style.left = '-9999px'
@@ -129,17 +127,6 @@ export default function RiwayatSuratPage() {
           <p className="text-sm text-[#64748B] mt-1">Daftar arsip pencetakan dan pembuatan surat keputusan/keterangan</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={deleteMode ? "danger" : "outline"}
-            size="sm"
-            icon={<Trash2 size={15} />}
-            onClick={() => {
-              setDeleteMode(prev => !prev)
-              if (deleteMode) setSelectedIds([])
-            }}
-          >
-            {deleteMode ? 'Batal Mode Hapus' : 'Mode Hapus'}
-          </Button>
           <Button variant="outline" size="sm" icon={<FileDown size={15} />} onClick={handleExportXLSX}>
             Excel
           </Button>
@@ -148,35 +135,6 @@ export default function RiwayatSuratPage() {
           </Button>
         </div>
       </div>
-
-      {/* Bulk Delete Action Bar */}
-      {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-200 animate-fade-in mb-4">
-          <span className="text-sm font-semibold text-red-800">
-            {selectedIds.length} data riwayat surat terpilih
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-red-200 text-red-700 hover:bg-red-100"
-              onClick={() => setSelectedIds([])}
-            >
-              Batal
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 border-red-600 text-white"
-              icon={<Trash2 size={14} />}
-              onClick={() => setBulkDeleteOpen(true)}
-              loading={bulkDeleteMutation.isPending}
-            >
-              Hapus Terpilih
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -217,6 +175,7 @@ export default function RiwayatSuratPage() {
         selectable={true}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
+        onBulkDelete={handleBulkDelete}
         columns={[
           { key: 'nomor_surat', header: 'Nomor Surat', render: r => <span className="font-bold text-teal-800">{String(r.nomor_surat)}</span> },
           { key: 'jenis_surat', header: 'Jenis Surat', render: r => {
@@ -320,25 +279,6 @@ export default function RiwayatSuratPage() {
       >
         <p className="text-sm text-[#2B3440]">
           Apakah Anda yakin ingin menghapus data arsip riwayat surat ini dari sistem?
-        </p>
-      </Modal>
-
-      {/* Modal Confirm Bulk Delete */}
-      <Modal
-        isOpen={bulkDeleteOpen}
-        onClose={() => setBulkDeleteOpen(false)}
-        title="Hapus Banyak Riwayat Surat"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setBulkDeleteOpen(false)}>Batal</Button>
-            <Button variant="danger" loading={bulkDeleteMutation.isPending} onClick={handleBulkDelete}>
-              Hapus {selectedIds.length} Riwayat
-            </Button>
-          </>
-        }
-      >
-        <p className="text-sm text-[#2B3440]">
-          Apakah Anda yakin ingin menghapus <strong>{selectedIds.length} data riwayat surat</strong> yang dipilih dari sistem? Tindakan ini tidak dapat dibatalkan.
         </p>
       </Modal>
     </div>

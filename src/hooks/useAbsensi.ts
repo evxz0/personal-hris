@@ -122,6 +122,21 @@ export function useDeleteAbsensi() {
   })
 }
 
+export function useBulkDeleteAbsensi() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('absensi').delete().in('id', ids)
+      if (error) throw error
+      await logAudit('BULK_DELETE_ABSENSI', JSON.stringify({ count: ids.length, ids }))
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['absensi'] })
+      qc.invalidateQueries({ queryKey: ['karyawan'] })
+    },
+  })
+}
+
 export function useBulkInsertAbsensi() {
   const qc = useQueryClient()
   return useMutation({

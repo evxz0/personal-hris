@@ -160,11 +160,10 @@ export function useBulkDeleteRiwayatSurat() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      // Local storage delete
-      const localList = getLocalHistory().filter(item => !ids.includes(item.id))
+      const setIds = new Set(ids)
+      const localList = getLocalHistory().filter(item => !setIds.has(item.id))
       saveLocalHistory(localList)
 
-      // Supabase delete
       try {
         await supabase.from('riwayat_surat').delete().in('id', ids)
       } catch (err) {

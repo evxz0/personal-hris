@@ -86,3 +86,14 @@ export function useDeleteMutasi() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mutasi'] }),
   })
 }
+
+export function useBulkDeleteMutasi() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('mutasi').delete().in('id', ids)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['mutasi'] }),
+  })
+}

@@ -99,9 +99,21 @@ export function useBulkInsertMagang() {
       })
       const { data, error } = await supabase.from('magang').insert(prepared).select()
       if (error) throw error
-      await logAudit('IMPORT_MAGANG', `${rows.length} data magang diimport`)
+      await logAudit('BULK_INSERT_MAGANG', JSON.stringify({ count: prepared.length }))
       return data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['magang'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['magang'] })
+  })
+}
+
+export function useBulkDeleteMagang() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('magang').delete().in('id', ids)
+      if (error) throw error
+      await logAudit('BULK_DELETE_MAGANG', JSON.stringify({ count: ids.length, ids }))
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['magang'] })
   })
 }

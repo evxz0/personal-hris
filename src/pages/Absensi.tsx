@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, Search, Trash2, CalendarOff, AlertCircle, FileDown, FileText, Edit2 } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useAbsensi, useAddAbsensi, useDeleteAbsensi, useBulkInsertAbsensi, useUpdateAbsensi, type AbsensiInsert } from '../hooks/useAbsensi'
+import { useAbsensi, useAddAbsensi, useDeleteAbsensi, useBulkDeleteAbsensi, useBulkInsertAbsensi, useUpdateAbsensi, type AbsensiInsert } from '../hooks/useAbsensi'
 import { useKaryawan, useKaryawanByNPP } from '../hooks/useKaryawan'
 import { ImportModal } from '../components/ui/ImportModal'
 import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
@@ -59,6 +59,7 @@ export default function AbsensiPage() {
   const [importOpen, setImportOpen] = useState(false)
   const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [form, setForm] = useState<AbsensiInsert>(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
 
@@ -67,6 +68,7 @@ export default function AbsensiPage() {
   const addMutation    = useAddAbsensi()
   const updateMutation = useUpdateAbsensi()
   const deleteMutation = useDeleteAbsensi()
+  const bulkDeleteMutation = useBulkDeleteAbsensi()
   const bulkInsert     = useBulkInsertAbsensi()
 
   const data = filterJenis === 'ALL' ? rawData : rawData.filter(a => a.jenis === filterJenis)
@@ -98,6 +100,13 @@ export default function AbsensiPage() {
 
   const handleDelete = async () => {
     if (deleteId) { await deleteMutation.mutateAsync(deleteId); setDeleteId(null) }
+  }
+
+  const handleBulkDelete = async (ids: string[]) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus ${ids.length} data absensi terpilih?`)) {
+      await bulkDeleteMutation.mutateAsync(ids)
+      setSelectedIds([])
+    }
   }
 
   const handleImport = async (rows: Record<string, unknown>[]) => {
@@ -221,6 +230,10 @@ export default function AbsensiPage() {
         loading={isLoading}
         emptyMessage="Belum ada catatan absensi"
         emptyIcon={<CalendarOff size={40} className="text-gray-200" />}
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onBulkDelete={handleBulkDelete}
         columns={[
           { key: 'npp', header: 'NPP', width: 'w-24' },
           { key: 'nama', header: 'Nama', render: r => {

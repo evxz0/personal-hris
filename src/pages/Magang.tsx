@@ -1,7 +1,7 @@
 import { Plus, Search, Edit2, Trash2, GraduationCap, FileDown, FileText } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useMagang, useAddMagang, useUpdateMagang, useDeleteMagang, useBulkInsertMagang, type Magang } from '../hooks/useMagang'
+import { useMagang, useAddMagang, useUpdateMagang, useDeleteMagang, useBulkInsertMagang, useBulkDeleteMagang, type Magang } from '../hooks/useMagang'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -10,6 +10,7 @@ import { formatDate, calculateDays } from '../lib/utils'
 import { ImportModal } from '../components/ui/ImportModal'
 import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
+import { useState } from 'react'
 
 const MAGANG_FIELD_MAPPING: Record<string, string> = {
   'Nama': 'nama', 'NIK': 'nik', 'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
@@ -24,14 +25,13 @@ const EMPTY = {
   penempatan: '', tanggal_mulai: '', tanggal_selesai: '',
 }
 
-import { useState } from 'react'
-
 export default function MagangPage() {
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [importMode, setImportMode] = useState<ImportMode>('excel')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [form, setForm] = useState(EMPTY)
   const [editId, setEditId] = useState<string | null>(null)
 
@@ -39,6 +39,7 @@ export default function MagangPage() {
   const addMutation    = useAddMagang()
   const updateMutation = useUpdateMagang()
   const deleteMutation = useDeleteMagang()
+  const bulkDeleteMutation = useBulkDeleteMagang()
   const bulkInsert     = useBulkInsertMagang()
 
   const openAdd  = () => { setForm(EMPTY); setEditId(null); setModalOpen(true) }
@@ -64,6 +65,13 @@ export default function MagangPage() {
 
   const handleDelete = async () => {
     if (deleteId) { await deleteMutation.mutateAsync(deleteId); setDeleteId(null) }
+  }
+
+  const handleBulkDelete = async (ids: string[]) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus ${ids.length} data magang terpilih?`)) {
+      await bulkDeleteMutation.mutateAsync(ids)
+      setSelectedIds([])
+    }
   }
 
   const handleImport = async (rows: Record<string, unknown>[]) => {
@@ -157,6 +165,10 @@ export default function MagangPage() {
         loading={isLoading}
         emptyMessage="Belum ada data magang"
         emptyIcon={<GraduationCap size={40} className="text-gray-200" />}
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onBulkDelete={handleBulkDelete}
         columns={[
           { key: 'nama', header: 'Nama', render: r => {
             const str = String(r.nama || '')
