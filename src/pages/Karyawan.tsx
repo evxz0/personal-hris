@@ -109,7 +109,8 @@ export default function KaryawanPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [importMode, setImportMode] = useState<ImportMode>('excel')
-   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteMode, setDeleteMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [form, setForm] = useState<KaryawanInsert>(EMPTY)
@@ -493,6 +494,17 @@ export default function KaryawanPage() {
             onSelectExcel={() => { setImportMode('excel'); setImportOpen(true); }}
             onSelectOcr={() => { setImportMode('ocr'); setImportOpen(true); }}
           />
+          <Button
+            variant={deleteMode ? "danger" : "outline"}
+            size="sm"
+            icon={<Trash2 size={15} />}
+            onClick={() => {
+              setDeleteMode(prev => !prev)
+              if (deleteMode) setSelectedIds([])
+            }}
+          >
+            {deleteMode ? 'Batal Mode Hapus' : 'Mode Hapus'}
+          </Button>
           <Button
             variant="outline"
             size="sm"

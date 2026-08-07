@@ -155,3 +155,24 @@ export function useDeleteRiwayatSurat() {
     },
   })
 }
+
+export function useBulkDeleteRiwayatSurat() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      // Local storage delete
+      const localList = getLocalHistory().filter(item => !ids.includes(item.id))
+      saveLocalHistory(localList)
+
+      // Supabase delete
+      try {
+        await supabase.from('riwayat_surat').delete().in('id', ids)
+      } catch (err) {
+        console.warn('Supabase bulk delete failed:', err)
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['riwayat-surat'] })
+    },
+  })
+}
