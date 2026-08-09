@@ -15,6 +15,7 @@ const SYNONYMS: Record<string, string[]> = {
   ],
   jabatan: [
     'jabatan', 'posisi', 'position', 'role', 'tugas', 'pekerjaan', 'job', 'title',
+    'posisi saat ini', 'posisi_saat_ini', 'posisi/jabatan', 'posisi / jabatan', 'posisi / role',
     'jabatan asal', 'jabatan baru', 'jabatan_asal', 'jabatan_baru', 'posisi_pekerjaan'
   ],
   outlet: [
@@ -24,17 +25,18 @@ const SYNONYMS: Record<string, string[]> = {
   ],
   kategori: [
     'kategori', 'category', 'status', 'tipe', 'jenis', 'kelompok', 'hubungan kerja',
-    'jenis pegawai', 'status pegawai', 'tipe pegawai', 'kategori_pegawai', 'status_kerja'
+    'jenis pegawai', 'status pegawai', 'tipe pegawai', 'kategori_pegawai', 'status_kerja',
+    'keterangan', 'ket'
   ],
   grade: [
-    'grade', 'golongan', 'pangkat', 'tingkat', 'level', 'grade asal', 'grade pgs', 'gol'
+    'grade', 'golongan', 'pangkat', 'tingkat', 'level', 'grade asal', 'grade pgs', 'gol', 'grade.'
   ],
   jenjang: [
     'jenjang', 'subgrade', 'sub-grade', 'jenjang jabatan', 'band', 'jenjang asal', 'jenjang pgs'
   ],
   tanggal_lahir: [
     'tanggal lahir', 'tgl lahir', 'birth date', 'dob', 'date of birth', 'lahir',
-    'tgl_lahir', 'tgl. lahir', 'tgl_lhr', 'tanggal_lhr'
+    'tgl_lahir', 'tgl. lahir', 'tgl_lhr', 'tanggal_lhr', 'birth day', 'birthday', 'efektif', 'tgl efektif'
   ],
   tanggal_masuk: [
     'tanggal masuk', 'tgl masuk', 'join date', 'hire date', 'tgl bergabung',
@@ -209,6 +211,35 @@ export function parseSpreadsheetSmart(
     // Skip empty rows
     const hasData = rowCells.some(c => String(c || '').trim() !== '')
     if (!hasData) continue
+
+    // Check if this row is a repeating/stacked sub-header in multi-table sheets
+    let headerMatches = 0
+    const tempColMap: Record<number, string> = {}
+    const tempUsed = new Set<string>()
+    rowCells.forEach((c, idx) => {
+      const cStr = String(c || '').trim()
+      const m = matchHeaderToKey(cStr, fieldMapping)
+      if (m && !tempUsed.has(m)) {
+        headerMatches++
+        tempColMap[idx] = m
+        tempUsed.add(m)
+      }
+    })
+
+    // If row matches >= 3 headers, update colIndexToKeyMap and skip this header row
+    if (headerMatches >= 3) {
+      Object.assign(colIndexToKeyMap, tempColMap)
+      continue
+    }
+
+    // Skip if row is a sub-table header line (e.g. contains 'NPP' or 'NAMA PEGAWAI')
+    const nppColIdx = Object.keys(colIndexToKeyMap).find(k => colIndexToKeyMap[Number(k)] === 'npp')
+    const namaColIdx = Object.keys(colIndexToKeyMap).find(k => colIndexToKeyMap[Number(k)] === 'nama')
+    const possibleNpp = nppColIdx !== undefined ? String(rowCells[Number(nppColIdx)] || '').trim().toUpperCase() : ''
+    const possibleNama = namaColIdx !== undefined ? String(rowCells[Number(namaColIdx)] || '').trim().toUpperCase() : ''
+    if (possibleNpp === 'NPP' || possibleNama === 'NAMA' || possibleNama === 'NAMA PEGAWAI' || possibleNama === 'NAMA KARYAWAN') {
+      continue
+    }
 
     const rowObj: Record<string, unknown> = {}
 

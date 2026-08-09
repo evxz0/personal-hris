@@ -93,12 +93,15 @@ export const formatGradeValue = (val: string | number | null | undefined): strin
 }
 
 const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
-  'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
+  'NPP': 'npp', 'Nama': 'nama', 'Nama Pegawai': 'nama', 'NIK': 'nik',
   'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
   'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
-  'Kategori': 'kategori', 'Outlet': 'outlet', 'Tanggal Lahir': 'tanggal_lahir',
-  'Posisi Saat Ini': 'posisi_saat_ini', 'Jenjang': 'jenjang',
-  'Jabatan': 'jabatan', 'Grade': 'grade',
+  'Kategori': 'kategori', 'Status': 'kategori', 'Keterangan': 'kategori',
+  'Outlet': 'outlet', 'Unit': 'outlet', 'Unit Kerja': 'outlet', 'Cabang': 'outlet',
+  'Tanggal Lahir': 'tanggal_lahir', 'Birth Day': 'tanggal_lahir', 'Birthday': 'tanggal_lahir', 'Efektif': 'tanggal_lahir',
+  'Posisi Saat Ini': 'jabatan', 'Posisi': 'jabatan', 'Jabatan': 'jabatan',
+  'Jenjang': 'jenjang', 'Jenjang Jabatan': 'jenjang',
+  'Grade': 'grade', 'Golongan': 'grade', 'Pangkat': 'grade',
   'NPP DIGI HC': 'npp_digi_hc', 'NPP WEBMAIL': 'npp_webmail',
   'Tanggal Mulai': 'tanggal_mulai', 'Tanggal Berakhir': 'tanggal_berakhir',
   'KD Wil': 'kd_wil', 'Batch': 'batch',
@@ -302,8 +305,18 @@ export default function KaryawanPage() {
 
   const handleImport = async (rows: Record<string, unknown>[]) => {
     const mapped = rows.map(r => {
-      const isBina = String(r.kategori ?? '').toUpperCase() === 'BINA'
-      const isTad = String(r.kategori ?? '').toUpperCase() === 'TAD'
+      // Smart category detection
+      const rawKet = String(r.kategori ?? r.keterangan ?? r['KETERANGAN'] ?? r.status ?? '').toUpperCase()
+      let category: 'FTE' | 'TAD' | 'BINA' = 'FTE'
+      if (rawKet.includes('BINA')) category = 'BINA'
+      else if (rawKet.includes('TAD') || rawKet.includes('OS') || rawKet.includes('ALIH DAYA')) category = 'TAD'
+      else if (r.kategori) {
+        const k = String(r.kategori).toUpperCase()
+        if (k === 'TAD' || k === 'BINA' || k === 'FTE') category = k as any
+      }
+
+      const isBina = category === 'BINA'
+      const isTad = category === 'TAD'
       
       const digiHc = r.npp_digi_hc ? String(r.npp_digi_hc).trim() : null
       const webmail = r.npp_webmail ? String(r.npp_webmail).trim() : null
@@ -320,18 +333,50 @@ export default function KaryawanPage() {
         }
       }
 
-      const gradeRaw = r.grade ? Number(r.grade) : null
-      const validGrade = gradeRaw && gradeRaw >= 1 && gradeRaw <= 12 ? gradeRaw : null
+      // Smart extraction for Grade (handles GRADE.11, GRADE.09, .GRADE.7, NON GRADE, etc.)
+      let validGrade: number | null = null
+      const rawGrade = r.grade ?? r.Grade ?? r['GRADE'] ?? (r as any).golongan
+      if (rawGrade !== null && rawGrade !== undefined && rawGrade !== '') {
+        const gradeStr = String(rawGrade).trim().toUpperCase()
+        if (!gradeStr.includes('NON') && !gradeStr.includes('ON GRADE')) {
+          const match = gradeStr.match(/\d+/)
+          if (match) {
+            const num = parseInt(match[0], 10)
+            if (num >= 1 && num <= 12) {
+              validGrade = num
+            }
+          }
+        }
+      }
+
+      // Smart extraction for Jabatan (takes jabatan, posisi_saat_ini, posisi, etc.)
+      const rawJabatan = r.jabatan ?? r.posisi_saat_ini ?? r.posisi ?? r['POSISI SAAT INI'] ?? r['Posisi Saat Ini'] ?? r['Posisi'] ?? r['Jabatan']
+      const jabatanVal = rawJabatan ? String(rawJabatan).trim() : null
+
+      // Smart extraction for Jenjang (handles MGR, AMGR, AVP, ASST, NON/ON GRADE)
+      const rawJenjang = r.jenjang ?? r.Jenjang ?? r['JENJANG']
+      let jenjangVal: string | null = null
+      if (rawJenjang) {
+        const jStr = String(rawJenjang).trim().toUpperCase()
+        if (!jStr.includes('NON') && !jStr.includes('ON GRADE')) {
+          jenjangVal = jStr
+        }
+      }
+
+      // Smart extraction for Outlet
+      const rawOutlet = r.outlet ?? r.Outlet ?? r.unit ?? r['UNIT'] ?? r['OUTLET'] ?? r['Unit Kerja']
+      const outletVal = rawOutlet ? String(rawOutlet).trim() : null
+
       return {
         ...EMPTY,
         npp: nppVal,
         nama: String(r.nama ?? '').toUpperCase().trim(),
-        kategori: (isTad ? 'TAD' : isBina ? 'BINA' : 'FTE') as 'FTE'|'TAD'|'BINA',
-        outlet: r.outlet ? String(r.outlet) : null,
-        tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir),
-        posisi_saat_ini: isBina ? null : r.posisi_saat_ini ? String(r.posisi_saat_ini) : null,
-        jenjang: isBina ? null : r.jenjang ? String(r.jenjang) : null,
-        jabatan: r.jabatan ? String(r.jabatan) : null,
+        kategori: category,
+        outlet: outletVal,
+        tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir || r.efektif || (r as any)['EFEKTIF'] || (r as any)['BIRTH DAY']),
+        posisi_saat_ini: isBina ? null : jabatanVal,
+        jenjang: isBina ? null : jenjangVal,
+        jabatan: jabatanVal,
         grade: isTad ? null : validGrade,
         nik: r.nik ? String(r.nik) : null,
         npp_digi_hc: isTad ? digiHc : null,
