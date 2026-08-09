@@ -12,7 +12,7 @@ export interface Karyawan {
   posisi_saat_ini: string | null
   jenjang: string | null
   jabatan: string | null
-  grade: number | null
+  grade: string | number | null
   nik: string | null
   npp_digi_hc: string | null
   npp_webmail: string | null

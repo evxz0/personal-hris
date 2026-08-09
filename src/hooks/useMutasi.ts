@@ -10,7 +10,7 @@ export interface Mutasi {
   outlet: string
   jenjang: string
   jabatan: string
-  grade: number
+  grade: string | number
   tanggal_lahir?: string
   nik?: string
   no_rek?: string

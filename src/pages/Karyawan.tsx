@@ -116,17 +116,19 @@ export default function KaryawanPage() {
   const [editId, setEditId] = useState<string | null>(null)
   
   const [mutasiOpen, setMutasiOpen] = useState(false)
-  const [mutasiForm, setMutasiForm] = useState({
+  const [mutasiForm, setMutasiForm] = useState<{
+    npp: string; nama: string; kategori: string; outlet: string; jenjang: string;
+    jabatan: string; grade: string | number; tanggal_lahir: string; nik: string; no_rek: string; no_hp: string;
+    sisa_cuti: number; keterangan: string; tanggal_aktif: string;
+  }>({
     npp: '', nama: '', kategori: 'FTE', outlet: '', jenjang: '',
-    jabatan: '', grade: 1, tanggal_lahir: '', nik: '', no_rek: '', no_hp: '',
+    jabatan: '', grade: '', tanggal_lahir: '', nik: '', no_rek: '', no_hp: '',
     sisa_cuti: 18, keterangan: '', tanggal_aktif: ''
   })
 
   const { data: rawData = [], isLoading } = useKaryawan(search)
   const { data: outlets = [] } = useReferensi('OUTLET')
   const { data: jabatans = [] } = useReferensi('JABATAN_KARYAWAN')
-  const { data: jabatansBina = [] } = useReferensi('JABATAN_BINA')
-  const { data: jenjangs = [] } = useReferensi('JENJANG')
 
   const addMutation      = useAddKaryawan()
   const updateMutation   = useUpdateKaryawan()
@@ -177,7 +179,7 @@ export default function KaryawanPage() {
       outlet: k.outlet || '',
       jenjang: k.jenjang || '',
       jabatan: k.jabatan || '',
-      grade: k.grade || 1,
+      grade: k.grade || '',
       tanggal_lahir: k.tanggal_lahir || '',
       nik: k.nik || '',
       no_rek: k.no_rek || '',
@@ -447,7 +449,6 @@ export default function KaryawanPage() {
         colMap.jabatan,
         colMap.tanggal_mulai,
         colMap.tanggal_berakhir,
-        colMap.kd_wil,
         colMap.grade,
         colMap.batch,
       ]
@@ -468,7 +469,6 @@ export default function KaryawanPage() {
       colMap.jabatan,
       colMap.tanggal_mulai,
       colMap.tanggal_berakhir,
-      colMap.kd_wil,
       colMap.grade,
       colMap.batch,
       colMap.nik,
@@ -591,7 +591,18 @@ export default function KaryawanPage() {
             selectedValues={filterGrade}
             onChange={setFilterGrade}
             placeholder="Semua Grade"
-            options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Grade ${i + 1}` }))}
+            options={[
+              { value: '.GRADE.12', label: '.GRADE.12' },
+              { value: '.GRADE.11', label: '.GRADE.11' },
+              { value: '.GRADE.10', label: '.GRADE.10' },
+              { value: '.GRADE.9', label: '.GRADE.9' },
+              { value: '.GRADE.8', label: '.GRADE.8' },
+              { value: '.GRADE.7', label: '.GRADE.7' },
+              { value: '.GRADE.6', label: '.GRADE.6' },
+              { value: '.GRADE.5', label: '.GRADE.5' },
+              { value: '.GRADE.4', label: '.GRADE.4' },
+              { value: '.NON.GRADE', label: '.NON.GRADE' },
+            ]}
           />
         </div>
         <div className="text-xs text-[#64748B] self-center px-3 py-1.5 bg-white rounded-xl border border-gray-200 font-medium whitespace-nowrap">
@@ -669,7 +680,7 @@ export default function KaryawanPage() {
                 const clears = 
                   kat === 'FTE' ? { npp_digi_hc: null, npp_webmail: null, jenis_kelamin: null, tanggal_mulai: null, tanggal_berakhir: null, kd_wil: null, batch: null } :
                   kat === 'TAD' ? { grade: null, posisi_saat_ini: null, jenjang: null, no_rek: null, tanggal_lahir: null, jenis_kelamin: null, tanggal_mulai: null, tanggal_berakhir: null, kd_wil: null, batch: null } :
-                  { npp_digi_hc: null, npp_webmail: null, posisi_saat_ini: null, jenjang: null, no_rek: null, tanggal_lahir: null, nik: null, no_hp: null }
+                  { npp_digi_hc: null, npp_webmail: null, posisi_saat_ini: null, jenjang: null, no_rek: null, tanggal_lahir: null, nik: null, no_hp: null, kd_wil: null }
                 return {
                   ...f,
                   kategori: kat,
@@ -713,26 +724,27 @@ export default function KaryawanPage() {
             </div>
           )}
 
-          {form.kategori === 'FTE' && (
-            <Input label="Posisi Saat Ini" value={form.posisi_saat_ini || ''} onChange={e => setForm(f => ({ ...f, posisi_saat_ini: e.target.value }))} placeholder="Jabatan/posisi aktif" />
-          )}
-
           {(form.kategori === 'FTE' || filterKategori.length === 0) && (
             <Select
               label="Jenjang"
               value={form.jenjang || ''}
-              onChange={e => setForm(f => ({ ...f, jenjang: e.target.value }))}
-              options={jenjangs.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+              onChange={e => setForm(f => ({ ...f, jenjang: e.target.value || null }))}
+              options={[
+                { value: 'VP', label: 'VP' },
+                { value: 'AVP', label: 'AVP' },
+                { value: 'MGR', label: 'MGR' },
+                { value: 'AMGR', label: 'AMGR' },
+                { value: 'ASST', label: 'ASST' },
+              ]}
               placeholder="-- Pilih Jenjang --"
             />
           )}
 
-          <Select
+          <Input
             label="Jabatan"
             value={form.jabatan || ''}
             onChange={e => setForm(f => ({ ...f, jabatan: e.target.value }))}
-            options={(form.kategori === 'BINA' ? jabatansBina : jabatans).map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
-            placeholder="-- Pilih Jabatan --"
+            placeholder="Masukkan jabatan..."
           />
 
           {(form.kategori === 'BINA' || filterKategori.length === 0) && (
@@ -760,16 +772,24 @@ export default function KaryawanPage() {
             </>
           )}
 
-          {(form.kategori === 'BINA' || filterKategori.length === 0) && (
-            <Input label="KD Wil" value={form.kd_wil || ''} onChange={e => setForm(f => ({ ...f, kd_wil: e.target.value }))} placeholder="Kode Wilayah" />
-          )}
-
           {(form.kategori === 'FTE' || form.kategori === 'BINA' || filterKategori.length === 0) && (
             <Select
               label="Grade"
-              value={form.grade || ''}
-              onChange={e => setForm(f => ({ ...f, grade: Number(e.target.value) }))}
-              options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Grade ${i + 1}` }))}
+              value={form.grade !== null && form.grade !== undefined ? String(form.grade) : ''}
+              onChange={e => setForm(f => ({ ...f, grade: e.target.value || null }))}
+              options={[
+                { value: '.GRADE.12', label: '.GRADE.12' },
+                { value: '.GRADE.11', label: '.GRADE.11' },
+                { value: '.GRADE.10', label: '.GRADE.10' },
+                { value: '.GRADE.9', label: '.GRADE.9' },
+                { value: '.GRADE.8', label: '.GRADE.8' },
+                { value: '.GRADE.7', label: '.GRADE.7' },
+                { value: '.GRADE.6', label: '.GRADE.6' },
+                { value: '.GRADE.5', label: '.GRADE.5' },
+                { value: '.GRADE.4', label: '.GRADE.4' },
+                { value: '.NON.GRADE', label: '.NON.GRADE' },
+              ]}
+              placeholder="-- Pilih Grade --"
             />
           )}
 
@@ -865,12 +885,11 @@ export default function KaryawanPage() {
               options={outlets.map(o => ({ value: o.nama_referensi, label: o.nama_referensi }))}
               placeholder="-- Pilih Outlet Baru --"
             />
-            <Select
+            <Input
               label="Jabatan Baru"
               value={mutasiForm.jabatan}
               onChange={e => setMutasiForm(f => ({ ...f, jabatan: e.target.value }))}
-              options={jabatans.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
-              placeholder="-- Pilih Jabatan Baru --"
+              placeholder="Masukkan jabatan baru..."
             />
           </div>
 
@@ -879,14 +898,32 @@ export default function KaryawanPage() {
               label="Jenjang Baru"
               value={mutasiForm.jenjang}
               onChange={e => setMutasiForm(f => ({ ...f, jenjang: e.target.value }))}
-              options={jenjangs.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+              options={[
+                { value: 'VP', label: 'VP' },
+                { value: 'AVP', label: 'AVP' },
+                { value: 'MGR', label: 'MGR' },
+                { value: 'AMGR', label: 'AMGR' },
+                { value: 'ASST', label: 'ASST' },
+              ]}
               placeholder="-- Pilih Jenjang Baru --"
             />
             <Select
               label="Grade Baru"
               value={mutasiForm.grade}
-              onChange={e => setMutasiForm(f => ({ ...f, grade: Number(e.target.value) }))}
-              options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Grade ${i + 1}` }))}
+              onChange={e => setMutasiForm(f => ({ ...f, grade: e.target.value }))}
+              options={[
+                { value: '.GRADE.12', label: '.GRADE.12' },
+                { value: '.GRADE.11', label: '.GRADE.11' },
+                { value: '.GRADE.10', label: '.GRADE.10' },
+                { value: '.GRADE.9', label: '.GRADE.9' },
+                { value: '.GRADE.8', label: '.GRADE.8' },
+                { value: '.GRADE.7', label: '.GRADE.7' },
+                { value: '.GRADE.6', label: '.GRADE.6' },
+                { value: '.GRADE.5', label: '.GRADE.5' },
+                { value: '.GRADE.4', label: '.GRADE.4' },
+                { value: '.NON.GRADE', label: '.NON.GRADE' },
+              ]}
+              placeholder="-- Pilih Grade Baru --"
             />
           </div>
 

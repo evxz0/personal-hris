@@ -84,9 +84,13 @@ export default function BinaPage() {
   const [editId, setEditId] = useState<string | null>(null)
   
   const [mutasiOpen, setMutasiOpen] = useState(false)
-  const [mutasiForm, setMutasiForm] = useState({
+  const [mutasiForm, setMutasiForm] = useState<{
+    npp: string; nama: string; kategori: string; outlet: string; jenjang: string;
+    jabatan: string; grade: string | number; tanggal_lahir: string; nik: string; no_rek: string; no_hp: string;
+    sisa_cuti: number; keterangan: string; tanggal_aktif: string;
+  }>({
     npp: '', nama: '', kategori: 'BINA', outlet: '', jenjang: '',
-    jabatan: '', grade: 1, tanggal_lahir: '', nik: '', no_rek: '', no_hp: '',
+    jabatan: '', grade: '', tanggal_lahir: '', nik: '', no_rek: '', no_hp: '',
     sisa_cuti: 18, keterangan: '', tanggal_aktif: ''
   })
 
@@ -134,7 +138,7 @@ export default function BinaPage() {
       outlet: k.outlet || '',
       jenjang: k.jenjang || '',
       jabatan: k.jabatan || '',
-      grade: k.grade || 1,
+      grade: k.grade || '',
       tanggal_lahir: k.tanggal_lahir || '',
       nik: k.nik || '',
       no_rek: k.no_rek || '',
