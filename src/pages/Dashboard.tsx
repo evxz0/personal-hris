@@ -8,6 +8,8 @@ import { formatDate } from '../lib/utils'
 import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 
+import { IndonesianCalendar } from '../components/dashboard/IndonesianCalendar'
+
 function StatCard({ icon, label, value, color, sub }: {
   icon: React.ReactNode; label: string; value: number | string; color: string; sub?: string
 }) {
@@ -150,25 +152,31 @@ export default function Dashboard() {
           color="bg-red-50" sub="Sakit & Cuti" />
       </div>
 
-      {/* Activity Log */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-50">
-              <Activity size={16} className="text-blue-600" />
+      {/* 2-Column: Indonesian Calendar (Left) & Activity Log (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Left Column: Kalender Kerja & Tanggal Merah Indonesia */}
+        <IndonesianCalendar />
+
+        {/* Right Column: Log Aktivitas Sistem */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-blue-50">
+                <Activity size={16} className="text-blue-600" />
+              </div>
+              <h2 className="font-bold text-sm text-[#2B3440]">Log Aktivitas Sistem</h2>
             </div>
-            <h2 className="font-bold text-sm text-[#2B3440]">Log Aktivitas Sistem</h2>
+            <button onClick={() => setLogModalOpen(true)} className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors cursor-pointer">
+              Lihat Semua
+            </button>
           </div>
-          <button onClick={() => setLogModalOpen(true)} className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors">
-            Lihat Semua
-          </button>
-        </div>
-        <div className="divide-y divide-gray-50">
-          {auditLogs.length === 0 ? (
-            <div className="py-8 text-center text-sm text-[#64748B]">Belum ada aktivitas</div>
-          ) : (
-            auditLogs.map((log: any) => renderLogItem(log))
-          )}
+          <div className="divide-y divide-gray-50 flex-1">
+            {auditLogs.length === 0 ? (
+              <div className="py-12 text-center text-sm text-[#64748B]">Belum ada aktivitas</div>
+            ) : (
+              auditLogs.slice(0, 6).map((log: any) => renderLogItem(log))
+            )}
+          </div>
         </div>
       </div>
 
