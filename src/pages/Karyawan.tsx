@@ -83,6 +83,15 @@ const parseDateStringToISO = (val: any): string | null => {
   return cleanStr
 }
 
+export const formatGradeValue = (val: string | number | null | undefined): string => {
+  if (val === null || val === undefined || val === '') return ''
+  const s = String(val).trim().toUpperCase()
+  if (s.includes('NON')) return '.NON.GRADE'
+  const num = s.replace(/\D/g, '')
+  if (num) return `.GRADE.${num}`
+  return s
+}
+
 const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
   'NPP': 'npp', 'Nama': 'nama', 'NIK': 'nik',
   'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
@@ -192,23 +201,66 @@ export default function KaryawanPage() {
   }
 
   const handleSave = async () => {
-    const payload = {
-      ...form,
-      nama: String(form.nama || '').toUpperCase().trim()
+    try {
+      const { id, created_at, ...cleanForm } = form as any
+
+      let parsedGrade: number | null = null
+      if (cleanForm.grade !== null && cleanForm.grade !== undefined && cleanForm.grade !== '') {
+        const gradeStr = String(cleanForm.grade).trim().toUpperCase()
+        if (!gradeStr.includes('NON')) {
+          const numMatch = gradeStr.match(/\d+/)
+          if (numMatch) {
+            parsedGrade = parseInt(numMatch[0], 10)
+          }
+        }
+      }
+
+      const payload: KaryawanInsert = {
+        ...cleanForm,
+        nama: String(cleanForm.nama || '').toUpperCase().trim(),
+        grade: parsedGrade,
+        tanggal_lahir: cleanForm.tanggal_lahir || null,
+        tanggal_mulai: cleanForm.tanggal_mulai || null,
+        tanggal_berakhir: cleanForm.tanggal_berakhir || null,
+        outlet: cleanForm.outlet || null,
+        jenjang: cleanForm.jenjang || null,
+        jabatan: cleanForm.jabatan || null,
+        nik: cleanForm.nik || null,
+        no_rek: cleanForm.no_rek || null,
+        no_hp: cleanForm.no_hp || null,
+      }
+
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, payload })
+      } else {
+        await addMutation.mutateAsync(payload)
+      }
+      setModalOpen(false)
+    } catch (err: any) {
+      console.error('Error saving karyawan:', err)
+      alert(`Gagal menyimpan data karyawan: ${err?.message || JSON.stringify(err)}`)
     }
-    if (editId) {
-      await updateMutation.mutateAsync({ id: editId, payload })
-    } else {
-      await addMutation.mutateAsync(payload)
-    }
-    setModalOpen(false)
   }
 
   const handleSaveMutasi = async () => {
     try {
+      const { id, created_at, ...cleanMutasi } = mutasiForm as any
+
+      let parsedGrade: number | null = null
+      if (cleanMutasi.grade !== null && cleanMutasi.grade !== undefined && cleanMutasi.grade !== '') {
+        const gradeStr = String(cleanMutasi.grade).trim().toUpperCase()
+        if (!gradeStr.includes('NON')) {
+          const numMatch = gradeStr.match(/\d+/)
+          if (numMatch) {
+            parsedGrade = parseInt(numMatch[0], 10)
+          }
+        }
+      }
+
       await mutasiMutation.mutateAsync({
-        ...mutasiForm,
-        nama: String(mutasiForm.nama || '').toUpperCase().trim()
+        ...cleanMutasi,
+        nama: String(cleanMutasi.nama || '').toUpperCase().trim(),
+        grade: parsedGrade || 1
       })
       setMutasiOpen(false)
     } catch (err: any) {
@@ -399,9 +451,8 @@ export default function KaryawanPage() {
       jabatan: { key: 'jabatan', header: 'Jabatan' },
       tanggal_mulai: { key: 'tanggal_mulai', header: 'Tgl Mulai', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_mulai ? formatDate(r.tanggal_mulai) : '-'}</span> },
       tanggal_berakhir: { key: 'tanggal_berakhir', header: 'Tgl Berakhir', render: (r: any) => <span className="whitespace-nowrap">{r.tanggal_berakhir ? formatDate(r.tanggal_berakhir) : '-'}</span> },
-      kd_wil: { key: 'kd_wil', header: 'Kd Wil', render: (r: any) => <span>{String(r.kd_wil || '-')}</span> },
       grade: { key: 'grade', header: 'Grade', render: (r: any) => (
-        <span className="font-bold text-teal-700">{r.grade !== null && r.grade !== undefined ? String(r.grade) : '-'}</span>
+        <span className="font-bold text-teal-700">{formatGradeValue(r.grade) || '-'}</span>
       )},
       batch: { key: 'batch', header: 'Batch', render: (r: any) => <span>{r.batch ? `Batch ${r.batch}` : '-'}</span> },
       nik: { key: 'nik', header: 'NIK' },
@@ -775,7 +826,7 @@ export default function KaryawanPage() {
           {(form.kategori === 'FTE' || form.kategori === 'BINA' || filterKategori.length === 0) && (
             <Select
               label="Grade"
-              value={form.grade !== null && form.grade !== undefined ? String(form.grade) : ''}
+              value={formatGradeValue(form.grade)}
               onChange={e => setForm(f => ({ ...f, grade: e.target.value || null }))}
               options={[
                 { value: '.GRADE.12', label: '.GRADE.12' },
@@ -909,7 +960,7 @@ export default function KaryawanPage() {
             />
             <Select
               label="Grade Baru"
-              value={mutasiForm.grade}
+              value={formatGradeValue(mutasiForm.grade)}
               onChange={e => setMutasiForm(f => ({ ...f, grade: e.target.value }))}
               options={[
                 { value: '.GRADE.12', label: '.GRADE.12' },

@@ -87,9 +87,10 @@ export function useAddKaryawan() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: KaryawanInsert) => {
-      const { data, error } = await supabase.from('karyawan').insert(payload).select().single()
+      const { id: _id, created_at: _cat, ...cleanPayload } = payload as any
+      const { data, error } = await supabase.from('karyawan').insert(cleanPayload).select()
       if (error) throw error
-      await logAudit('TAMBAH_KARYAWAN', JSON.stringify({ npp: payload.npp, nama: payload.nama }))
+      await logAudit('TAMBAH_KARYAWAN', JSON.stringify({ npp: cleanPayload.npp, nama: cleanPayload.nama }))
       return data
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['karyawan'] }),
@@ -100,9 +101,10 @@ export function useUpdateKaryawan() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: Partial<KaryawanInsert> }) => {
-      const { data, error } = await supabase.from('karyawan').update(payload).eq('id', id).select().single()
+      const { id: _id, created_at: _cat, ...cleanPayload } = payload as any
+      const { data, error } = await supabase.from('karyawan').update(cleanPayload).eq('id', id)
       if (error) throw error
-      await logAudit('UPDATE_KARYAWAN', JSON.stringify({ id, ...payload }))
+      await logAudit('UPDATE_KARYAWAN', JSON.stringify({ id, ...cleanPayload }))
       return data
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['karyawan'] }),

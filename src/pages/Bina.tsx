@@ -151,12 +151,18 @@ export default function BinaPage() {
   }
 
   const handleSave = async () => {
-    if (editId) {
-      await updateMutation.mutateAsync({ id: editId, payload: form })
-    } else {
-      await addMutation.mutateAsync(form)
+    try {
+      const { id, created_at, ...cleanForm } = form as any
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, payload: cleanForm })
+      } else {
+        await addMutation.mutateAsync(cleanForm)
+      }
+      setModalOpen(false)
+    } catch (err: any) {
+      console.error('Error saving bina:', err)
+      alert(`Gagal menyimpan data bina: ${err?.message || JSON.stringify(err)}`)
     }
-    setModalOpen(false)
   }
 
   const handleSaveMutasi = async () => {
