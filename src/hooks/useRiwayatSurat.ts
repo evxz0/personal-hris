@@ -47,12 +47,12 @@ export function useRiwayatSurat(searchQuery = '') {
 
         // Auto-sync offline/local storage entries to Supabase cloud if table exists
         const localList = getLocalHistory()
-        if (localList.length > 0 && data) {
-          const supabaseNos = new Set(data.map(d => `${d.nomor_surat}-${d.npp_pegawai}`))
-          const unsynced = localList.filter(l => !supabaseNos.has(`${l.nomor_surat}-${l.npp_pegawai}`))
+        if (localList.length > 0 && Array.isArray(data)) {
+          const supabaseKeys = new Set(data.map(d => `${d.nomor_surat}-${d.npp_pegawai}-${d.tanggal_surat}`))
+          const unsynced = localList.filter(l => !supabaseKeys.has(`${l.nomor_surat}-${l.npp_pegawai}-${l.tanggal_surat}`))
           
           if (unsynced.length > 0) {
-            supabase.from('riwayat_surat').insert(unsynced.map(u => ({
+            const rowsToInsert = unsynced.map(u => ({
               nomor_surat: u.nomor_surat,
               jenis_surat: u.jenis_surat,
               nama_pegawai: u.nama_pegawai,
@@ -60,9 +60,10 @@ export function useRiwayatSurat(searchQuery = '') {
               tanggal_surat: u.tanggal_surat,
               payload: u.payload,
               created_at: u.created_at
-            }))).then(({ error: syncErr }) => {
+            }))
+            supabase.from('riwayat_surat').insert(rowsToInsert).then(({ error: syncErr }) => {
               if (!syncErr) {
-                saveLocalHistory([]) // clear local queue after successful cloud sync
+                // All local entries synced to cloud successfully
               }
             })
           }
@@ -91,15 +92,34 @@ export function useAddRiwayatSurat() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: RiwayatSuratInsert) => {
-      const newItem: RiwayatSurat = {
+      let savedCloudItem: RiwayatSurat | null = null
+
+      // 1. Try to save directly to Supabase cloud
+      try {
+        const { data, error } = await supabase.from('riwayat_surat').insert([{
+          nomor_surat: payload.nomor_surat,
+          jenis_surat: payload.jenis_surat,
+          nama_pegawai: payload.nama_pegawai,
+          npp_pegawai: payload.npp_pegawai,
+          tanggal_surat: payload.tanggal_surat,
+          payload: payload.payload
+        }]).select().single()
+
+        if (!error && data) {
+          savedCloudItem = data as RiwayatSurat
+        }
+      } catch (err) {
+        console.warn('Supabase cloud insert failed:', err)
+      }
+
+      // 2. Keep local backup in localStorage
+      const newItem: RiwayatSurat = savedCloudItem || {
         ...payload,
         id: 'RS-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
         created_at: new Date().toISOString()
       }
 
-      // Save to localStorage fallback
       const localList = getLocalHistory()
-      // Avoid exact duplicate within 5 seconds
       const isDuplicate = localList.some(item =>
         item.nomor_surat === newItem.nomor_surat &&
         item.npp_pegawai === newItem.npp_pegawai &&
@@ -108,23 +128,6 @@ export function useAddRiwayatSurat() {
       if (!isDuplicate) {
         localList.unshift(newItem)
         saveLocalHistory(localList)
-      }
-
-      // Save to Supabase if table exists
-      try {
-        const { error } = await supabase.from('riwayat_surat').insert([{
-          nomor_surat: payload.nomor_surat,
-          jenis_surat: payload.jenis_surat,
-          nama_pegawai: payload.nama_pegawai,
-          npp_pegawai: payload.npp_pegawai,
-          tanggal_surat: payload.tanggal_surat,
-          payload: payload.payload
-        }])
-        if (error) {
-          console.warn('Could not insert to Supabase riwayat_surat table, stored locally:', error)
-        }
-      } catch (err) {
-        console.warn('Supabase insert failed:', err)
       }
 
       return newItem
