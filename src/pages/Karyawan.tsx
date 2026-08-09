@@ -92,14 +92,31 @@ export const formatGradeValue = (val: string | number | null | undefined): strin
   return s
 }
 
+export const determineKategoriFromNpp = (
+  npp: string | null | undefined,
+  rawKategori?: string | null
+): 'FTE' | 'TAD' | 'BINA' => {
+  const s = String(npp || '').trim().toUpperCase()
+  if (s.startsWith('K')) return 'TAD'
+  if (s.startsWith('P')) return 'FTE'
+  if (s.startsWith('B')) return 'BINA'
+
+  // Fallback if NPP doesn't start with K, P, or B
+  const raw = String(rawKategori || '').trim().toUpperCase()
+  if (raw.includes('BINA') || raw.includes('MAGANG')) return 'BINA'
+  if (raw.includes('TAD') || raw.includes('OS') || raw.includes('ALIH DAYA')) return 'TAD'
+  if (raw === 'FTE') return 'FTE'
+  return 'FTE'
+}
+
 const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
   'NPP': 'npp', 'Nama': 'nama', 'Nama Pegawai': 'nama', 'NIK': 'nik',
   'TTL': 'ttl', 'Tempat Tanggal Lahir': 'ttl',
   'Jenis Kelamin': 'jenis_kelamin', 'Alamat': 'alamat', 'Agama': 'agama',
-  'Kategori': 'kategori', 'Status': 'kategori', 'Keterangan': 'kategori',
+  'Kategori': 'kategori', 'Status': 'kategori',
   'Outlet': 'outlet', 'Unit': 'outlet', 'Unit Kerja': 'outlet', 'Cabang': 'outlet',
   'Tanggal Lahir': 'tanggal_lahir', 'Birth Day': 'tanggal_lahir', 'Birthday': 'tanggal_lahir', 'Efektif': 'tanggal_lahir',
-  'Posisi Saat Ini': 'jabatan', 'Posisi': 'jabatan', 'Jabatan': 'jabatan',
+  'Posisi Saat Ini': 'jabatan', 'Posisi': 'jabatan', 'Jabatan': 'jabatan', 'Keterangan': 'keterangan_excel', 'Ket': 'keterangan_excel',
   'Jenjang': 'jenjang', 'Jenjang Jabatan': 'jenjang',
   'Grade': 'grade', 'Golongan': 'grade', 'Pangkat': 'grade',
   'NPP DIGI HC': 'npp_digi_hc', 'NPP WEBMAIL': 'npp_webmail',
@@ -218,9 +235,14 @@ export default function KaryawanPage() {
         }
       }
 
+      const nppInput = String(cleanForm.npp || '').trim().toUpperCase()
+      const resolvedKategori = determineKategoriFromNpp(nppInput, cleanForm.kategori)
+
       const payload: KaryawanInsert = {
         ...cleanForm,
+        npp: nppInput,
         nama: String(cleanForm.nama || '').toUpperCase().trim(),
+        kategori: resolvedKategori,
         grade: parsedGrade,
         tanggal_lahir: cleanForm.tanggal_lahir || null,
         tanggal_mulai: cleanForm.tanggal_mulai || null,
@@ -305,33 +327,25 @@ export default function KaryawanPage() {
 
   const handleImport = async (rows: Record<string, unknown>[]) => {
     const mapped = rows.map(r => {
-      // Smart category detection
-      const rawKet = String(r.kategori ?? r.keterangan ?? r['KETERANGAN'] ?? r.status ?? '').toUpperCase()
-      let category: 'FTE' | 'TAD' | 'BINA' = 'FTE'
-      if (rawKet.includes('BINA')) category = 'BINA'
-      else if (rawKet.includes('TAD') || rawKet.includes('OS') || rawKet.includes('ALIH DAYA')) category = 'TAD'
-      else if (r.kategori) {
-        const k = String(r.kategori).toUpperCase()
-        if (k === 'TAD' || k === 'BINA' || k === 'FTE') category = k as any
-      }
-
-      const isBina = category === 'BINA'
-      const isTad = category === 'TAD'
-      
       const digiHc = r.npp_digi_hc ? String(r.npp_digi_hc).trim() : null
       const webmail = r.npp_webmail ? String(r.npp_webmail).trim() : null
       
       // Fallback for npp: if empty or simple row sequence number (1-3 digits), use digiHc/webmail or generate ID
       let nppVal = String(r.npp ?? '').trim()
       if (!nppVal || /^\d{1,3}$/.test(nppVal)) {
-        if (isTad && digiHc) {
+        if (digiHc) {
           nppVal = digiHc
-        } else if (isTad && webmail) {
+        } else if (webmail) {
           nppVal = webmail
         } else {
           nppVal = `GEN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
         }
       }
+
+      // Rule: NPP prefix strictly determines Kategori: K -> TAD, P -> FTE, B -> BINA
+      const category = determineKategoriFromNpp(nppVal, (r.kategori as string) || (r.status as string))
+      const isBina = category === 'BINA'
+      const isTad = category === 'TAD'
 
       // Smart extraction for Grade (handles GRADE.11, GRADE.09, .GRADE.7, NON GRADE, etc.)
       let validGrade: number | null = null
@@ -349,9 +363,20 @@ export default function KaryawanPage() {
         }
       }
 
-      // Smart extraction for Jabatan (takes jabatan, posisi_saat_ini, posisi, etc.)
+      // Smart extraction for Jabatan (takes jabatan, posisi_saat_ini, posisi, keterangan_excel, etc.)
       const rawJabatan = r.jabatan ?? r.posisi_saat_ini ?? r.posisi ?? r['POSISI SAAT INI'] ?? r['Posisi Saat Ini'] ?? r['Posisi'] ?? r['Jabatan']
-      const jabatanVal = rawJabatan ? String(rawJabatan).trim() : null
+      const rawKet = String(r.keterangan_excel ?? (r as any).keterangan ?? r['KETERANGAN'] ?? '').trim().toUpperCase()
+      
+      let jabatanVal = rawJabatan ? String(rawJabatan).trim() : null
+      if (!jabatanVal && rawKet) {
+        if (rawKet === 'CS' || rawKet.includes('CUSTOMER SERVICE')) {
+          jabatanVal = 'Customer Service'
+        } else if (rawKet === 'TELLER') {
+          jabatanVal = 'Teller'
+        } else {
+          jabatanVal = String(r.keterangan_excel ?? (r as any).keterangan ?? r['KETERANGAN']).trim()
+        }
+      }
 
       // Smart extraction for Jenjang (handles MGR, AMGR, AVP, ASST, NON/ON GRADE)
       const rawJenjang = r.jenjang ?? r.Jenjang ?? r['JENJANG']
@@ -478,13 +503,14 @@ export default function KaryawanPage() {
       npp_digi_hc: { key: 'npp_digi_hc', header: 'NPP DIGI HC', render: (r: any) => <span>{String(r.npp_digi_hc || '-')}</span> },
       npp_webmail: { key: 'npp_webmail', header: 'NPP WEBMAIL', render: (r: any) => <span>{String(r.npp_webmail || '-')}</span> },
       nama: { key: 'nama', header: 'Nama', render: (r: any) => renderNameCell(r.nama) },
-      kategori: { key: 'kategori', header: 'Tipe', render: (r: any) => {
-        let bg = 'bg-teal-100 text-teal-700'
-        if (r.kategori === 'TAD') bg = 'bg-orange-100 text-orange-700'
-        else if (r.kategori === 'BINA') bg = 'bg-blue-100 text-blue-700'
+      kategori: { key: 'kategori', header: 'Kategori', render: (r: any) => {
+        const cat = determineKategoriFromNpp(r.npp, r.kategori)
+        let bg = 'bg-teal-100 text-teal-800'
+        if (cat === 'TAD') bg = 'bg-orange-100 text-orange-800'
+        else if (cat === 'BINA') bg = 'bg-blue-100 text-blue-800'
         return (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${bg}`}>
-            {String(r.kategori)}
+          <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${bg}`}>
+            {cat}
           </span>
         )
       }},

@@ -24,9 +24,7 @@ const SYNONYMS: Record<string, string[]> = {
     'unit kerja asal', 'kantor_cabang', 'unit_asal', 'lokasi_kerja', 'departemen/unit'
   ],
   kategori: [
-    'kategori', 'category', 'status', 'tipe', 'jenis', 'kelompok', 'hubungan kerja',
-    'jenis pegawai', 'status pegawai', 'tipe pegawai', 'kategori_pegawai', 'status_kerja',
-    'keterangan', 'ket'
+    'kategori', 'category', 'status pegawai', 'tipe pegawai', 'kategori_pegawai', 'status_kerja'
   ],
   grade: [
     'grade', 'golongan', 'pangkat', 'tingkat', 'level', 'grade asal', 'grade pgs', 'gol', 'grade.'
