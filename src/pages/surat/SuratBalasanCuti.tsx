@@ -10,6 +10,7 @@ import { useReferensi } from '../../hooks/useReferensi'
 import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput, UnitSelectInput } from '../../components/ui/DocumentFormControls'
+import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
 
 // Helper function to convert numbers to Indonesian words (Terbilang)
 function terbilang(n: number | string): string {
@@ -444,6 +445,9 @@ export default function SuratBalasanCutiPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Calendar Popup Helper */}
+      <CalendarPopupHelper />
     </div>
   )
 }

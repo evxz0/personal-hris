@@ -9,6 +9,7 @@ import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDr
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { Printer, UserCheck, Plus, Trash2, Sparkles, FileUp, Award, Layers } from 'lucide-react'
+import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
 
 export default function SuratCustomPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -358,6 +359,9 @@ export default function SuratCustomPage() {
           </div>
         </div>
       )}
+
+      {/* Floating Calendar Popup Helper */}
+      <CalendarPopupHelper />
     </div>
   )
 }

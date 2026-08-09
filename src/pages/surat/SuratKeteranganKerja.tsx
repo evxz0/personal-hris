@@ -9,6 +9,7 @@ import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { Printer, FileText, UserCheck, Award } from 'lucide-react'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput } from '../../components/ui/DocumentFormControls'
+import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
 
 export default function SuratKeteranganKerjaPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -461,6 +462,9 @@ export default function SuratKeteranganKerjaPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Calendar Popup Helper */}
+      <CalendarPopupHelper />
     </div>
   )
 }

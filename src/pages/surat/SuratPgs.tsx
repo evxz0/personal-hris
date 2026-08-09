@@ -11,6 +11,7 @@ import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { useReferensi } from '../../hooks/useReferensi'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput, UnitSelectInput, JenjangSelect, GradeSelect } from '../../components/ui/DocumentFormControls'
+import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
 
 export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -406,6 +407,9 @@ export default function SuratPgsPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Calendar Popup Helper */}
+      <CalendarPopupHelper />
     </div>
   )
 }
