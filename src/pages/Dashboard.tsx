@@ -141,10 +141,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 animate-fade-in pb-8">
       {/* Top Panoramic Hero Banner */}
-      <DashboardHeroBanner
-        totalKaryawan={totalKaryawan}
-        hadirRate={hadirRate}
-      />
+      <DashboardHeroBanner />
 
       {/* Header Info */}
       <div className="flex items-center justify-between">

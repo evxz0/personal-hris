@@ -1,13 +1,8 @@
 import { LayoutDashboard, CheckCircle2 } from 'lucide-react'
 
-interface Props {
-  totalKaryawan: number
-  hadirRate: string
-}
-
-export function DashboardHeroBanner({ totalKaryawan, hadirRate }: Props) {
+export function DashboardHeroBanner() {
   return (
-    <div className="relative rounded-3xl overflow-hidden shadow-md border border-gray-100/80 min-h-[220px] sm:min-h-[260px] flex flex-col justify-between p-5 sm:p-7">
+    <div className="relative rounded-3xl overflow-hidden shadow-lg border border-white/20 min-h-[220px] sm:min-h-[260px] flex flex-col justify-between p-5 sm:p-7">
       {/* Panoramic Background Image */}
       <img
         src="/bg-home-hero.avif"
@@ -15,71 +10,43 @@ export function DashboardHeroBanner({ totalKaryawan, hadirRate }: Props) {
         className="absolute inset-0 w-full h-full object-cover object-center"
       />
 
-      {/* Subtle overlay for contrast */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-black/30 pointer-events-none" />
+      {/* Dark gradient overlay for optimal glass contrast */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/35 pointer-events-none" />
 
       {/* Top Breadcrumb */}
       <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white/95 text-xs font-extrabold tracking-wide drop-shadow-md">
-          <LayoutDashboard size={16} className="text-white" />
+        <div className="flex items-center gap-2 text-white text-xs font-extrabold tracking-wide drop-shadow-md">
+          <LayoutDashboard size={16} className="text-teal-300" />
           <span>Dashboard</span>
           <span className="text-white/60">/</span>
           <span className="text-white/90">Personal Human Resource Information System (P-HRIS)</span>
         </div>
       </div>
 
-      {/* Floating Info Card (Bottom-Left) */}
-      <div className="relative z-10 max-w-lg bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/90 space-y-3 animate-fade-in-up">
+      {/* Floating Glassmorphism Info Card (Transparent / Glass Background) */}
+      <div className="relative z-10 max-w-lg bg-black/30 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-white/25 space-y-2.5 animate-fade-in-up">
         {/* Main Title */}
         <div>
-          <h2 className="text-base sm:text-lg font-black text-[#2B3440] leading-tight">
+          <h2 className="text-base sm:text-lg font-black text-white leading-tight drop-shadow-md">
             PT Bank Negara Indonesia (Persero) Tbk
           </h2>
-          <p className="text-xs font-semibold text-[#64748B] mt-0.5">
+          <p className="text-xs font-semibold text-white/85 mt-0.5 drop-shadow-sm">
             Regional Office 09 · Human Capital Information Portal
           </p>
         </div>
 
-        {/* Tags / Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 size={12} className="text-emerald-700" />
+        {/* Tags / Pills with Glass Effect */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 backdrop-blur-md shadow-xs">
+            <CheckCircle2 size={13} className="text-emerald-400" />
             Live System
           </span>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-[#475569] border border-gray-200">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/15 text-white border border-white/25 backdrop-blur-md shadow-xs">
             Regional Office 09
           </span>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-[#475569] border border-gray-200">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/15 text-white border border-white/25 backdrop-blur-md shadow-xs">
             Unit HC & SDM
           </span>
-        </div>
-
-        {/* Highlight Metrics */}
-        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
-          <div>
-            <span className="text-sm sm:text-base font-black text-[#2B3440] block leading-none">
-              {totalKaryawan}
-            </span>
-            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block mt-1">
-              Total SDM
-            </span>
-          </div>
-          <div>
-            <span className="text-sm sm:text-base font-black text-teal-700 block leading-none">
-              {hadirRate}%
-            </span>
-            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block mt-1">
-              Kehadiran
-            </span>
-          </div>
-          <div>
-            <span className="text-sm sm:text-base font-black text-orange-600 block leading-none">
-              RO 09
-            </span>
-            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block mt-1">
-              Wilayah
-            </span>
-          </div>
         </div>
       </div>
     </div>
