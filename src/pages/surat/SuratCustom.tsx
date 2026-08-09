@@ -247,7 +247,7 @@ export default function SuratCustomPage() {
               >
                 {templates.map(t => (
                   <option key={t.id} value={t.id}>
-                    📄 {t.nama_template}
+                    {t.nama_template}
                   </option>
                 ))}
               </select>

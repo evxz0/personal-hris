@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Sun, Info, CalendarDays } from 'lucide-react'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Sun, Info, CalendarDays, X } from 'lucide-react'
 import {
   getHoliday,
   isWeekend,
@@ -342,17 +342,17 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
           id="toggle-calendar-btn"
           type="button"
           onClick={() => setIsOpen(prev => !prev)}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-full font-extrabold text-xs shadow-xl transition-all duration-200 cursor-pointer active:scale-95 ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-xs shadow-xl transition-all duration-200 cursor-pointer active:scale-95 ${
             isOpen
               ? 'bg-red-600 hover:bg-red-700 text-white ring-4 ring-red-500/25 shadow-red-900/30'
-              : 'bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white ring-4 ring-teal-700/15 shadow-teal-900/30'
+              : 'bg-teal-800 hover:bg-teal-900 text-white ring-4 ring-teal-700/20 shadow-teal-950/30'
           }`}
-          title={isOpen ? 'Tutup Kalender' : 'Buka Kalender Hari Libur & Kerja'}
+          title={isOpen ? 'Tutup Kalender' : 'Buka Kalender Hari Libur'}
         >
-          <CalendarDays size={17} className={isOpen ? '' : 'animate-pulse'} />
-          <span>{isOpen ? '✕ Tutup Kalender' : '📅 Kalender Hari Libur'}</span>
+          {isOpen ? <X size={15} /> : <CalendarDays size={15} />}
+          <span>{isOpen ? 'Tutup Kalender' : 'Kalender Hari Libur'}</span>
           {holidaysThisMonth.length > 0 && !isOpen && (
-            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-black">
+            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
               {holidaysThisMonth.length}
             </span>
           )}
