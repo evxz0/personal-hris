@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
+import { Users, UserCheck, GraduationCap, CalendarOff, Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { formatDate } from '../lib/utils'
@@ -9,7 +9,24 @@ import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 
 import { IndonesianCalendar } from '../components/dashboard/IndonesianCalendar'
-import { DashboardAnalyticsHeader } from '../components/dashboard/DashboardAnalyticsHeader'
+import { DashboardHeroBanner } from '../components/dashboard/DashboardHeroBanner'
+
+function StatCard({ icon, label, value, color, sub }: {
+  icon: React.ReactNode; label: string; value: number | string; color: string; sub?: string
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 animate-fade-in-up">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color} shrink-0`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-[#64748B] font-medium">{label}</p>
+        <p className="text-2xl font-extrabold text-[#2B3440]">{value}</p>
+        {sub && <p className="text-xs text-[#64748B] mt-0.5">{sub}</p>}
+      </div>
+    </div>
+  )
+}
 
 function renderLogItem(log: any) {
   const isTambah = log.aksi.includes('TAMBAH')
@@ -113,22 +130,63 @@ export default function Dashboard() {
     enabled: logModalOpen,
   })
 
+  const fte = karyawan.filter((k: { kategori?: string }) => k.kategori === 'FTE').length
+  const tad = karyawan.filter((k: { kategori?: string }) => k.kategori === 'TAD').length
+  const bina = karyawan.filter((k: { kategori?: string }) => k.kategori === 'BINA').length
+  const totalKaryawan = karyawan.length
+  const absensiCount = absensi.length
+  const hadirCount = Math.max(0, totalKaryawan - absensiCount)
+  const hadirRate = totalKaryawan > 0 ? ((hadirCount / totalKaryawan) * 100).toFixed(1) : '100'
+
   return (
-    <div className="space-y-8 animate-fade-in pb-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-[#2B3440]">Dashboard</h1>
-        <p className="text-sm text-[#64748B] mt-1">
-          Selamat datang · {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+    <div className="space-y-6 animate-fade-in pb-8">
+      {/* Top Panoramic Hero Banner */}
+      <DashboardHeroBanner
+        totalKaryawan={totalKaryawan}
+        hadirRate={hadirRate}
+      />
+
+      {/* Header Info */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-extrabold text-[#2B3440]">Ringkasan Data SDM</h1>
+          <p className="text-xs text-[#64748B] mt-0.5">
+            Informasi status kepegawaian dan kehadiran per {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
       </div>
 
-      {/* Top Visual Analytics & Diagrams (Non-Pie) */}
-      <DashboardAnalyticsHeader
-        karyawan={karyawan}
-        magang={magang}
-        absensi={absensi}
-      />
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={<Users size={22} className="text-teal-600" />}
+          label="Total Karyawan"
+          value={totalKaryawan}
+          color="bg-teal-50"
+          sub={`FTE: ${fte} | TAD: ${tad} | BINA: ${bina}`}
+        />
+        <StatCard
+          icon={<UserCheck size={22} className="text-orange-500" />}
+          label="Tenaga Bina"
+          value={bina}
+          color="bg-orange-50"
+          sub="Program Pemagangan BNI"
+        />
+        <StatCard
+          icon={<GraduationCap size={22} className="text-purple-600" />}
+          label="Magang Aktif"
+          value={magang.length}
+          color="bg-purple-50"
+          sub="Internship Mahasiswa"
+        />
+        <StatCard
+          icon={<CalendarOff size={22} className="text-red-500" />}
+          label="Absensi Hari Ini"
+          value={absensiCount}
+          color="bg-red-50"
+          sub={`${hadirRate}% Tingkat Hadir`}
+        />
+      </div>
 
       {/* 2-Column: Indonesian Calendar (Left) & Activity Log (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
