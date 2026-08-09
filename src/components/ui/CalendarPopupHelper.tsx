@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Calendar as CalendarIcon, X, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Sun, Info, CalendarDays } from 'lucide-react'
+import { useState } from 'react'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Sun, Info, CalendarDays } from 'lucide-react'
 import {
   getHoliday,
   isWeekend,
@@ -26,27 +26,6 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear())
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth())
   const [selectedDate, setSelectedDate] = useState<Date>(today)
-  const popupRef = useRef<HTMLDivElement>(null)
-
-  // Close when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        // Only close if click is not on the toggle button
-        const target = event.target as HTMLElement
-        if (!target.closest('#toggle-calendar-btn')) {
-          setIsOpen(false)
-        }
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
 
   // Navigation handlers
   const handlePrevMonth = () => {
@@ -166,38 +145,14 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
   }
 
   return (
-    <>
-      {/* Floating Trigger Button (Bottom-Right) */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          id="toggle-calendar-btn"
-          type="button"
-          onClick={() => setIsOpen(prev => !prev)}
-          className={`flex items-center gap-2 px-4 py-3 rounded-full font-bold text-xs shadow-xl transition-all duration-300 cursor-pointer active:scale-95 ${
-            isOpen
-              ? 'bg-teal-900 text-white ring-4 ring-teal-500/20'
-              : 'bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white ring-4 ring-teal-700/10 hover:shadow-teal-900/30'
-          }`}
-          title="Buka/Tutup Kalender Hari Libur & Kerja"
-        >
-          <CalendarDays size={17} className="animate-pulse" />
-          <span>{isOpen ? 'Tutup Kalender' : 'Kalender Hari Libur'}</span>
-          {holidaysThisMonth.length > 0 && !isOpen && (
-            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-black">
-              {holidaysThisMonth.length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Pop-up Calendar Floating Panel */}
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2.5 pointer-events-none">
+      {/* Pop-up Calendar Floating Card (Stays open while user types in form) */}
       {isOpen && (
         <div
-          ref={popupRef}
-          className="fixed bottom-20 right-6 z-50 w-[340px] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-teal-100/80 overflow-hidden animate-fade-in-up flex flex-col max-h-[85vh]"
-          style={{ backdropFilter: 'blur(10px)' }}
+          className="pointer-events-auto w-[330px] sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in-up flex flex-col max-h-[calc(100vh-130px)]"
+          style={{ backdropFilter: 'blur(8px)' }}
         >
-          {/* Header */}
+          {/* Header (Clean, without X button as requested) */}
           <div className="bg-gradient-to-r from-teal-800 to-teal-900 px-4 py-3 text-white flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">
               <CalendarIcon size={16} className="text-teal-300" />
@@ -206,18 +161,13 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
                 <p className="text-[10px] text-teal-200">Panduan tanggal cuti & surat</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded-lg hover:bg-white/20 text-teal-200 hover:text-white transition-colors cursor-pointer"
-              title="Tutup Kalender"
-            >
-              <X size={16} />
-            </button>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-700/80 text-teal-100 border border-teal-600/50">
+              Tetap Terbuka
+            </span>
           </div>
 
           {/* Month Navigation */}
-          <div className="px-3.5 py-2.5 bg-teal-50/60 border-b border-teal-100 flex items-center justify-between text-xs">
+          <div className="px-3.5 py-2 bg-teal-50/70 border-b border-teal-100 flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={handleToday}
@@ -234,7 +184,7 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
               >
                 <ChevronLeft size={15} />
               </button>
-              <span className="font-extrabold text-teal-950 text-xs min-w-[100px] text-center">
+              <span className="font-extrabold text-teal-950 text-xs min-w-[95px] text-center">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </span>
               <button
@@ -249,8 +199,8 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
           </div>
 
           {/* Body Content */}
-          <div className="p-3 overflow-y-auto max-h-[calc(85vh-160px)] space-y-3 custom-scrollbar">
-            {/* Day Names */}
+          <div className="p-3 overflow-y-auto space-y-3 custom-scrollbar">
+            {/* Day Names Header */}
             <div className="grid grid-cols-7 gap-1 text-center">
               {DAY_NAMES.map((name, i) => (
                 <div
@@ -319,7 +269,9 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
             <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Tanggal Dipilih:</span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800">
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                  selectedIsWorkday ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-700'
+                }`}>
                   {selectedIsWorkday ? 'Hari Kerja Aktif' : 'Libur'}
                 </span>
               </div>
@@ -383,6 +335,29 @@ export function CalendarPopupHelper({ onSelectDate }: Props) {
           </div>
         </div>
       )}
-    </>
+
+      {/* Floating Toggle Button (Always clearly visible, never covered by popup) */}
+      <div className="pointer-events-auto">
+        <button
+          id="toggle-calendar-btn"
+          type="button"
+          onClick={() => setIsOpen(prev => !prev)}
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-full font-extrabold text-xs shadow-xl transition-all duration-200 cursor-pointer active:scale-95 ${
+            isOpen
+              ? 'bg-red-600 hover:bg-red-700 text-white ring-4 ring-red-500/25 shadow-red-900/30'
+              : 'bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white ring-4 ring-teal-700/15 shadow-teal-900/30'
+          }`}
+          title={isOpen ? 'Tutup Kalender' : 'Buka Kalender Hari Libur & Kerja'}
+        >
+          <CalendarDays size={17} className={isOpen ? '' : 'animate-pulse'} />
+          <span>{isOpen ? '✕ Tutup Kalender' : '📅 Kalender Hari Libur'}</span>
+          {holidaysThisMonth.length > 0 && !isOpen && (
+            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-black">
+              {holidaysThisMonth.length}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
   )
 }
