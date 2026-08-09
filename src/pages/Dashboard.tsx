@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Users, UserCheck, GraduationCap, CalendarOff, Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
+import { Clock, Activity, PlusCircle, Edit, Trash2, UploadCloud } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { formatDate } from '../lib/utils'
@@ -9,23 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 
 import { IndonesianCalendar } from '../components/dashboard/IndonesianCalendar'
-
-function StatCard({ icon, label, value, color, sub }: {
-  icon: React.ReactNode; label: string; value: number | string; color: string; sub?: string
-}) {
-  return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 animate-fade-in-up">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color} shrink-0`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-xs text-[#64748B] font-medium">{label}</p>
-        <p className="text-2xl font-extrabold text-[#2B3440]">{value}</p>
-        {sub && <p className="text-xs text-[#64748B] mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  )
-}
+import { DashboardAnalyticsHeader } from '../components/dashboard/DashboardAnalyticsHeader'
 
 function renderLogItem(log: any) {
   const isTambah = log.aksi.includes('TAMBAH')
@@ -86,8 +70,11 @@ export default function Dashboard() {
   const [logModalOpen, setLogModalOpen] = useState(false)
   const [logDateFilter, setLogDateFilter] = useState<Date | null>(null)
   const { data: karyawan = [] } = useQuery({
-    queryKey: ['karyawan'],
-    queryFn: async () => { const { data } = await supabase.from('karyawan').select('id, kategori'); return data ?? [] },
+    queryKey: ['karyawan-dashboard'],
+    queryFn: async () => {
+      const { data } = await supabase.from('karyawan').select('id, kategori, jenjang, outlet, grade, jenis_kelamin')
+      return data ?? []
+    },
   })
   const { data: magang = [] } = useQuery({
     queryKey: ['magang-count'],
@@ -126,12 +113,8 @@ export default function Dashboard() {
     enabled: logModalOpen,
   })
 
-  const fte = karyawan.filter((k: { kategori: string }) => k.kategori === 'FTE').length
-  const tad = karyawan.filter((k: { kategori: string }) => k.kategori === 'TAD').length
-  const bina = karyawan.filter((k: { kategori: string }) => k.kategori === 'BINA').length
-
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-extrabold text-[#2B3440]">Dashboard</h1>
@@ -140,17 +123,12 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <StatCard icon={<Users size={22} className="text-teal-600" />} label="Total Karyawan" value={karyawan.length}
-          color="bg-teal-50" sub={`FTE: ${fte} | TAD: ${tad} | BINA: ${bina}`} />
-        <StatCard icon={<UserCheck size={22} className="text-orange-500" />} label="Data Bina" value={bina}
-          color="bg-orange-50" />
-        <StatCard icon={<GraduationCap size={22} className="text-purple-600" />} label="Magang Aktif" value={magang.length}
-          color="bg-purple-50" />
-        <StatCard icon={<CalendarOff size={22} className="text-red-500" />} label="Absensi Hari Ini" value={absensi.length}
-          color="bg-red-50" sub="Sakit & Cuti" />
-      </div>
+      {/* Top Visual Analytics & Diagrams (Non-Pie) */}
+      <DashboardAnalyticsHeader
+        karyawan={karyawan}
+        magang={magang}
+        absensi={absensi}
+      />
 
       {/* 2-Column: Indonesian Calendar (Left) & Activity Log (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
