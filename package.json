@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "npm run build && wrangler pages dev ./dist",
-    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=preview"
+    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=main",
+    "deploy:preview": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=preview"
   },
   "dependencies": {
     "@emnapi/core": "^1.11.2",
