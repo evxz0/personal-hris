@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatLegalDocumentHtml } from '../../lib/legalDocumentFormatter';
 
 interface Props {
   htmlContent: string;
@@ -30,7 +31,11 @@ export function replacePlaceholdersInHtml(html: string, values: Record<string, s
 }
 
 export const CustomTemplateRenderer = React.forwardRef<HTMLDivElement, Props>(({ htmlContent, placeholderValues, hideLogo = false }, ref) => {
-  const finalHtml = replacePlaceholdersInHtml(htmlContent, placeholderValues);
+  const structuredHtml = htmlContent.includes('bni-sk-official-doc')
+    ? htmlContent
+    : formatLegalDocumentHtml(htmlContent);
+
+  const finalHtml = replacePlaceholdersInHtml(structuredHtml, placeholderValues);
 
   return (
     <div ref={ref} className="sk-custom-paper">

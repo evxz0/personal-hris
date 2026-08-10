@@ -5,6 +5,7 @@ import { Modal } from './Modal'
 import { Button } from './Button'
 import { useAddCustomTemplate } from '../../hooks/useCustomTemplates'
 import { CustomTemplateRenderer } from '../templates/CustomTemplateRenderer'
+import { formatLegalDocumentHtml } from '../../lib/legalDocumentFormatter'
 
 interface UploadTemplateModalProps {
   isOpen: boolean
@@ -102,14 +103,15 @@ export function UploadTemplateModal({ isOpen, onClose, onSuccess }: UploadTempla
           ]
         }
       )
-      const html = result.value
+      const rawHtml = result.value
 
-      if (!html || html.trim() === '') {
+      if (!rawHtml || rawHtml.trim() === '') {
         throw new Error('Dokumen template kosong atau tidak memiliki teks yang terbaca.')
       }
 
-      setParsedHtml(html)
-      const foundPlaceholders = extractPlaceholdersFromHtml(html)
+      const formattedHtml = formatLegalDocumentHtml(rawHtml)
+      setParsedHtml(formattedHtml)
+      const foundPlaceholders = extractPlaceholdersFromHtml(formattedHtml)
       setPlaceholders(foundPlaceholders)
       setStatus('preview')
     } catch (err: any) {
