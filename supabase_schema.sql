@@ -18,30 +18,30 @@ CREATE TABLE IF NOT EXISTS master_referensi (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_referensi_kategori ON master_referensi(kategori);
--- 2. KARYAWAN (FTE & TAD)
+-- 2. KARYAWAN (FTE, TAD, BINA)
 CREATE TABLE IF NOT EXISTS karyawan (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  npp VARCHAR(20) UNIQUE NOT NULL,
-  nama VARCHAR(200) NOT NULL,
+  npp VARCHAR(50) UNIQUE NOT NULL,
+  nama VARCHAR(255) NOT NULL,
   kategori TEXT NOT NULL CHECK (kategori IN ('FTE', 'TAD', 'BINA')),
-  outlet VARCHAR(100),
+  outlet VARCHAR(255),
   tanggal_lahir DATE,
-  posisi_saat_ini VARCHAR(100),
-  jenjang VARCHAR(50),
-  jabatan VARCHAR(50),
+  posisi_saat_ini VARCHAR(255),
+  jenjang VARCHAR(100),
+  jabatan VARCHAR(255),
   grade INTEGER CHECK (
     grade BETWEEN 1 AND 12
   ),
-  nik VARCHAR(20),
-  npp_digi_hc VARCHAR(50),
-  npp_webmail VARCHAR(50),
-  jenis_kelamin VARCHAR(10),
+  nik VARCHAR(50),
+  npp_digi_hc VARCHAR(100),
+  npp_webmail VARCHAR(100),
+  jenis_kelamin VARCHAR(20),
   tanggal_mulai DATE,
   tanggal_berakhir DATE,
-  kd_wil VARCHAR(20),
-  batch VARCHAR(10),
-  no_rek VARCHAR(30),
-  no_hp VARCHAR(20),
+  kd_wil VARCHAR(50),
+  batch VARCHAR(50),
+  no_rek VARCHAR(50),
+  no_hp VARCHAR(50),
   sisa_cuti INTEGER DEFAULT 18,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

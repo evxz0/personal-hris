@@ -116,7 +116,7 @@ const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
   'Kategori': 'kategori', 'Status': 'kategori',
   'Outlet': 'outlet', 'Unit': 'outlet', 'Unit Kerja': 'outlet', 'Cabang': 'outlet',
   'Tanggal Lahir': 'tanggal_lahir', 'Birth Day': 'tanggal_lahir', 'Birthday': 'tanggal_lahir', 'Efektif': 'tanggal_lahir',
-  'Posisi Saat Ini': 'jabatan', 'Posisi': 'jabatan', 'Jabatan': 'jabatan', 'Keterangan': 'keterangan_excel', 'Ket': 'keterangan_excel',
+  'Posisi Saat Ini': 'jabatan', 'Posisi': 'jabatan', 'Jabatan': 'jabatan', 'Keterangan': 'jabatan', 'Ket': 'jabatan',
   'Jenjang': 'jenjang', 'Jenjang Jabatan': 'jenjang',
   'Grade': 'grade', 'Golongan': 'grade', 'Pangkat': 'grade',
   'NPP DIGI HC': 'npp_digi_hc', 'NPP WEBMAIL': 'npp_webmail',
@@ -363,9 +363,9 @@ export default function KaryawanPage() {
         }
       }
 
-      // Smart extraction for Jabatan (takes jabatan, posisi_saat_ini, posisi, keterangan_excel, etc.)
+      // Smart extraction for Jabatan (takes jabatan, posisi_saat_ini, posisi, etc.)
       const rawJabatan = r.jabatan ?? r.posisi_saat_ini ?? r.posisi ?? r['POSISI SAAT INI'] ?? r['Posisi Saat Ini'] ?? r['Posisi'] ?? r['Jabatan']
-      const rawKet = String(r.keterangan_excel ?? (r as any).keterangan ?? r['KETERANGAN'] ?? '').trim().toUpperCase()
+      const rawKet = String((r as any).keterangan ?? r['KETERANGAN'] ?? '').trim().toUpperCase()
       
       let jabatanVal = rawJabatan ? String(rawJabatan).trim() : null
       if (!jabatanVal && rawKet) {
@@ -374,7 +374,7 @@ export default function KaryawanPage() {
         } else if (rawKet === 'TELLER') {
           jabatanVal = 'Teller'
         } else {
-          jabatanVal = String(r.keterangan_excel ?? (r as any).keterangan ?? r['KETERANGAN']).trim()
+          jabatanVal = String((r as any).keterangan ?? r['KETERANGAN']).trim()
         }
       }
 
@@ -392,27 +392,40 @@ export default function KaryawanPage() {
       const rawOutlet = r.outlet ?? r.Outlet ?? r.unit ?? r['UNIT'] ?? r['OUTLET'] ?? r['Unit Kerja']
       const outletVal = rawOutlet ? String(rawOutlet).trim() : null
 
+      // Safe string length limits according to database constraints
+      const safeJabatan = jabatanVal ? String(jabatanVal).trim().substring(0, 50) : null
+      const safePosisi = jabatanVal ? String(jabatanVal).trim().substring(0, 100) : null
+      const safeOutlet = outletVal ? String(outletVal).trim().substring(0, 100) : null
+      const safeJenjang = jenjangVal ? String(jenjangVal).trim().substring(0, 50) : null
+      const safeNama = String(r.nama ?? '').toUpperCase().trim().substring(0, 200)
+      const safeNpp = String(nppVal).trim().substring(0, 20)
+      const safeNik = r.nik ? String(r.nik).trim().substring(0, 20) : null
+      const safeDigiHc = digiHc ? String(digiHc).trim().substring(0, 50) : null
+      const safeWebmail = webmail ? String(webmail).trim().substring(0, 50) : null
+      const safeNoRek = r.no_rek ? String(r.no_rek).trim().substring(0, 30) : null
+      const safeNoHp = r.no_hp ? String(r.no_hp).trim().substring(0, 20) : null
+
       return {
         ...EMPTY,
-        npp: nppVal,
-        nama: String(r.nama ?? '').toUpperCase().trim(),
+        npp: safeNpp,
+        nama: safeNama,
         kategori: category,
-        outlet: outletVal,
+        outlet: safeOutlet,
         tanggal_lahir: parseDateStringToISO(r.tanggal_lahir || r.ttl || r.tempat_tanggal_lahir || r.efektif || (r as any)['EFEKTIF'] || (r as any)['BIRTH DAY']),
-        posisi_saat_ini: isBina ? null : jabatanVal,
-        jenjang: isBina ? null : jenjangVal,
-        jabatan: jabatanVal,
+        posisi_saat_ini: isBina ? null : safePosisi,
+        jenjang: isBina ? null : safeJenjang,
+        jabatan: safeJabatan,
         grade: isTad ? null : validGrade,
-        nik: r.nik ? String(r.nik) : null,
-        npp_digi_hc: isTad ? digiHc : null,
-        npp_webmail: isTad ? webmail : null,
-        jenis_kelamin: r.jenis_kelamin ? String(r.jenis_kelamin) : null,
+        nik: safeNik,
+        npp_digi_hc: isTad ? safeDigiHc : null,
+        npp_webmail: isTad ? safeWebmail : null,
+        jenis_kelamin: r.jenis_kelamin ? String(r.jenis_kelamin).trim().substring(0, 10) : null,
         tanggal_mulai: isBina ? parseDateStringToISO(r.tanggal_mulai) : null,
         tanggal_berakhir: isBina ? parseDateStringToISO(r.tanggal_berakhir) : null,
-        kd_wil: isBina && r.kd_wil ? String(r.kd_wil) : null,
-        batch: isBina && r.batch ? String(r.batch) : null,
-        no_rek: r.no_rek ? String(r.no_rek) : null,
-        no_hp: r.no_hp ? String(r.no_hp) : null,
+        kd_wil: isBina && r.kd_wil ? String(r.kd_wil).trim().substring(0, 20) : null,
+        batch: isBina && r.batch ? String(r.batch).trim().substring(0, 10) : null,
+        no_rek: safeNoRek,
+        no_hp: safeNoHp,
         sisa_cuti: 18,
       }
     })
