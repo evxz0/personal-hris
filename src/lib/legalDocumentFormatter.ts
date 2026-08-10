@@ -6,48 +6,19 @@
 export function formatLegalDocumentHtml(rawHtml: string): string {
   if (!rawHtml || rawHtml.trim() === '') return '';
 
-  // Extract clean text lines from HTML paragraphs or tables
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = rawHtml;
+  // Extract clean text lines from HTML
+  const rawParagraphs = rawHtml
+    .replace(/<br\s*[\/]?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
 
-  // If the document is already a nicely formatted custom table, preserve basic structure
-  // but enhance styling
-  const rawParagraphs: string[] = [];
+  if (rawParagraphs.length === 0) return rawHtml;
 
-  // Recursively collect text chunks / paragraphs
-  function collectNodes(node: Node) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node as HTMLElement;
-      const tag = el.tagName.toUpperCase();
-
-      if (tag === 'TABLE') {
-        // Collect rows
-        const rows = Array.from(el.querySelectorAll('tr'));
-        rows.forEach(r => {
-          const cells = Array.from(r.querySelectorAll('td, th')).map(c => c.textContent?.trim() || '');
-          const combined = cells.filter(Boolean).join(' | ');
-          if (combined) rawParagraphs.push(combined);
-        });
-        return;
-      }
-
-      if (['P', 'H1', 'H2', 'H3', 'H4', 'DIV', 'LI'].includes(tag)) {
-        const text = el.textContent?.trim() || '';
-        if (text) rawParagraphs.push(text);
-        return;
-      }
-    }
-
-    node.childNodes.forEach(collectNodes);
-  }
-
-  collectNodes(tempDiv);
-
-  if (rawParagraphs.length === 0) {
-    return rawHtml;
-  }
-
-  // State machine to identify SK sections
   const headerMeta: { key: string; val: string }[] = [];
   const titleLines: string[] = [];
   const menimbangItems: string[] = [];
@@ -65,195 +36,170 @@ export function formatLegalDocumentHtml(rawHtml: string): string {
   let closingNote = '';
   const signatureLines: string[] = [];
 
-  let currentSection: 'header' | 'title' | 'menimbang' | 'mengingat' | 'memperhatikan' | 'memutuskan' | 'pertama' | 'kedua' | 'ketiga' | 'closing' = 'header';
+  let stage: 'header_or_title' | 'menimbang' | 'mengingat' | 'memperhatikan' | 'memutuskan' | 'pertama' | 'kedua' | 'ketiga' | 'keempat' | 'closing' = 'header_or_title';
 
   for (let i = 0; i < rawParagraphs.length; i++) {
-    const rawLine = rawParagraphs[i].trim();
-    const upper = rawLine.toUpperCase();
+    const line = rawParagraphs[i].trim();
+    const upper = line.toUpperCase();
 
-    // 1. Header Meta (Putusan, Nomor, Tanggal, Hal)
-    if (
-      currentSection === 'header' &&
-      (/^(PUTUSAN|NOMOR|TANGGAL|HAL|NO)\s*[:|]/i.test(rawLine) ||
-        /^(KP\/\d+|KEPUTUSAN|SURAT)/i.test(rawLine))
-    ) {
-      const parts = rawLine.split(/[:|]/);
-      if (parts.length >= 2) {
-        const k = parts[0].trim();
-        const v = parts.slice(1).join(':').trim();
-        headerMeta.push({ key: k, val: v });
-        continue;
-      }
-    }
-
-    // 2. Title Block (SURAT KEPUTUSAN / REGIONAL OFFICE 09 / PT. BANK NEGARA INDONESIA)
-    if (
-      upper.includes('SURAT KEPUTUSAN') ||
-      upper.includes('SURAT KETERANGAN') ||
-      upper.includes('SURAT TUGAS') ||
-      upper.includes('SURAT EDARAN') ||
-      (currentSection === 'header' && (upper.includes('REGIONAL OFFICE') || upper.includes('PT. BANK NEGARA INDONESIA')))
-    ) {
-      currentSection = 'title';
-      titleLines.push(rawLine);
+    // Skip unwanted watermark artifacts
+    if (upper === 'HCMS DIGITAL SK' || upper.includes('WATERMARK') || upper === 'HCMS DIGITAL') {
       continue;
     }
 
-    if (currentSection === 'title') {
-      if (
-        upper.includes('REGIONAL OFFICE') ||
-        upper.includes('PT. BANK NEGARA INDONESIA') ||
-        upper.includes('PERSERO') ||
-        upper.includes('CABANG')
-      ) {
-        titleLines.push(rawLine);
-        continue;
-      } else {
-        currentSection = 'menimbang';
-      }
-    }
-
-    // 3. Preamble Sections (Menimbang, Mengingat, Memperhatikan)
+    // Stage Transitions based on standard Indonesian SK Keywords
     if (upper.startsWith('MENIMBANG')) {
-      currentSection = 'menimbang';
-      const rest = rawLine.replace(/^MENIMBANG\s*[:|]?\s*/i, '').trim();
+      stage = 'menimbang';
+      const rest = line.replace(/^MENIMBANG\s*[:|]?\s*/i, '').trim();
       if (rest) menimbangItems.push(rest);
       continue;
     }
 
     if (upper.startsWith('MENGINGAT')) {
-      currentSection = 'mengingat';
-      const rest = rawLine.replace(/^MENGINGAT\s*[:|]?\s*/i, '').trim();
+      stage = 'mengingat';
+      const rest = line.replace(/^MENGINGAT\s*[:|]?\s*/i, '').trim();
       if (rest) mengingatItems.push(rest);
       continue;
     }
 
     if (upper.startsWith('MEMPERHATIKAN')) {
-      currentSection = 'memperhatikan';
-      const rest = rawLine.replace(/^MEMPERHATIKAN\s*[:|]?\s*/i, '').trim();
+      stage = 'memperhatikan';
+      const rest = line.replace(/^MEMPERHATIKAN\s*[:|]?\s*/i, '').trim();
       if (rest) memperhatikanItems.push(rest);
       continue;
     }
 
     if (upper.startsWith('MEMUTUSKAN')) {
       isMemutuskan = true;
-      currentSection = 'memutuskan';
+      stage = 'memutuskan';
       continue;
     }
 
-    if (currentSection === 'menimbang') {
-      if (!upper.startsWith('MENGINGAT') && !upper.startsWith('MEMPERHATIKAN') && !upper.startsWith('MEMUTUSKAN')) {
-        // Skip watermark artifacts like "HCMS Digital SK"
-        if (!upper.includes('HCMS DIGITAL') && !upper.includes('WATERMARK')) {
-          menimbangItems.push(rawLine);
-        }
-        continue;
-      }
-    }
-
-    if (currentSection === 'mengingat') {
-      if (!upper.startsWith('MEMPERHATIKAN') && !upper.startsWith('MEMUTUSKAN')) {
-        if (!upper.includes('HCMS DIGITAL') && !upper.includes('WATERMARK')) {
-          mengingatItems.push(rawLine);
-        }
-        continue;
-      }
-    }
-
-    if (currentSection === 'memperhatikan') {
-      if (!upper.startsWith('MEMUTUSKAN')) {
-        if (!upper.includes('HCMS DIGITAL') && !upper.includes('WATERMARK')) {
-          memperhatikanItems.push(rawLine);
-        }
-        continue;
-      }
-    }
-
-    // 4. Decision Clauses (Menetapkan, Pertama, Kedua, Ketiga, Keempat)
     if (upper.startsWith('MENETAPKAN')) {
-      menetapkanText = rawLine.replace(/^MENETAPKAN\s*[:|]?\s*/i, '').trim();
-      currentSection = 'pertama';
+      stage = 'pertama';
+      menetapkanText = line.replace(/^MENETAPKAN\s*[:|]?\s*/i, '').trim();
       continue;
     }
 
     if (upper.startsWith('PERTAMA')) {
-      currentSection = 'pertama';
-      pertamaHeader = rawLine.replace(/^PERTAMA\s*[:|]?\s*/i, '').trim();
+      stage = 'pertama';
+      pertamaHeader = line.replace(/^PERTAMA\s*[:|]?\s*/i, '').trim();
       continue;
     }
 
     if (upper.startsWith('KEDUA')) {
-      currentSection = 'kedua';
-      keduaText = rawLine.replace(/^KEDUA\s*[:|]?\s*/i, '').trim();
+      stage = 'kedua';
+      keduaText = line.replace(/^KEDUA\s*[:|]?\s*/i, '').trim();
       continue;
     }
 
     if (upper.startsWith('KETIGA')) {
-      currentSection = 'ketiga';
-      ketigaText = rawLine.replace(/^KETIGA\s*[:|]?\s*/i, '').trim();
+      stage = 'ketiga';
+      ketigaText = line.replace(/^KETIGA\s*[:|]?\s*/i, '').trim();
       continue;
     }
 
     if (upper.startsWith('KEEMPAT')) {
-      currentSection = 'ketiga';
-      keempatText = rawLine.replace(/^KEEMPAT\s*[:|]?\s*/i, '').trim();
+      stage = 'keempat';
+      keempatText = line.replace(/^KEEMPAT\s*[:|]?\s*/i, '').trim();
       continue;
     }
 
-    // Capture Sub-specs (Sebagai, Unit, Lokasi, etc.)
-    if (currentSection === 'pertama') {
-      if (/^(SEBAGAI|UNIT|LOKASI|JABATAN|GRADE|OUTLET)\s*[:|]/i.test(rawLine)) {
-        const parts = rawLine.split(/[:|]/);
+    if (upper.includes('SURAT KEPUTUSAN INI DISAMPAIKAN') || upper.includes('DIKETAHUI DAN DILAKSANAKAN')) {
+      stage = 'closing';
+      closingNote = line;
+      continue;
+    }
+
+    // Process lines according to current stage
+    if (stage === 'header_or_title') {
+      if (/^(PUTUSAN|NOMOR|TANGGAL|HAL)\s*[:|]/i.test(line)) {
+        const parts = line.split(/[:|]/);
+        headerMeta.push({ key: parts[0].trim(), val: parts.slice(1).join(':').trim() });
+        continue;
+      }
+      if (
+        upper.includes('SURAT KEPUTUSAN') ||
+        upper.includes('REGIONAL OFFICE') ||
+        upper.includes('PT. BANK NEGARA INDONESIA') ||
+        upper.includes('PERSERO')
+      ) {
+        titleLines.push(line);
+        continue;
+      }
+    } else if (stage === 'menimbang') {
+      menimbangItems.push(line);
+    } else if (stage === 'mengingat') {
+      mengingatItems.push(line);
+    } else if (stage === 'memperhatikan') {
+      memperhatikanItems.push(line);
+    } else if (stage === 'pertama') {
+      if (/^(SEBAGAI|UNIT|LOKASI|JABATAN|OUTLET)\s*[:|]/i.test(line)) {
+        const parts = line.split(/[:|]/);
         specs.push({ key: parts[0].trim(), val: parts.slice(1).join(':').trim() });
         continue;
       }
 
-      if (upper.startsWith('SDR.') || upper.startsWith('SDR ') || upper.startsWith('SDRI') || upper.includes('NPP.')) {
-        subjectPerson = rawLine;
+      if (upper.startsWith('SDR.') || upper.startsWith('SDR ') || upper.startsWith('SDRI') || upper.includes('NPP')) {
+        subjectPerson = line;
         continue;
       }
 
       if (
-        (upper.includes('LEADER') || upper.includes('MANAGER') || upper.includes('OFFICER') || upper.includes('GRADE')) &&
         !specs.some(s => s.key.toUpperCase() === 'SEBAGAI') &&
-        !subjectRole
+        !subjectRole &&
+        subjectPerson
       ) {
-        subjectRole = rawLine;
+        subjectRole = line;
         continue;
       }
 
       if (!pertamaHeader) {
-        pertamaHeader = rawLine;
+        pertamaHeader = line;
         continue;
       }
-    }
-
-    if (currentSection === 'kedua') {
-      keduaText = keduaText ? `${keduaText} ${rawLine}` : rawLine;
-      continue;
-    }
-
-    if (currentSection === 'ketiga') {
-      ketigaText = ketigaText ? `${ketigaText} ${rawLine}` : rawLine;
-      continue;
-    }
-
-    // 5. Closing & Signature
-    if (upper.includes('SURAT KEPUTUSAN INI DISAMPAIKAN') || upper.includes('DIKETAHUI DAN DILAKSANAKAN')) {
-      closingNote = rawLine;
-      currentSection = 'closing';
-      continue;
-    }
-
-    if (currentSection === 'closing') {
-      signatureLines.push(rawLine);
+    } else if (stage === 'kedua') {
+      keduaText = keduaText ? `${keduaText} ${line}` : line;
+    } else if (stage === 'ketiga') {
+      ketigaText = ketigaText ? `${ketigaText} ${line}` : line;
+    } else if (stage === 'keempat') {
+      keempatText = keempatText ? `${keempatText} ${line}` : line;
+    } else if (stage === 'closing') {
+      signatureLines.push(line);
     }
   }
 
-  // If unable to parse standard SK structure, fallback to enhanced clean paragraphs
+  // Fallback to enhanced general HTML if not an SK document
   if (titleLines.length === 0 && menimbangItems.length === 0 && !isMemutuskan) {
     return cleanUpGeneralHtml(rawHtml);
   }
+
+  // Parse numbered items in clause lists (supporting "1. ", "a. ", or "Bahwa...")
+  function parseNumberedItems(items: string[]): string[] {
+    const result: string[] = [];
+    let currentItem = '';
+
+    for (const raw of items) {
+      const isNewItem = /^(\d+[\.\)]|[a-zA-Z][\.\)]|Bahwa\b)/i.test(raw);
+      if (isNewItem) {
+        if (currentItem) result.push(currentItem);
+        currentItem = raw;
+      } else {
+        if (currentItem) {
+          currentItem += ' ' + raw;
+        } else {
+          currentItem = raw;
+        }
+      }
+    }
+    if (currentItem) result.push(currentItem);
+
+    return result;
+  }
+
+  const cleanMenimbang = parseNumberedItems(menimbangItems);
+  const cleanMengingat = parseNumberedItems(mengingatItems);
+  const cleanMemperhatikan = parseNumberedItems(memperhatikanItems);
 
   // BUILD STRUCTURED OFFICIAL BNI SK HTML
   let out = '<div class="bni-sk-official-doc" style="font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.45; color: #000;">';
@@ -281,7 +227,7 @@ export function formatLegalDocumentHtml(rawHtml: string): string {
     out += '</div>';
   }
 
-  // Helper to format clause items
+  // Helper to format clause rows
   function formatClauseRow(label: string, items: string[]) {
     if (items.length === 0) return '';
     let rowsHtml = '';
@@ -290,8 +236,8 @@ export function formatLegalDocumentHtml(rawHtml: string): string {
       let num = `${idx + 1}.`;
       let text = item;
 
-      // If text already has numbering like "1. Bahwa ..."
-      const matchNum = item.match(/^(\d+[\.\)])\s*(.*)/s);
+      // Extract existing numbering if present
+      const matchNum = item.match(/^(\d+[\.\)]|[a-zA-Z][\.\)])\s*(.*)/s);
       if (matchNum) {
         num = matchNum[1];
         text = matchNum[2];
@@ -312,9 +258,9 @@ export function formatLegalDocumentHtml(rawHtml: string): string {
 
   // 3. Preamble Clauses Table (Menimbang, Mengingat, Memperhatikan)
   out += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">';
-  out += formatClauseRow('Menimbang', menimbangItems);
-  out += formatClauseRow('Mengingat', mengingatItems);
-  out += formatClauseRow('Memperhatikan', memperhatikanItems);
+  out += formatClauseRow('Menimbang', cleanMenimbang);
+  out += formatClauseRow('Mengingat', cleanMengingat);
+  out += formatClauseRow('Memperhatikan', cleanMemperhatikan);
   out += '</table>';
 
   // 4. MEMUTUSKAN Banner
