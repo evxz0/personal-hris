@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, Mail } from 'lucide-react'
 
+import { recordUserLogin } from '../lib/sessionTracker'
+
 type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success'
 
 export default function LoginPage() {
@@ -104,11 +106,24 @@ export default function LoginPage() {
 
     const email = formatEmail(userId)
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
     if (authError) {
       setError('ID Pengguna atau kata sandi tidak sesuai.')
     } else {
-      navigate('/')
+      const cleanUser = userId.trim()
+      await recordUserLogin({
+        userId: authData.user?.id || cleanUser,
+        username: cleanUser,
+        email,
+        nama: cleanUser.toUpperCase(),
+        role: cleanUser.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
+      }).catch(console.error)
+
+      if (cleanUser.toLowerCase() === 'superadmin' || cleanUser.toLowerCase().includes('superadmin')) {
+        navigate('/superadmin')
+      } else {
+        navigate('/')
+      }
     }
     setLoading(false)
   }

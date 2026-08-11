@@ -17,6 +17,7 @@ import SuratPgsPage from './pages/surat/SuratPgs'
 import SuratBalasanCutiPage from './pages/surat/SuratBalasanCuti'
 import SuratKeteranganKerjaPage from './pages/surat/SuratKeteranganKerja'
 import SuratCustomPage from './pages/surat/SuratCustom'
+import SuperadminPage from './pages/Superadmin'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/riwayat/surat" element={<ProtectedRoute session={session}><RiwayatSuratPage /></ProtectedRoute>} />
 
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
+        <Route path="/superadmin" element={session ? <SuperadminPage /> : <Navigate to="/login" replace />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

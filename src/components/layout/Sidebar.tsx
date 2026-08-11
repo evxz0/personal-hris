@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Users, GraduationCap,
   CalendarOff, Settings, FileText, ChevronDown,
-  ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck
+  ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck, ShieldAlert
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -311,6 +311,43 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 {collapsed && (
                   <div className="absolute left-full ml-3 px-3 py-1.5 bg-teal-900/95 text-white text-xs font-semibold rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                     Pengaturan
+                  </div>
+                )}
+              </>
+            )}
+          </NavLink>
+
+          {/* Superadmin Control Center */}
+          <NavLink
+            to="/superadmin"
+            onClick={() => setMobileOpen(false)}
+            className={({ isActive }) => `
+              flex items-center rounded-xl font-semibold text-xs mt-1
+              transition-all duration-200 group relative border
+              ${collapsed ? 'justify-center py-3 px-0' : 'gap-3 px-3 py-2.5'}
+              ${isActive
+                ? 'bg-slate-900 text-teal-300 border-teal-500/50 shadow-md'
+                : 'bg-teal-800/40 text-teal-100 border-teal-600/40 hover:bg-slate-900/70 hover:text-teal-200'
+              }
+            `}
+          >
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-teal-400 rounded-r-full" />
+                )}
+                <span className={`shrink-0 ${isActive ? 'text-teal-300' : 'text-teal-300 group-hover:text-teal-200'}`}>
+                  <ShieldAlert size={18} />
+                </span>
+                {!collapsed && (
+                  <div className="truncate flex items-center justify-between flex-1">
+                    <span className="font-bold">Superadmin Panel</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-500 text-slate-950 font-black">ADMIN</span>
+                  </div>
+                )}
+                {collapsed && (
+                  <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-teal-300 text-xs font-bold rounded-xl shadow-xl border border-teal-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    Superadmin Panel
                   </div>
                 )}
               </>
