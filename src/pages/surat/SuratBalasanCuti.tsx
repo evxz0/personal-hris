@@ -6,8 +6,9 @@ import { SuratBalasanCutiTemplate, type SuratBalasanCutiData } from '../../compo
 import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDropdown'
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
+import { useAddAbsensi } from '../../hooks/useAbsensi'
 import { useReferensi } from '../../hooks/useReferensi'
-import { Printer, FileText, UserCheck, Calendar, Award } from 'lucide-react'
+import { Printer, FileText, UserCheck, Calendar, Award, CheckCircle2 } from 'lucide-react'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput, UnitSelectInput } from '../../components/ui/DocumentFormControls'
 import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
@@ -29,9 +30,41 @@ function terbilang(n: number | string): string {
   return String(num);
 }
 
+function parseIndonesianDateToISO(dateStr: string): string | null {
+  if (!dateStr) return null
+  const clean = dateStr.trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean
+  
+  const months: Record<string, string> = {
+    'januari': '01', 'jan': '01',
+    'februari': '02', 'feb': '02',
+    'maret': '03', 'mar': '03',
+    'april': '04', 'apr': '04',
+    'mei': '05', 'may': '05',
+    'juni': '06', 'jun': '06',
+    'juli': '07', 'jul': '07',
+    'agustus': '08', 'agt': '08', 'ags': '08', 'aug': '08',
+    'september': '09', 'sep': '09',
+    'oktober': '10', 'okt': '10', 'oct': '10',
+    'november': '11', 'nov': '11',
+    'desember': '12', 'des': '12', 'dec': '12'
+  }
+  
+  const parts = clean.split(/[\s-]+/)
+  if (parts.length >= 3) {
+    const day = parts[0].padStart(2, '0')
+    const monthName = parts[1].toLowerCase()
+    const month = months[monthName] || '01'
+    const year = parts[2]
+    return `${year}-${month}-${day}`
+  }
+  return null
+}
+
 export default function SuratBalasanCutiPage() {
   const printRef = useRef<HTMLDivElement>(null)
   const addRiwayatSurat = useAddRiwayatSurat()
+  const addAbsensi = useAddAbsensi()
 
   // Fetch Master Outlet referensi
   const { data: outlets = [] } = useReferensi('OUTLET')
@@ -78,8 +111,10 @@ export default function SuratBalasanCutiPage() {
 
   const [selectedNpp, setSelectedNpp] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
+  const [autoSyncAbsensi, setAutoSyncAbsensi] = useState(true)
+  const [syncSuccess, setSyncSuccess] = useState(false)
 
-  const logHistory = () => {
+  const logHistory = async () => {
     addRiwayatSurat.mutate({
       nomor_surat: formData.nomorSurat,
       jenis_surat: 'Surat Balasan Cuti',
@@ -88,6 +123,27 @@ export default function SuratBalasanCutiPage() {
       tanggal_surat: formData.tanggalSurat,
       payload: formData as any
     })
+
+    // Auto record into Absensi page & deduct sisa_cuti in Master Karyawan
+    if (autoSyncAbsensi && formData.pegawai.npp && formData.cuti.tanggalMulai) {
+      const isoMulai = parseIndonesianDateToISO(formData.cuti.tanggalMulai)
+      const isoSelesai = parseIndonesianDateToISO(formData.cuti.tanggalSelesai) || isoMulai
+      if (isoMulai && isoSelesai) {
+        try {
+          await addAbsensi.mutateAsync({
+            npp: formData.pegawai.npp,
+            jenis: 'CUTI',
+            tanggal_mulai: isoMulai,
+            tanggal_selesai: isoSelesai,
+            keterangan: `Cuti ${formData.cuti.jumlahHari ? `${formData.cuti.jumlahHari} hari ` : ''}(Surat Balasan No. ${formData.nomorSurat || '-'})`
+          })
+          setSyncSuccess(true)
+          setTimeout(() => setSyncSuccess(false), 5000)
+        } catch (e) {
+          console.error('Gagal mencatat otomatis ke absensi:', e)
+        }
+      }
+    }
   }
 
   // Handle employee selection from dropdown
@@ -95,6 +151,10 @@ export default function SuratBalasanCutiPage() {
     setSelectedNpp(npp)
     const emp = karyawanList.find(k => k.npp === npp)
     if (emp) {
+      const currentSisa = emp.sisa_cuti !== null && emp.sisa_cuti !== undefined ? Number(emp.sisa_cuti) : 18
+      const durasi = parseInt(formData.cuti.jumlahHari, 10) || 0
+      const calculatedSisa = Math.max(0, currentSisa - durasi)
+
       setFormData(prev => ({
         ...prev,
         pegawai: {
@@ -102,6 +162,11 @@ export default function SuratBalasanCutiPage() {
           npp: emp.npp || '',
           unitAsal: (emp.outlet || emp.departemen || 'Pontianak Branch Office').toUpperCase(),
           kotaUnit: (emp.outlet || 'PONTIANAK').toUpperCase()
+        },
+        cuti: {
+          ...prev.cuti,
+          sisaCuti: prev.cuti.sisaCuti || String(calculatedSisa),
+          sisaCutiTerbilang: prev.cuti.sisaCutiTerbilang || terbilang(calculatedSisa)
         }
       }))
     }
@@ -122,7 +187,7 @@ export default function SuratBalasanCutiPage() {
     if (!printRef.current) return
     try {
       setDownloading(true)
-      logHistory()
+      await logHistory()
       await exportElementToPDF(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -135,7 +200,7 @@ export default function SuratBalasanCutiPage() {
   const handleDownloadWord = async () => {
     if (!printRef.current) return
     try {
-      logHistory()
+      await logHistory()
       await exportElementToWord(printRef.current, `Surat_Balasan_Cuti_${formData.pegawai.npp || 'Surat'}`)
     } catch (e) {
       console.error(e)
@@ -157,6 +222,16 @@ export default function SuratBalasanCutiPage() {
           </p>
         </div>
       </div>
+
+      {/* Sync Notification Banner */}
+      {syncSuccess && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-semibold flex items-center gap-2.5 animate-fade-in shadow-xs">
+          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+          <span>
+            Data cuti atas nama <strong>{formData.pegawai.nama}</strong> ({formData.cuti.jumlahHari || '-'} hari) berhasil otomatis tercatat di <strong>Halaman Absensi</strong> dan kuota cuti di Master Karyawan telah diperbarui!
+          </span>
+        </div>
+      )}
 
       {/* Main Grid: Left Form Editor, Right Live Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -182,11 +257,29 @@ export default function SuratBalasanCutiPage() {
               ) : (
                 karyawanList.map(k => (
                   <option key={k.id || k.npp} value={k.npp}>
-                    {k.nama} ({k.npp}) - {k.jabatan || 'Pegawai'}
+                    {k.nama} ({k.npp}) - {k.jabatan || 'Pegawai'} {k.sisa_cuti !== null ? `[Sisa: ${k.sisa_cuti} hari]` : ''}
                   </option>
                 ))
               )}
             </select>
+          </div>
+
+          {/* Sync Absensi & Quota Toggle */}
+          <div className="p-3 bg-teal-50/80 border border-teal-200 rounded-xl space-y-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoSyncAbsensi}
+                onChange={e => setAutoSyncAbsensi(e.target.checked)}
+                className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
+              />
+              <span className="text-xs font-bold text-teal-950">
+                Otomatis Catat ke Data Absensi & Kurangi Kuota Cuti
+              </span>
+            </label>
+            <p className="text-[11px] text-teal-700 pl-6 leading-relaxed">
+              Saat surat dicetak/diunduh, sistem otomatis mencatat absensi cuti atas nama <strong>{formData.pegawai.nama || 'Pegawai'}</strong> dan mengurangi sisa cuti di Master Karyawan.
+            </p>
           </div>
 
           {/* Section 1: Metadata Surat */}

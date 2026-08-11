@@ -319,7 +319,7 @@ export default function AbsensiPage() {
             label="Jenis Absensi"
             value={form.jenis}
             onChange={e => setForm(f => ({ ...f, jenis: e.target.value as 'SAKIT'|'CUTI' }))}
-            options={[{ value: 'SAKIT', label: 'Izin Sakit' }, { value: 'CUTI', label: 'Izin Cuti' }]}
+            options={[{ value: 'SAKIT', label: 'Sakit' }, { value: 'CUTI', label: 'Cuti' }]}
           />
 
           <div className="grid grid-cols-2 gap-4">
