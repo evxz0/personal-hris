@@ -105,24 +105,32 @@ export default function LoginPage() {
     setError('')
 
     const email = formatEmail(userId)
-    const cleanUser = userId.trim()
+    const cleanUser = userId.trim().toLowerCase()
     let loggedInUser = null
 
-    // 1. Try direct sign in
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
-    
-    if (!authError && authData?.session) {
-      loggedInUser = authData.user
+    // 1. Master/Standard built-in credentials check (superadmin / admin)
+    const isMasterSuperadmin = cleanUser === 'superadmin' && (password === 'superadmin123' || password === 'superadmin' || password === 'admin123')
+    const isMasterAdmin = cleanUser === 'admin' && (password === 'admin123' || password === 'admin')
+
+    if (isMasterSuperadmin || isMasterAdmin) {
+      loggedInUser = {
+        id: isMasterSuperadmin ? 'usr_superadmin' : 'usr_admin',
+        email: `${cleanUser}@phris.local`,
+        user_metadata: { name: cleanUser.toUpperCase(), role: isMasterSuperadmin ? 'SUPERADMIN' : 'ADMIN_HR' }
+      }
+      localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
     } else {
-      // 2. If account doesn't exist in Supabase auth yet, attempt auto-signup
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password })
-      if (!signUpErr && signUpData?.session) {
-        loggedInUser = signUpData.user
+      // 2. Try Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!authError && authData?.session) {
+        loggedInUser = authData.user
+        localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
       } else {
-        // Try sign in once more in case signup created it
-        const { data: retryData } = await supabase.auth.signInWithPassword({ email, password })
-        if (retryData?.session) {
-          loggedInUser = retryData.user
+        // Attempt auto-signup for custom created users
+        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password })
+        if (!signUpErr && signUpData?.session) {
+          loggedInUser = signUpData.user
+          localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
         }
       }
     }
@@ -133,16 +141,16 @@ export default function LoginPage() {
       return
     }
 
-    // Record login session & telemetry
+    // Record session tracking & telemetry
     await recordUserLogin({
       userId: loggedInUser.id || cleanUser,
       username: cleanUser,
-      email,
+      email: `${cleanUser}@phris.local`,
       nama: cleanUser.toUpperCase(),
-      role: cleanUser.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
+      role: cleanUser.includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
     }).catch(console.error)
 
-    if (cleanUser.toLowerCase() === 'superadmin' || cleanUser.toLowerCase().includes('superadmin')) {
+    if (cleanUser === 'superadmin' || cleanUser.includes('superadmin')) {
       navigate('/superadmin')
     } else {
       navigate('/')

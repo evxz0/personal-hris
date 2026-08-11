@@ -20,12 +20,19 @@ import SuratCustomPage from './pages/surat/SuratCustom'
 import SuperadminPage from './pages/Superadmin'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
-  if (!session) return <Navigate to="/login" replace />
+  const localAuth = localStorage.getItem('phris_authenticated_user')
+  if (!session && !localAuth) return <Navigate to="/login" replace />
   return <Layout>{children}</Layout>
 }
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>(() => {
+    try {
+      const local = localStorage.getItem('phris_authenticated_user')
+      if (local) return { user: JSON.parse(local) } as any
+    } catch {}
+    return null
+  })
   const [loading, setLoading] = useState(true)
 
   // Attach 1-hour idle timeout listener when session is active
@@ -33,12 +40,22 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
+      if (session) {
+        setSession(session)
+      } else {
+        const local = localStorage.getItem('phris_authenticated_user')
+        if (local) setSession({ user: JSON.parse(local) } as any)
+      }
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
+      if (session) {
+        setSession(session)
+      } else {
+        const local = localStorage.getItem('phris_authenticated_user')
+        if (local) setSession({ user: JSON.parse(local) } as any)
+      }
     })
 
     return () => subscription.unsubscribe()

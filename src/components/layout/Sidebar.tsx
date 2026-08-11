@@ -50,6 +50,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   }, [location.pathname])
 
   const handleLogout = async () => {
+    localStorage.removeItem('phris_authenticated_user')
     await supabase.auth.signOut()
     navigate('/login')
   }
