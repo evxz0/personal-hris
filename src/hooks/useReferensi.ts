@@ -38,6 +38,24 @@ export function useAddReferensi() {
   })
 }
 
+export function useUpdateReferensi() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, nama_referensi }: { id: string; nama_referensi: string }) => {
+      const { data, error } = await supabase
+        .from('master_referensi')
+        .update({ nama_referensi: nama_referensi.trim().toUpperCase() })
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw error
+      await logAudit('UPDATE_REFERENSI', JSON.stringify({ id, nama_referensi }))
+      return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['referensi'] }),
+  })
+}
+
 export function useDeleteReferensi() {
   const qc = useQueryClient()
   return useMutation({
