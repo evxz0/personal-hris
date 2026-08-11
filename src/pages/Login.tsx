@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, Mail } from 'lucide-react'
 
 import { recordUserLogin } from '../lib/sessionTracker'
-import { getLocalUsers } from '../hooks/useSuperadmin'
 
 type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success'
 
@@ -108,93 +107,65 @@ export default function LoginPage() {
     const email = formatEmail(userId)
     const cleanUser = userId.trim().toLowerCase()
     const cleanPass = password.trim()
-    let loggedInUser = null
 
-    // 1. Check in Managed Users Store (Accounts created by Superadmin or default accounts)
-    const localUsers = getLocalUsers()
-    const matchedLocalUser = localUsers.find(
-      u => (u.username.toLowerCase() === cleanUser || u.email.toLowerCase() === email.toLowerCase())
-    )
+    let activeUser = null
 
-    if (matchedLocalUser) {
-      if (matchedLocalUser.status === 'NONAKTIF' || matchedLocalUser.status === 'SUSPENDED') {
-        setError(`Akun ini sedang ${matchedLocalUser.status.toLowerCase()}. Silakan hubungi Superadmin.`)
-        setLoading(false)
-        return
-      }
+    // 1. Authenticate with Supabase Auth
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: cleanPass
+    })
 
-      const isPassValid =
-        (matchedLocalUser.password && matchedLocalUser.password === cleanPass) ||
-        (matchedLocalUser.role === 'SUPERADMIN' && (cleanPass === 'superadmin123' || cleanPass === 'superadmin' || cleanPass === 'admin123')) ||
-        (matchedLocalUser.role !== 'SUPERADMIN' && (cleanPass === 'admin123' || cleanPass === 'admin' || cleanPass === 'BNI#123456')) ||
-        (!matchedLocalUser.password && cleanPass.length >= 4)
-
-      if (isPassValid) {
-        loggedInUser = {
-          id: matchedLocalUser.id,
-          email: matchedLocalUser.email,
-          user_metadata: {
-            name: matchedLocalUser.nama,
-            username: matchedLocalUser.username,
-            role: matchedLocalUser.role
+    if (!signInError && signInData?.session && signInData?.user) {
+      activeUser = signInData.user
+    } else {
+      // 2. If account doesn't exist in Supabase Auth yet, attempt auto-signup
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+        email,
+        password: cleanPass,
+        options: {
+          data: {
+            name: cleanUser.toUpperCase(),
+            username: cleanUser,
+            role: email.includes('superadmin') || cleanUser.includes('superadmin') ? 'SUPERADMIN' : 'ADMIN_HR'
           }
         }
-        localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
-      }
-    }
-
-    // 2. Master fallback for superadmin / admin
-    if (!loggedInUser) {
-      const isMasterSuperadmin = cleanUser.includes('superadmin') && (cleanPass === 'superadmin123' || cleanPass === 'superadmin' || cleanPass === 'admin123' || cleanPass.length >= 4)
-      const isMasterAdmin = cleanUser === 'admin' && (cleanPass === 'admin123' || cleanPass === 'admin' || cleanPass.length >= 4)
-
-      if (isMasterSuperadmin || isMasterAdmin) {
-        loggedInUser = {
-          id: isMasterSuperadmin ? 'usr_superadmin' : 'usr_admin',
-          email: `${cleanUser}@phris.local`,
-          user_metadata: { name: cleanUser.toUpperCase(), role: isMasterSuperadmin ? 'SUPERADMIN' : 'ADMIN_HR' }
-        }
-        localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
-      }
-    }
-
-    // 3. Try Supabase Auth
-    if (!loggedInUser) {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password: cleanPass })
-      if (!authError && authData?.session) {
-        loggedInUser = authData.user
-        localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
-      } else {
-        // Attempt auto-signup for custom created users
-        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password: cleanPass })
-        if (!signUpErr && signUpData?.session) {
-          loggedInUser = signUpData.user
-          localStorage.setItem('phris_authenticated_user', JSON.stringify(loggedInUser))
+      })
+      if (!signUpErr && signUpData?.session && signUpData?.user) {
+        activeUser = signUpData.user
+      } else if (!signUpErr && signUpData?.user) {
+        const { data: retryData, error: retryErr } = await supabase.auth.signInWithPassword({
+          email,
+          password: cleanPass
+        })
+        if (!retryErr && retryData?.session && retryData?.user) {
+          activeUser = retryData.user
         }
       }
     }
 
-    if (!loggedInUser) {
-      setError('ID Pengguna atau kata sandi tidak sesuai.')
+    if (!activeUser) {
+      setError(signInError?.message || 'ID Pengguna atau kata sandi tidak sesuai.')
       setLoading(false)
       return
     }
 
-    // Record session tracking & telemetry
+    // Record session tracking & telemetry in Supabase audit_logs
     await recordUserLogin({
-      userId: loggedInUser.id || cleanUser,
+      userId: activeUser.id,
       username: cleanUser,
-      email: `${cleanUser}@phris.local`,
-      nama: cleanUser.toUpperCase(),
-      role: cleanUser.includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
+      email: activeUser.email || email,
+      nama: activeUser.user_metadata?.name || cleanUser.toUpperCase(),
+      role: (email.includes('superadmin') || cleanUser.includes('superadmin')) ? 'SUPERADMIN' : 'ADMIN_HR',
     }).catch(console.error)
 
+    const isSuper = email.includes('superadmin') || cleanUser.includes('superadmin')
     const searchParams = new URLSearchParams(window.location.search)
     const redirectParam = searchParams.get('redirect')
 
-    if (redirectParam) {
+    if (redirectParam && (redirectParam !== '/superadmin' || isSuper)) {
       navigate(redirectParam, { replace: true })
-    } else if (cleanUser === 'superadmin' || cleanUser.includes('superadmin') || email.includes('superadmin')) {
+    } else if (isSuper) {
       navigate('/superadmin', { replace: true })
     } else {
       navigate('/', { replace: true })
