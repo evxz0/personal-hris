@@ -12,15 +12,31 @@ export interface Referensi {
   created_at: string
 }
 
+// Map virtual categories to existing DB enum values to satisfy Postgres CHECK constraints
+function toDbKategori(kategori?: KategoriReferensi): string | undefined {
+  if (!kategori) return undefined
+  if (kategori === 'OUTLET_SK') return 'JABATAN_BINA'
+  return kategori
+}
+
+function fromDbKategori(kategori: string): KategoriReferensi {
+  if (kategori === 'JABATAN_BINA') return 'OUTLET_SK'
+  return kategori as KategoriReferensi
+}
+
 export function useReferensi(kategori?: KategoriReferensi) {
+  const dbKategori = toDbKategori(kategori)
   return useQuery({
     queryKey: ['referensi', kategori],
     queryFn: async () => {
       let q = supabase.from('master_referensi').select('*').eq('status_aktif', true).order('nama_referensi')
-      if (kategori) q = q.eq('kategori', kategori)
+      if (dbKategori) q = q.eq('kategori', dbKategori)
       const { data, error } = await q
       if (error) throw error
-      return (data ?? []) as Referensi[]
+      return (data ?? []).map(d => ({
+        ...d,
+        kategori: fromDbKategori(d.kategori)
+      })) as Referensi[]
     },
   })
 }
@@ -29,10 +45,18 @@ export function useAddReferensi() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: { kategori: KategoriReferensi; nama_referensi: string }) => {
-      const { data, error } = await supabase.from('master_referensi').insert({ ...payload, status_aktif: true }).select().single()
+      const dbKategori = toDbKategori(payload.kategori) as string
+      const { data, error } = await supabase.from('master_referensi').insert({
+        kategori: dbKategori,
+        nama_referensi: payload.nama_referensi.trim().toUpperCase(),
+        status_aktif: true
+      }).select().single()
       if (error) throw error
       await logAudit('TAMBAH_REFERENSI', JSON.stringify(payload))
-      return data
+      return {
+        ...data,
+        kategori: fromDbKategori(data.kategori)
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['referensi'] }),
   })
@@ -50,7 +74,10 @@ export function useUpdateReferensi() {
         .single()
       if (error) throw error
       await logAudit('UPDATE_REFERENSI', JSON.stringify({ id, nama_referensi }))
-      return data
+      return {
+        ...data,
+        kategori: fromDbKategori(data.kategori)
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['referensi'] }),
   })
@@ -82,7 +109,7 @@ export function useCloneOutletToSk() {
       if (!outlets || outlets.length === 0) return []
 
       const payloads = outlets.map(o => ({
-        kategori: 'OUTLET_SK' as const,
+        kategori: 'JABATAN_BINA', // maps to OUTLET_SK
         nama_referensi: o.nama_referensi,
         status_aktif: true,
       }))
