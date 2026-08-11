@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "npm run build && wrangler pages dev ./dist",
-    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=main",
+    "deploy": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=private-hris",
     "deploy:preview": "npm run build && wrangler pages deploy ./dist --project-name=private-hris --branch=preview"
   },
   "dependencies": {
