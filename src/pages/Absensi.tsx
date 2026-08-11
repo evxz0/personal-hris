@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Plus, Search, Trash2, CalendarOff, AlertCircle, FileDown, FileText, Edit2 } from 'lucide-react'
+import { Plus, Search, Trash2, CalendarOff, FileDown, FileText, Edit2, UserCheck } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useAbsensi, useAddAbsensi, useDeleteAbsensi, useBulkDeleteAbsensi, useBulkInsertAbsensi, useUpdateAbsensi, type AbsensiInsert } from '../hooks/useAbsensi'
-import { useKaryawan, useKaryawanByNPP } from '../hooks/useKaryawan'
+import { useKaryawan } from '../hooks/useKaryawan'
 import { ImportModal } from '../components/ui/ImportModal'
 import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
-import { Input, Select, Textarea } from '../components/ui/Input'
+import { Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { formatDate, calculateDays } from '../lib/utils'
 
@@ -25,32 +25,6 @@ const ABSENSI_FIELD_MAPPING: Record<string, string> = {
   'Tgl Selesai': 'tanggal_selesai', 'Keterangan': 'keterangan'
 }
 const TEMPLATE_HEADERS = ['NPP', 'Nama', 'NIK', 'TTL', 'Jenis Kelamin', 'Alamat', 'Agama', 'Jenis', 'Tgl Mulai', 'Tgl Selesai', 'Keterangan']
-
-function AutoFillNPP({ npp, onFill }: { npp: string; onFill: (nama: string, jabatan: string) => void }) {
-  const { data: karyawan } = useKaryawanByNPP(npp)
-  const found = karyawan
-
-  if (!found || !npp || npp.length < 3) return null
-  return (
-    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-teal-50 border border-teal-100 text-sm animate-fade-in">
-      <AlertCircle size={14} className="text-teal-600 shrink-0" />
-      <div className="flex-1">
-        <span className="font-bold text-teal-700">{found.nama}</span>
-        <span className="text-teal-600 ml-2 text-xs">
-          {found.jabatan || ''}
-          {found.kategori ? ` · ${found.kategori}` : ''}
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={() => onFill(found.nama, found.jabatan || '')}
-        className="text-xs px-2.5 py-1 rounded-lg bg-teal-600 text-white font-semibold"
-      >
-        Gunakan
-      </button>
-    </div>
-  )
-}
 
 export default function AbsensiPage() {
   const [search, setSearch] = useState('')
@@ -70,8 +44,9 @@ export default function AbsensiPage() {
   const deleteMutation = useDeleteAbsensi()
   const bulkDeleteMutation = useBulkDeleteAbsensi()
   const bulkInsert     = useBulkInsertAbsensi()
-
   const data = filterJenis === 'ALL' ? rawData : rawData.filter(a => a.jenis === filterJenis)
+  const sortedKaryawan = [...allKaryawan].sort((a, b) => (a.nama || '').localeCompare(b.nama || ''))
+  const selectedKaryawan = allKaryawan.find(k => k.npp === form.npp)
 
   const openAdd = () => { setForm(EMPTY); setEditId(null); setModalOpen(true) }
   
@@ -294,15 +269,51 @@ export default function AbsensiPage() {
         }
       >
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              label="NPP Karyawan"
+          {/* Dropdown Pilih Karyawan */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#2B3440] flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <UserCheck size={14} className="text-teal-600" />
+                Pilih Nama Karyawan <span className="text-red-500">*</span>
+              </span>
+              {selectedKaryawan && (
+                <span className="text-[11px] font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                  NPP: {selectedKaryawan.npp} {selectedKaryawan.kategori ? `· ${selectedKaryawan.kategori}` : ''}
+                </span>
+              )}
+            </label>
+            <select
               value={form.npp}
               onChange={e => setForm(f => ({ ...f, npp: e.target.value }))}
-              placeholder="Ketik NPP untuk auto-fill nama..."
-            />
-            <AutoFillNPP npp={form.npp} onFill={() => {}} />
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 bg-white font-medium text-[#2B3440]"
+            >
+              <option value="">-- Pilih Nama Karyawan --</option>
+              {sortedKaryawan.map(k => (
+                <option key={k.id || k.npp} value={k.npp}>
+                  {k.nama} ({k.npp}) {k.jabatan ? `- ${k.jabatan}` : ''} {k.kategori ? `[${k.kategori}]` : ''}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Info Card Karyawan Terpilih */}
+          {selectedKaryawan && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-teal-50/70 border border-teal-100 text-xs animate-fade-in">
+              <div className="w-8 h-8 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center shrink-0">
+                {selectedKaryawan.nama ? selectedKaryawan.nama.charAt(0).toUpperCase() : 'K'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-teal-950 truncate">{selectedKaryawan.nama}</p>
+                <p className="text-[#64748B] truncate">
+                  NPP: <span className="font-semibold text-teal-800">{selectedKaryawan.npp}</span> · {selectedKaryawan.jabatan || 'Staff'} · {selectedKaryawan.outlet || 'Pontianak'}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-[11px] text-teal-700 block">Sisa Cuti:</span>
+                <span className="font-bold text-orange-600">{getSisaCuti(selectedKaryawan.npp)} hari</span>
+              </div>
+            </div>
+          )}
 
           <Select
             label="Jenis Absensi"
