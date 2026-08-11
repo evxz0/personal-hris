@@ -151,10 +151,15 @@ export default function LoginPage() {
       role: cleanUser.includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
     }).catch(console.error)
 
-    if (cleanUser === 'superadmin' || cleanUser.includes('superadmin')) {
-      navigate('/superadmin')
+    const searchParams = new URLSearchParams(window.location.search)
+    const redirectParam = searchParams.get('redirect')
+
+    if (redirectParam) {
+      navigate(redirectParam, { replace: true })
+    } else if (cleanUser === 'superadmin' || cleanUser.includes('superadmin') || email.includes('superadmin')) {
+      navigate('/superadmin', { replace: true })
     } else {
-      navigate('/')
+      navigate('/', { replace: true })
     }
     setLoading(false)
   }

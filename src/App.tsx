@@ -25,6 +25,27 @@ function ProtectedRoute({ session, children }: { session: Session | null; childr
   return <Layout>{children}</Layout>
 }
 
+function SuperadminRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
+  const localAuth = localStorage.getItem('phris_authenticated_user')
+  if (!session && !localAuth) return <Navigate to="/login?redirect=/superadmin" replace />
+  return <>{children}</>
+}
+
+function LoginRoute({ session }: { session: Session | null }) {
+  const localAuth = localStorage.getItem('phris_authenticated_user')
+  const user = session?.user || (localAuth ? JSON.parse(localAuth) : null)
+  
+  if (user) {
+    const email = (user.email || '').toLowerCase()
+    const name = (user.user_metadata?.name || '').toLowerCase()
+    if (email.includes('superadmin') || name.includes('superadmin')) {
+      return <Navigate to="/superadmin" replace />
+    }
+    return <Navigate to="/" replace />
+  }
+  return <LoginPage />
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => {
     try {
@@ -78,7 +99,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
+        <Route path="/login" element={<LoginRoute session={session} />} />
 
         <Route path="/" element={<ProtectedRoute session={session}><Dashboard /></ProtectedRoute>} />
         <Route path="/karyawan" element={<ProtectedRoute session={session}><KaryawanPage /></ProtectedRoute>} />
@@ -98,7 +119,7 @@ export default function App() {
         <Route path="/riwayat/surat" element={<ProtectedRoute session={session}><RiwayatSuratPage /></ProtectedRoute>} />
 
         <Route path="/settings" element={<ProtectedRoute session={session}><SettingsPage /></ProtectedRoute>} />
-        <Route path="/superadmin" element={session ? <SuperadminPage /> : <Navigate to="/login" replace />} />
+        <Route path="/superadmin" element={<SuperadminRoute session={session}><SuperadminPage /></SuperadminRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
