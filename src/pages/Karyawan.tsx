@@ -4,6 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { useKaryawan, useAddKaryawan, useUpdateKaryawan, useDeleteKaryawan, useBulkDeleteKaryawan, useBulkInsertKaryawan, useUppercaseAllNames, type Karyawan, type KaryawanInsert } from '../hooks/useKaryawan'
 import { useAddMutasi } from '../hooks/useMutasi'
 import { useReferensi } from '../hooks/useReferensi'
+import { getCutiDefaultQuota } from '../hooks/useCutiSettings'
 import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
 import { Input, Select, Textarea, MultiSelect } from '../components/ui/Input'
@@ -18,7 +19,7 @@ const EMPTY: KaryawanInsert = {
   posisi_saat_ini: null, jenjang: null, jabatan: null, grade: null,
   nik: null, npp_digi_hc: null, npp_webmail: null,
   jenis_kelamin: null, tanggal_mulai: null, tanggal_berakhir: null, kd_wil: null, batch: null,
-  no_rek: null, no_hp: null, sisa_cuti: 18,
+  no_rek: null, no_hp: null, sisa_cuti: getCutiDefaultQuota(),
 }
 
 const parseDateStringToISO = (val: any): string | null => {
@@ -426,7 +427,7 @@ export default function KaryawanPage() {
         batch: isBina && r.batch ? String(r.batch).trim().substring(0, 10) : null,
         no_rek: safeNoRek,
         no_hp: safeNoHp,
-        sisa_cuti: 18,
+        sisa_cuti: getCutiDefaultQuota(),
       }
     })
 
