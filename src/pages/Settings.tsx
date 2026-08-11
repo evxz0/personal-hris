@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Settings, Plus, Trash2, Tag, Edit2, CalendarClock, RotateCcw, CheckCircle2, ShieldCheck, Sparkles, Clock, AlertTriangle } from 'lucide-react'
-import { useReferensi, useAddReferensi, useUpdateReferensi, useDeleteReferensi, type KategoriReferensi } from '../hooks/useReferensi'
+import { useReferensi, useAddReferensi, useUpdateReferensi, useDeleteReferensi, useCloneOutletToSk, type KategoriReferensi } from '../hooks/useReferensi'
 import { useCutiConfig, type CutiConfig } from '../hooks/useCutiSettings'
 import { useKaryawan } from '../hooks/useKaryawan'
 import { Button } from '../components/ui/Button'
@@ -8,15 +8,30 @@ import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { formatDate } from '../lib/utils'
 
-const KATEGORI_CONFIG: { key: KategoriReferensi; label: string; color: string; desc: string }[] = [
-  { key: 'OUTLET', label: 'Master Outlet', color: 'bg-purple-50 border-purple-200 text-purple-700', desc: 'Daftar outlet, cabang, dan unit kerja yang tersedia' },
+const KATEGORI_CONFIG: { key: KategoriReferensi; label: string; color: string; desc: string; badge: string; isSk?: boolean }[] = [
+  { 
+    key: 'OUTLET', 
+    label: 'Master Outlet (Karyawan & Bina)', 
+    color: 'bg-purple-50 border-purple-200 text-purple-700', 
+    desc: 'Daftar outlet dan cabang untuk pilihan penempatan pada halaman Master Karyawan dan Master Bina',
+    badge: 'Master Karyawan & Bina',
+  },
+  { 
+    key: 'OUTLET_SK', 
+    label: 'Master Outlet SK (Surat Keterangan)', 
+    color: 'bg-teal-50 border-teal-200 text-teal-700', 
+    desc: 'Daftar unit kerja / outlet khusus untuk seluruh format dokumen pada halaman Surat Keterangan (SK PGS, Balasan Cuti, dll)',
+    badge: 'Khusus Surat Keterangan',
+    isSk: true,
+  },
 ]
 
-function ReferensiCard({ kategori, label, color, desc }: { kategori: KategoriReferensi; label: string; color: string; desc: string }) {
+function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori: KategoriReferensi; label: string; color: string; desc: string; badge: string; isSk?: boolean }) {
   const { data = [], isLoading } = useReferensi(kategori)
   const addMutation = useAddReferensi()
   const updateMutation = useUpdateReferensi()
   const deleteMutation = useDeleteReferensi()
+  const cloneMutation = useCloneOutletToSk()
   
   const [addOpen, setAddOpen] = useState(false)
   const [editItem, setEditItem] = useState<{ id: string; name: string } | null>(null)
@@ -43,21 +58,45 @@ function ReferensiCard({ kategori, label, color, desc }: { kategori: KategoriRef
     }
   }
 
+  const handleCloneFromMaster = async () => {
+    try {
+      await cloneMutation.mutateAsync()
+    } catch (e: any) {
+      alert(`Gagal menyalin data outlet: ${e?.message || JSON.stringify(e)}`)
+    }
+  }
+
   return (
     <div className="rounded-2xl border bg-white shadow-sm overflow-hidden border-gray-200">
       {/* Header */}
-      <div className={`px-5 py-4 flex items-center justify-between border-b ${color.split(' ')[1]}`}>
+      <div className={`px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b ${color.split(' ')[1]}`}>
         <div>
           <div className="flex items-center gap-2">
-            <Tag size={15} className={color.split(' ')[2]} />
+            <Tag size={16} className={color.split(' ')[2]} />
             <h3 className={`font-bold text-base ${color.split(' ')[2]}`}>{label}</h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${color}`}>{data.length} Outlet</span>
+            <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${color}`}>{data.length} Outlet</span>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-[#475569]">
+              {badge}
+            </span>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">{desc}</p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={() => setAddOpen(true)}>
-          Tambah Outlet
-        </Button>
+        <div className="flex items-center gap-2">
+          {isSk && data.length === 0 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              loading={cloneMutation.isPending} 
+              onClick={handleCloneFromMaster}
+              className="text-teal-700 border-teal-200 hover:bg-teal-50"
+            >
+              Salin dari Master Outlet
+            </Button>
+          )}
+          <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={() => setAddOpen(true)}>
+            Tambah Outlet
+          </Button>
+        </div>
       </div>
 
       {/* List */}
@@ -69,7 +108,20 @@ function ReferensiCard({ kategori, label, color, desc }: { kategori: KategoriRef
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="py-8 text-center text-sm text-[#64748B]">Belum ada data outlet. Klik tombol Tambah Outlet untuk menambahkan.</div>
+          <div className="py-8 text-center text-sm text-[#64748B] space-y-2">
+            <p>Belum ada data outlet khusus di bagian ini.</p>
+            {isSk && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                loading={cloneMutation.isPending} 
+                onClick={handleCloneFromMaster}
+                className="text-teal-700 border-teal-200"
+              >
+                Salin 17 Data dari Master Outlet Sekarang
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="flex flex-wrap gap-2.5">
             {data.map(item => (
@@ -424,10 +476,18 @@ export default function SettingsPage() {
       {/* Section 1: Pengaturan Cuti Karyawan */}
       <CutiSettingsCard />
 
-      {/* Section 2: Master Outlet */}
+      {/* Section 2: Master Outlet & Master Outlet SK */}
       <div className="grid grid-cols-1 gap-5">
         {KATEGORI_CONFIG.map(cfg => (
-          <ReferensiCard key={cfg.key} kategori={cfg.key} label={cfg.label} color={cfg.color} desc={cfg.desc} />
+          <ReferensiCard 
+            key={cfg.key} 
+            kategori={cfg.key} 
+            label={cfg.label} 
+            color={cfg.color} 
+            desc={cfg.desc}
+            badge={cfg.badge}
+            isSk={cfg.isSk}
+          />
         ))}
       </div>
     </div>

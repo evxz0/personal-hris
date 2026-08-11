@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { logAudit } from '../lib/utils'
 
-export type KategoriReferensi = 'JENJANG' | 'JABATAN_KARYAWAN' | 'JABATAN_BINA' | 'OUTLET'
+export type KategoriReferensi = 'JENJANG' | 'JABATAN_KARYAWAN' | 'JABATAN_BINA' | 'OUTLET' | 'OUTLET_SK'
 
 export interface Referensi {
   id: string
@@ -66,4 +66,45 @@ export function useDeleteReferensi() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['referensi'] }),
   })
+}
+
+export function useCloneOutletToSk() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data: outlets, error: fetchErr } = await supabase
+        .from('master_referensi')
+        .select('nama_referensi')
+        .eq('kategori', 'OUTLET')
+        .eq('status_aktif', true)
+      if (fetchErr) throw fetchErr
+
+      if (!outlets || outlets.length === 0) return []
+
+      const payloads = outlets.map(o => ({
+        kategori: 'OUTLET_SK' as const,
+        nama_referensi: o.nama_referensi,
+        status_aktif: true,
+      }))
+
+      const { data, error } = await supabase.from('master_referensi').insert(payloads).select()
+      if (error) throw error
+      await logAudit('CLONE_OUTLET_TO_SK', `Menyalin ${payloads.length} outlet ke Master Outlet SK`)
+      return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['referensi'] }),
+  })
+}
+
+export function useOutletSK() {
+  const querySk = useReferensi('OUTLET_SK')
+  const queryDefault = useReferensi('OUTLET')
+
+  const data = (querySk.data && querySk.data.length > 0) ? querySk.data : (queryDefault.data ?? [])
+
+  return {
+    ...querySk,
+    data,
+    isLoading: querySk.isLoading && queryDefault.isLoading,
+  }
 }

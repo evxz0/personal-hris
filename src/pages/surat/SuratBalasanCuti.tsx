@@ -7,7 +7,7 @@ import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDr
 import { exportElementToPDF, exportElementToWord } from '../../lib/documentExport'
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
 import { useAddAbsensi } from '../../hooks/useAbsensi'
-import { useReferensi } from '../../hooks/useReferensi'
+import { useOutletSK } from '../../hooks/useReferensi'
 import { Printer, FileText, UserCheck, Calendar, Award, CheckCircle2 } from 'lucide-react'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput, UnitSelectInput } from '../../components/ui/DocumentFormControls'
@@ -66,8 +66,8 @@ export default function SuratBalasanCutiPage() {
   const addRiwayatSurat = useAddRiwayatSurat()
   const addAbsensi = useAddAbsensi()
 
-  // Fetch Master Outlet referensi
-  const { data: outlets = [] } = useReferensi('OUTLET')
+  // Fetch Master Outlet SK referensi (specifically for Surat Keterangan)
+  const { data: outlets = [] } = useOutletSK()
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({

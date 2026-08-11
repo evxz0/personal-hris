@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS master_referensi (
       'JENJANG',
       'JABATAN_KARYAWAN',
       'JABATAN_BINA',
-      'OUTLET'
+      'OUTLET',
+      'OUTLET_SK'
     )
   ),
   nama_referensi VARCHAR(100) NOT NULL,

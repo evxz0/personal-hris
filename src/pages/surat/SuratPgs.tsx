@@ -8,7 +8,7 @@ import { exportElementToPDF, exportElementToWord } from '../../lib/documentExpor
 import { Printer, FileText, UserCheck, Briefcase, Award } from 'lucide-react'
 
 import { useAddRiwayatSurat } from '../../hooks/useRiwayatSurat'
-import { useReferensi } from '../../hooks/useReferensi'
+import { useOutletSK } from '../../hooks/useReferensi'
 import { getTodayIndonesian } from '../../lib/dateUtils'
 import { DatePickerInput, UnitSelectInput, JenjangSelect, GradeSelect } from '../../components/ui/DocumentFormControls'
 import { CalendarPopupHelper } from '../../components/ui/CalendarPopupHelper'
@@ -17,8 +17,8 @@ export default function SuratPgsPage() {
   const printRef = useRef<HTMLDivElement>(null)
   const addRiwayatSurat = useAddRiwayatSurat()
 
-  // Fetch Master Outlet referensi
-  const { data: outlets = [] } = useReferensi('OUTLET')
+  // Fetch Master Outlet SK referensi (specifically for Surat Keterangan)
+  const { data: outlets = [] } = useOutletSK()
 
   // Fetch employees list to easily select employee
   const { data: karyawanList = [], isLoading: isLoadingKaryawan } = useQuery({
