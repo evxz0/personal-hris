@@ -12,6 +12,7 @@ export interface UserAccount {
   username: string
   nama: string
   email: string
+  password?: string
   role: UserRole
   status: UserStatus
   created_at: string
@@ -28,6 +29,7 @@ const INITIAL_USERS: UserAccount[] = [
     username: 'superadmin',
     nama: 'SUPER ADMINISTRATOR BNI',
     email: 'superadmin@phris.local',
+    password: 'superadmin123',
     role: 'SUPERADMIN',
     status: 'AKTIF',
     created_at: '2025-01-01T00:00:00.000Z',
@@ -39,6 +41,7 @@ const INITIAL_USERS: UserAccount[] = [
     username: 'admin',
     nama: 'ADMINISTRATOR HR',
     email: 'admin@phris.local',
+    password: 'admin123',
     role: 'ADMIN_HR',
     status: 'AKTIF',
     created_at: '2025-01-15T00:00:00.000Z',
@@ -50,6 +53,7 @@ const INITIAL_USERS: UserAccount[] = [
     username: 'operator',
     nama: 'STAFF OPERATOR SURAT & ABSENSI',
     email: 'operator@phris.local',
+    password: 'operator123',
     role: 'OPERATOR',
     status: 'AKTIF',
     created_at: '2025-02-01T00:00:00.000Z',
@@ -104,11 +108,13 @@ export function useCreateUser() {
         throw new Error(`Username "${cleanUsername}" sudah digunakan. Silakan gunakan username lain.`)
       }
 
+      const initialPassword = payload.password?.trim() || 'BNI#123456'
       const newUser: UserAccount = {
         id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         username: cleanUsername,
         nama: payload.nama.trim().toUpperCase(),
         email: payload.email.trim().toLowerCase() || `${cleanUsername}@phris.local`,
+        password: initialPassword,
         role: payload.role,
         status: 'AKTIF',
         created_at: new Date().toISOString(),
@@ -117,6 +123,23 @@ export function useCreateUser() {
 
       users.unshift(newUser)
       saveLocalUsers(users)
+
+      // Also create in Supabase Auth if possible
+      try {
+        await supabase.auth.signUp({
+          email: newUser.email,
+          password: initialPassword,
+          options: {
+            data: {
+              name: newUser.nama,
+              username: newUser.username,
+              role: newUser.role,
+            }
+          }
+        })
+      } catch (e) {
+        console.error('Supabase signup during user creation:', e)
+      }
 
       await logAudit(
         'CREATE_USER',
@@ -167,10 +190,12 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: async ({ userId, newPassword }: { userId: string; newPassword?: string }) => {
       const users = getLocalUsers()
-      const user = users.find(u => u.id === userId)
-      if (!user) throw new Error('User tidak ditemukan')
+      const idx = users.findIndex(u => u.id === userId)
+      if (idx === -1) throw new Error('User tidak ditemukan')
 
       const generatedPassword = newPassword || `BNI#${Math.floor(100000 + Math.random() * 900000)}`
+      users[idx].password = generatedPassword
+      saveLocalUsers(users)
 
       // If user exists in supabase auth, we also try updating via admin API if available
       try {
@@ -181,11 +206,11 @@ export function useResetPassword() {
 
       await logAudit(
         'RESET_PASSWORD',
-        `Mereset kata sandi akun: ${user.username}`,
+        `Mereset kata sandi akun: ${users[idx].username}`,
         'superadmin'
       )
 
-      return { user, generatedPassword }
+      return { user: users[idx], generatedPassword }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
   })
