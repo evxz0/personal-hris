@@ -105,25 +105,47 @@ export default function LoginPage() {
     setError('')
 
     const email = formatEmail(userId)
+    const cleanUser = userId.trim()
+    let loggedInUser = null
 
+    // 1. Try direct sign in
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
-    if (authError) {
-      setError('ID Pengguna atau kata sandi tidak sesuai.')
+    
+    if (!authError && authData?.session) {
+      loggedInUser = authData.user
     } else {
-      const cleanUser = userId.trim()
-      await recordUserLogin({
-        userId: authData.user?.id || cleanUser,
-        username: cleanUser,
-        email,
-        nama: cleanUser.toUpperCase(),
-        role: cleanUser.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
-      }).catch(console.error)
-
-      if (cleanUser.toLowerCase() === 'superadmin' || cleanUser.toLowerCase().includes('superadmin')) {
-        navigate('/superadmin')
+      // 2. If account doesn't exist in Supabase auth yet, attempt auto-signup
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email, password })
+      if (!signUpErr && signUpData?.session) {
+        loggedInUser = signUpData.user
       } else {
-        navigate('/')
+        // Try sign in once more in case signup created it
+        const { data: retryData } = await supabase.auth.signInWithPassword({ email, password })
+        if (retryData?.session) {
+          loggedInUser = retryData.user
+        }
       }
+    }
+
+    if (!loggedInUser) {
+      setError('ID Pengguna atau kata sandi tidak sesuai.')
+      setLoading(false)
+      return
+    }
+
+    // Record login session & telemetry
+    await recordUserLogin({
+      userId: loggedInUser.id || cleanUser,
+      username: cleanUser,
+      email,
+      nama: cleanUser.toUpperCase(),
+      role: cleanUser.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR',
+    }).catch(console.error)
+
+    if (cleanUser.toLowerCase() === 'superadmin' || cleanUser.toLowerCase().includes('superadmin')) {
+      navigate('/superadmin')
+    } else {
+      navigate('/')
     }
     setLoading(false)
   }
