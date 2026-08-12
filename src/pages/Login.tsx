@@ -6,7 +6,7 @@ import {
   ArrowRight, ArrowLeft, KeyRound, Mail, ShieldAlert, RefreshCw, Laptop
 } from 'lucide-react'
 import { formatDate } from '../lib/utils'
-import { recordUserLogin, checkActiveDeviceSession, type ActiveDeviceInfo } from '../lib/sessionTracker'
+import { recordUserLogin, checkActiveDeviceSession, initRealtimeSessionTracker, type ActiveDeviceInfo } from '../lib/sessionTracker'
 
 type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success' | 'device_blocked'
 
@@ -35,6 +35,11 @@ export default function LoginPage() {
   const isTimeout = searchParamsObj.get('reason') === 'timeout'
   const isConcurrent = searchParamsObj.get('reason') === 'concurrent_device'
   const isTerminated = searchParamsObj.get('reason') === 'terminated'
+
+  // Initialize Realtime Presence listener on mount so presence state is ready
+  useEffect(() => {
+    initRealtimeSessionTracker()
+  }, [])
 
   // Automatically detect recovery link from email & transition to reset password view
   useEffect(() => {

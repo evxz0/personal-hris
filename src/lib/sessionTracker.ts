@@ -148,15 +148,17 @@ export interface ActiveDeviceInfo {
 // Check if account is actively logged in on another device
 export async function checkActiveDeviceSession(username: string): Promise<ActiveDeviceInfo> {
   const clean = username.toLowerCase().trim()
-  const myToken = localStorage.getItem('phris_device_token')
+  const myToken = getCurrentDeviceToken()
 
-  // 1. Check Realtime Presence Channel state if available
-  if (globalPresenceChannel) {
-    const state = globalPresenceChannel.presenceState<UserSession>()
+  // Ensure Realtime Channel is initialized and listening
+  const channel = initRealtimeSessionTracker()
+
+  // 1. Check Realtime Presence Channel state immediately
+  if (channel) {
+    const state = channel.presenceState<UserSession>()
     const userPresence = state[clean]
     if (userPresence && userPresence.length > 0) {
       const active = userPresence[userPresence.length - 1]
-      // If active presence exists on another device token
       if (active && active.deviceToken && active.deviceToken !== myToken) {
         return {
           isActive: true,
@@ -171,12 +173,60 @@ export async function checkActiveDeviceSession(username: string): Promise<Active
     }
   }
 
-  // 2. Check Supabase Audit Logs for recent login without logout
+  // 2. Realtime Active Handshake (Broadcast PING and await PONG from active device)
+  if (channel) {
+    try {
+      const pongPromise = new Promise<ActiveDeviceInfo | null>((resolve) => {
+        let timeoutId: any = null
+        const handler = (payload: any) => {
+          const resp = payload?.payload
+          if (
+            resp &&
+            resp.username?.toLowerCase() === clean &&
+            resp.deviceToken &&
+            resp.deviceToken !== myToken
+          ) {
+            clearTimeout(timeoutId)
+            resolve({
+              isActive: true,
+              deviceInfo: `${resp.browser || 'Browser'} di ${resp.os || 'OS'} (${resp.deviceType || 'Desktop'})`,
+              ipAddress: resp.ipAddress || '36.85.132.38',
+              browser: resp.browser || 'Google Chrome',
+              os: resp.os || 'Windows 11/10',
+              deviceType: resp.deviceType || 'Desktop',
+              loginTime: resp.loginTime || new Date().toISOString(),
+            })
+          }
+        }
+
+        channel.on('broadcast', { event: 'PONG_ACTIVE_SESSION' }, handler)
+
+        // Broadcast PING
+        channel.send({
+          type: 'broadcast',
+          event: 'PING_ACTIVE_SESSION',
+          payload: { username: clean, queryingDeviceToken: myToken },
+        }).catch(() => {})
+
+        // Wait max 450ms for active device to respond
+        timeoutId = setTimeout(() => {
+          resolve(null)
+        }, 450)
+      })
+
+      const pongResult = await pongPromise
+      if (pongResult && pongResult.isActive) {
+        return pongResult
+      }
+    } catch {}
+  }
+
+  // 3. Fallback: Check Supabase Audit Logs for recent login without logout
   try {
     const { data: logs } = await supabase
       .from('audit_logs')
       .select('*')
-      .eq('user_operasi', clean)
+      .or(`user_operasi.eq.${clean},user_operasi.eq.${clean}@phris.local`)
       .in('aksi', ['USER_LOGIN', 'USER_LOGOUT', 'FORCE_LOGOUT'])
       .order('timestamp', { ascending: false })
       .limit(5)
@@ -227,9 +277,11 @@ export function initRealtimeSessionTracker(user?: {
   const nama = user?.user_metadata?.nama || username.toUpperCase()
   const deviceToken = getCurrentDeviceToken()
 
-  localStorage.setItem('phris_current_user_name', username)
-  if (!localStorage.getItem('phris_login_time')) {
-    localStorage.setItem('phris_login_time', new Date().toISOString())
+  if (user) {
+    localStorage.setItem('phris_current_user_name', username)
+    if (!localStorage.getItem('phris_login_time')) {
+      localStorage.setItem('phris_login_time', new Date().toISOString())
+    }
   }
 
   // Key presence by username so 1 user = 1 presence slot on server!
@@ -241,7 +293,38 @@ export function initRealtimeSessionTracker(user?: {
     },
   })
 
-  // Listen for remote force logout commands from Superadmin
+  // 1. Respond to PING from other devices checking if this account is currently alive
+  channel.on('broadcast', { event: 'PING_ACTIVE_SESSION' }, async (payload: any) => {
+    const target = payload?.payload?.username?.toLowerCase()
+    const queryingToken = payload?.payload?.queryingDeviceToken
+    const myUsername = (localStorage.getItem('phris_current_user_name') || '').toLowerCase()
+    const myDeviceToken = localStorage.getItem('phris_device_token')
+    const isLoggedIn = !!localStorage.getItem('phris_authenticated_user') || !!localStorage.getItem('phris_current_user_name')
+
+    if (isLoggedIn && target === myUsername && queryingToken && queryingToken !== myDeviceToken) {
+      const { browser, os, deviceType } = parseUserAgent()
+      const { ip } = await getPublicIP()
+      const loginTime = localStorage.getItem('phris_login_time') || new Date().toISOString()
+
+      try {
+        await channel.send({
+          type: 'broadcast',
+          event: 'PONG_ACTIVE_SESSION',
+          payload: {
+            username: myUsername,
+            deviceToken: myDeviceToken,
+            browser,
+            os,
+            deviceType,
+            ipAddress: ip,
+            loginTime,
+          },
+        })
+      } catch {}
+    }
+  })
+
+  // 2. Listen for remote force logout commands from Superadmin
   channel.on('broadcast', { event: 'FORCE_LOGOUT' }, async (payload: any) => {
     const targetUsername = payload?.payload?.username?.toLowerCase()
     const targetSessionId = payload?.payload?.sessionId
