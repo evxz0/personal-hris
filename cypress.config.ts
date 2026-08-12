@@ -2,10 +2,10 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:5173',
+    baseUrl: 'https://private-hris.pages.dev',
     viewportWidth: 1280,
     viewportHeight: 800,
-    video: false,
+    video: true,
     screenshotOnRunFailure: true,
     chromeWebSecurity: false,
     defaultCommandTimeout: 10000,

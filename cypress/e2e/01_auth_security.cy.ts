@@ -35,7 +35,7 @@ describe('01. Authentication & Security Testing (P-HRIS)', () => {
   it('Harus berhasil login dengan akun Superadmin dan diarahkan ke Dashboard / Superadmin Panel', () => {
     cy.visit('/login')
     cy.get('#userId').type('superadmin')
-    cy.get('#password').type('superadmin')
+    cy.get('#password').type('Superadmin09908')
     cy.get('button[type="submit"]').click()
 
     // Verifikasi URL atau dashboard header

@@ -34,7 +34,7 @@ Cypress.Commands.add('setMobileViewport', () => {
   cy.viewport(390, 844) // iPhone 12/13/14 or typical modern mobile screen
 })
 
-Cypress.Commands.add('login', (username = 'superadmin', password = 'password123') => {
+Cypress.Commands.add('login', (username = 'superadmin', password = 'Superadmin09908') => {
   cy.visit('/login')
   cy.get('#userId').clear().type(username)
   cy.get('#password').clear().type(password)
@@ -42,9 +42,8 @@ Cypress.Commands.add('login', (username = 'superadmin', password = 'password123'
 })
 
 Cypress.Commands.add('loginAsSuperadmin', () => {
-  // Directly populate localStorage or perform login
   cy.visit('/login')
   cy.get('#userId').clear().type('superadmin')
-  cy.get('#password').clear().type('password123')
+  cy.get('#password').clear().type('Superadmin09908')
   cy.get('button[type="submit"]').contains(/Masuk ke Sistem/i).click()
 })
