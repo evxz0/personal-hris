@@ -107,12 +107,51 @@ export default function BinaPage() {
   const bulkInsert       = useBulkInsertKaryawan()
   const mutasiMutation   = useAddMutasi()
 
+  const binaData = useMemo(() => {
+    return rawData.filter(k => k.kategori === 'BINA')
+  }, [rawData])
+
+  // Dynamic Jabatan Options for Bina
+  const dynamicJabatanOptions = useMemo(() => {
+    const set = new Set<string>()
+    jabatansBina.forEach(j => {
+      if (j.nama_referensi?.trim()) set.add(j.nama_referensi.trim())
+    })
+    binaData.forEach(k => {
+      if (k.jabatan?.trim()) set.add(k.jabatan.trim())
+    })
+    return Array.from(set)
+      .sort((a, b) => a.localeCompare(b))
+      .map(jab => ({ value: jab, label: jab }))
+  }, [jabatansBina, binaData])
+
+  // Dynamic Outlet Options for Bina
+  const dynamicOutletOptions = useMemo(() => {
+    const set = new Set<string>()
+    outlets.forEach(o => {
+      if (o.nama_referensi?.trim()) set.add(o.nama_referensi.trim())
+    })
+    binaData.forEach(k => {
+      if (k.outlet?.trim()) set.add(k.outlet.trim())
+    })
+    return Array.from(set)
+      .sort((a, b) => a.localeCompare(b))
+      .map(out => ({ value: out, label: out }))
+  }, [outlets, binaData])
+
   // Filter BINA only
-  const data = rawData
-    .filter(k => k.kategori === 'BINA')
+  const data = binaData
     .filter(k => {
-      if (filterOutlet.length > 0 && (!k.outlet || !filterOutlet.includes(k.outlet))) return false
-      if (filterJabatan.length > 0 && (!k.jabatan || !filterJabatan.includes(k.jabatan))) return false
+      if (filterOutlet.length > 0) {
+        const userOutlet = (k.outlet || '').trim().toUpperCase()
+        const matchOutlet = filterOutlet.some(fo => fo.trim().toUpperCase() === userOutlet)
+        if (!matchOutlet) return false
+      }
+      if (filterJabatan.length > 0) {
+        const userJabatan = (k.jabatan || '').trim().toUpperCase()
+        const matchJabatan = filterJabatan.some(fj => fj.trim().toUpperCase() === userJabatan)
+        if (!matchJabatan) return false
+      }
       return true
     })
 
@@ -346,13 +385,13 @@ export default function BinaPage() {
             selectedValues={filterOutlet}
             onChange={setFilterOutlet}
             placeholder="Semua Outlet"
-            options={outlets.map(o => ({ value: o.nama_referensi, label: o.nama_referensi }))}
+            options={dynamicOutletOptions}
           />
           <MultiSelect
             selectedValues={filterJabatan}
             onChange={setFilterJabatan}
             placeholder="Semua Jabatan"
-            options={jabatansBina.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+            options={dynamicJabatanOptions}
           />
         </div>
         <div className="text-xs text-[#64748B] self-center px-3 py-1.5 bg-white rounded-xl border border-gray-200 font-medium whitespace-nowrap">

@@ -128,7 +128,7 @@ const KARYAWAN_FIELD_MAPPING: Record<string, string> = {
 
 const TEMPLATE_HEADERS = ['NPP','Nama','NIK','TTL','Jenis Kelamin','Alamat','Agama','Kategori','Outlet','Tanggal Lahir','Posisi Saat Ini','Jenjang','Jabatan','Grade','NPP DIGI HC','NPP WEBMAIL','Tanggal Mulai','Tanggal Berakhir','KD Wil','Batch','No Rekening','No HP']
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 export default function KaryawanPage() {
   const [search, setSearch] = useState('')
@@ -170,12 +170,94 @@ export default function KaryawanPage() {
 
   const categoryOrder: Record<string, number> = { 'FTE': 1, 'TAD': 2, 'BINA': 3 }
 
+  // 1. Dynamic Jabatan Options (from actual employee data + master referensi)
+  const dynamicJabatanOptions = useMemo(() => {
+    const set = new Set<string>()
+    // Add from master referensi
+    jabatans.forEach(j => {
+      if (j.nama_referensi?.trim()) set.add(j.nama_referensi.trim())
+    })
+    // Add from all actual inputted employee data
+    rawData.forEach(k => {
+      if (k.jabatan?.trim()) set.add(k.jabatan.trim())
+    })
+    return Array.from(set)
+      .sort((a, b) => a.localeCompare(b))
+      .map(jab => ({ value: jab, label: jab }))
+  }, [jabatans, rawData])
+
+  // 2. Dynamic Outlet Options (from actual employee data + master referensi)
+  const dynamicOutletOptions = useMemo(() => {
+    const set = new Set<string>()
+    outlets.forEach(o => {
+      if (o.nama_referensi?.trim()) set.add(o.nama_referensi.trim())
+    })
+    rawData.forEach(k => {
+      if (k.outlet?.trim()) set.add(k.outlet.trim())
+    })
+    return Array.from(set)
+      .sort((a, b) => a.localeCompare(b))
+      .map(out => ({ value: out, label: out }))
+  }, [outlets, rawData])
+
+  // 3. Dynamic Grade Options (standard grades + existing data grades)
+  const dynamicGradeOptions = useMemo(() => {
+    const set = new Set<string>()
+    const standardGrades = [
+      '.GRADE.12', '.GRADE.11', '.GRADE.10', '.GRADE.9', '.GRADE.8',
+      '.GRADE.7', '.GRADE.6', '.GRADE.5', '.GRADE.4', '.GRADE.3',
+      '.GRADE.2', '.GRADE.1', '.NON.GRADE'
+    ]
+    standardGrades.forEach(g => set.add(g))
+
+    rawData.forEach(k => {
+      const formatted = formatGradeValue(k.grade)
+      if (formatted) set.add(formatted)
+    })
+
+    return Array.from(set)
+      .sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, '') || '0', 10)
+        const numB = parseInt(b.replace(/\D/g, '') || '0', 10)
+        if (numA !== numB) return numB - numA // Highest grade first
+        return a.localeCompare(b)
+      })
+      .map(g => ({ value: g, label: g }))
+  }, [rawData])
+
+  // Filtered and sorted data
   const data = rawData
     .filter(k => {
       if (filterKategori.length > 0 && !filterKategori.includes(k.kategori)) return false
-      if (filterOutlet.length > 0 && (!k.outlet || !filterOutlet.includes(k.outlet))) return false
-      if (filterJabatan.length > 0 && (!k.jabatan || !filterJabatan.includes(k.jabatan))) return false
-      if (filterGrade.length > 0 && (k.grade === null || k.grade === undefined || !filterGrade.includes(String(k.grade)))) return false
+      
+      // Outlet filter (case-insensitive)
+      if (filterOutlet.length > 0) {
+        const userOutlet = (k.outlet || '').trim().toUpperCase()
+        const matchOutlet = filterOutlet.some(fo => fo.trim().toUpperCase() === userOutlet)
+        if (!matchOutlet) return false
+      }
+
+      // Jabatan filter (case-insensitive)
+      if (filterJabatan.length > 0) {
+        const userJabatan = (k.jabatan || '').trim().toUpperCase()
+        const matchJabatan = filterJabatan.some(fj => fj.trim().toUpperCase() === userJabatan)
+        if (!matchJabatan) return false
+      }
+
+      // Grade filter (normalizes format, e.g. 9 <-> .GRADE.9)
+      if (filterGrade.length > 0) {
+        const formattedGrade = formatGradeValue(k.grade).toUpperCase()
+        const rawGradeStr = k.grade !== null && k.grade !== undefined ? String(k.grade).trim().toUpperCase() : ''
+        
+        const matchGrade = filterGrade.some(fg => {
+          const cleanFg = fg.trim().toUpperCase()
+          return cleanFg === formattedGrade ||
+                 cleanFg === rawGradeStr ||
+                 formatGradeValue(cleanFg).toUpperCase() === formattedGrade
+        })
+        if (!matchGrade) return false
+      }
+
       return true
     })
     .sort((a, b) => {
@@ -715,30 +797,19 @@ export default function KaryawanPage() {
             selectedValues={filterOutlet}
             onChange={setFilterOutlet}
             placeholder="Semua Outlet"
-            options={outlets.map(o => ({ value: o.nama_referensi, label: o.nama_referensi }))}
+            options={dynamicOutletOptions}
           />
           <MultiSelect
             selectedValues={filterJabatan}
             onChange={setFilterJabatan}
             placeholder="Semua Jabatan"
-            options={jabatans.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+            options={dynamicJabatanOptions}
           />
           <MultiSelect
             selectedValues={filterGrade}
             onChange={setFilterGrade}
             placeholder="Semua Grade"
-            options={[
-              { value: '.GRADE.12', label: '.GRADE.12' },
-              { value: '.GRADE.11', label: '.GRADE.11' },
-              { value: '.GRADE.10', label: '.GRADE.10' },
-              { value: '.GRADE.9', label: '.GRADE.9' },
-              { value: '.GRADE.8', label: '.GRADE.8' },
-              { value: '.GRADE.7', label: '.GRADE.7' },
-              { value: '.GRADE.6', label: '.GRADE.6' },
-              { value: '.GRADE.5', label: '.GRADE.5' },
-              { value: '.GRADE.4', label: '.GRADE.4' },
-              { value: '.NON.GRADE', label: '.NON.GRADE' },
-            ]}
+            options={dynamicGradeOptions}
           />
         </div>
         <div className="text-xs text-[#64748B] self-center px-3 py-1.5 bg-white rounded-xl border border-gray-200 font-medium whitespace-nowrap">
