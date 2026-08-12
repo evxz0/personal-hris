@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, Mail } from 'lucide-react'
 
-import { recordUserLogin } from '../lib/sessionTracker'
+import { recordUserLogin, checkActiveDeviceSession } from '../lib/sessionTracker'
 
 type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success'
 
@@ -158,6 +158,15 @@ export default function LoginPage() {
       } else {
         setError('ID Pengguna atau kata sandi tidak sesuai.')
       }
+      setLoading(false)
+      return
+    }
+
+    // 3. Strict 1 User = 1 Device Check: Block new login if already active on another device
+    const activeCheck = await checkActiveDeviceSession(cleanUser)
+    if (activeCheck.isActive) {
+      await supabase.auth.signOut()
+      setError(`Akun "${cleanUser}" sedang aktif digunakan di ${activeCheck.deviceInfo || 'perangkat lain'}. Sistem melarang login ganda (1 Akun = 1 Perangkat). Silakan keluar (logout) dari perangkat sebelumnya terlebih dahulu.`)
       setLoading(false)
       return
     }

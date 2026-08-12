@@ -135,6 +135,60 @@ export function getLocalLiveSession(): UserSession {
   }
 }
 
+// Check if account is actively logged in on another device
+export async function checkActiveDeviceSession(username: string): Promise<{ isActive: boolean; deviceInfo?: string }> {
+  const clean = username.toLowerCase().trim()
+  const myToken = localStorage.getItem('phris_device_token')
+
+  // 1. Check Realtime Presence Channel state if available
+  if (globalPresenceChannel) {
+    const state = globalPresenceChannel.presenceState<UserSession>()
+    const userPresence = state[clean]
+    if (userPresence && userPresence.length > 0) {
+      const active = userPresence[userPresence.length - 1]
+      // If active presence exists on another device token
+      if (active && active.deviceToken && active.deviceToken !== myToken) {
+        return {
+          isActive: true,
+          deviceInfo: `${active.browser} di ${active.os} (${active.deviceType}) [IP: ${active.ipAddress}]`,
+        }
+      }
+    }
+  }
+
+  // 2. Check Supabase Audit Logs for recent login without logout
+  try {
+    const { data: logs } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .eq('user_operasi', clean)
+      .in('aksi', ['USER_LOGIN', 'USER_LOGOUT', 'FORCE_LOGOUT'])
+      .order('timestamp', { ascending: false })
+      .limit(5)
+
+    if (logs && logs.length > 0) {
+      const latest = logs[0]
+      if (latest.aksi === 'USER_LOGIN') {
+        const timeDiffMinutes = (Date.now() - new Date(latest.timestamp).getTime()) / (1000 * 60)
+        let details: any = {}
+        try {
+          details = typeof latest.detail_perubahan === 'string' ? JSON.parse(latest.detail_perubahan) : latest.detail_perubahan || {}
+        } catch {}
+
+        // If logged in within last 30 minutes on a different device token
+        if (timeDiffMinutes < 30 && details?.deviceToken && details?.deviceToken !== myToken) {
+          return {
+            isActive: true,
+            deviceInfo: latest.device_info || 'Perangkat Lain',
+          }
+        }
+      }
+    }
+  } catch {}
+
+  return { isActive: false }
+}
+
 // Initialize Supabase Realtime Presence & Remote Logout Broadcast Listener
 export function initRealtimeSessionTracker(user?: {
   id?: string
@@ -167,28 +221,7 @@ export function initRealtimeSessionTracker(user?: {
     },
   })
 
-  // 1. Listen for new device logins (Enforce 1 User = 1 Device)
-  channel.on('broadcast', { event: 'DEVICE_LOGIN_CONFLICT' }, async (payload: any) => {
-    const targetUser = payload?.payload?.username?.toLowerCase()
-    const activeToken = payload?.payload?.deviceToken
-
-    const myUsername = (localStorage.getItem('phris_current_user_name') || '').toLowerCase()
-    const myDeviceToken = localStorage.getItem('phris_device_token')
-
-    // If another device logged into this exact same account, kick this device out immediately!
-    if (targetUser === myUsername && activeToken && activeToken !== myDeviceToken) {
-      try {
-        await supabase.auth.signOut()
-      } catch {}
-      localStorage.removeItem('phris_authenticated_user')
-      localStorage.removeItem('phris_current_user_name')
-      localStorage.removeItem('phris_login_time')
-      localStorage.removeItem('phris_device_token')
-      window.location.href = '/login?reason=concurrent_device'
-    }
-  })
-
-  // 2. Listen for remote force logout commands from Superadmin
+  // Listen for remote force logout commands from Superadmin
   channel.on('broadcast', { event: 'FORCE_LOGOUT' }, async (payload: any) => {
     const targetUsername = payload?.payload?.username?.toLowerCase()
     const targetSessionId = payload?.payload?.sessionId
@@ -209,7 +242,7 @@ export function initRealtimeSessionTracker(user?: {
     }
   })
 
-  // 3. Listen to Presence Sync events (1 User = 1 Row)
+  // Listen to Presence Sync events (1 User = 1 Row)
   channel.on('presence', { event: 'sync' }, () => {
     const state = channel.presenceState<UserSession>()
     const activeMap = new Map<string, UserSession>()
@@ -237,7 +270,7 @@ export function initRealtimeSessionTracker(user?: {
     presenceListeners.forEach(listener => listener(result))
   })
 
-  // 4. Subscribe and track current device presence
+  // Subscribe and track current device presence
   channel.subscribe(async (status) => {
     if (status === 'SUBSCRIBED') {
       const { ip, location } = await getPublicIP()
@@ -264,15 +297,6 @@ export function initRealtimeSessionTracker(user?: {
       }
 
       await channel.track(currentSession)
-
-      // Broadcast single-device enforcement to kick out any older device on this account
-      try {
-        await channel.send({
-          type: 'broadcast',
-          event: 'DEVICE_LOGIN_CONFLICT',
-          payload: { username, deviceToken },
-        })
-      } catch {}
     }
   })
 
