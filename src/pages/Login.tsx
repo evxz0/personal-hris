@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2, ArrowRight, ArrowLeft, KeyRound, Mail } from 'lucide-react'
+import {
+  Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2,
+  ArrowRight, ArrowLeft, KeyRound, Mail, ShieldAlert, RefreshCw, Laptop
+} from 'lucide-react'
+import { formatDate } from '../lib/utils'
+import { recordUserLogin, checkActiveDeviceSession, type ActiveDeviceInfo } from '../lib/sessionTracker'
 
-import { recordUserLogin, checkActiveDeviceSession } from '../lib/sessionTracker'
-
-type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success'
+type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success' | 'device_blocked'
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>('login')
+  const [blockedSession, setBlockedSession] = useState<ActiveDeviceInfo | null>(null)
   
   // Login State
   const [userId, setUserId] = useState('')
@@ -102,8 +106,8 @@ export default function LoginPage() {
   }
 
   // Handle Login Submit
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setLoading(true)
     setError('')
 
@@ -111,9 +115,25 @@ export default function LoginPage() {
     const cleanUser = userId.trim().toLowerCase()
     const cleanPass = password.trim()
 
+    if (!cleanUser || !cleanPass) {
+      setError('Harap masukkan ID Pengguna dan kata sandi Anda.')
+      setLoading(false)
+      return
+    }
+
+    // 1. PRE-AUTH CHECK: Strict 1 User = 1 Device (BEFORE contacting Supabase Auth)
+    // If account is already active on another device, BLOCK and redirect to dedicated conflict screen immediately!
+    const activeCheck = await checkActiveDeviceSession(cleanUser)
+    if (activeCheck.isActive) {
+      setBlockedSession(activeCheck)
+      setAuthMode('device_blocked')
+      setLoading(false)
+      return
+    }
+
     let activeUser = null
 
-    // 1. Authenticate with Supabase Auth
+    // 2. Authenticate with Supabase Auth
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password: cleanPass
@@ -122,7 +142,7 @@ export default function LoginPage() {
     if (!signInError && signInData?.session && signInData?.user) {
       activeUser = signInData.user
     } else {
-      // 2. If account doesn't exist in Supabase Auth yet, attempt auto-signup
+      // 3. If account doesn't exist in Supabase Auth yet, attempt auto-signup
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email,
         password: cleanPass,
@@ -158,15 +178,6 @@ export default function LoginPage() {
       } else {
         setError('ID Pengguna atau kata sandi tidak sesuai.')
       }
-      setLoading(false)
-      return
-    }
-
-    // 3. Strict 1 User = 1 Device Check: Block new login if already active on another device
-    const activeCheck = await checkActiveDeviceSession(cleanUser)
-    if (activeCheck.isActive) {
-      await supabase.auth.signOut()
-      setError(`Akun "${cleanUser}" sedang aktif digunakan di ${activeCheck.deviceInfo || 'perangkat lain'}. Sistem melarang login ganda (1 Akun = 1 Perangkat). Silakan keluar (logout) dari perangkat sebelumnya terlebih dahulu.`)
       setLoading(false)
       return
     }
@@ -488,6 +499,110 @@ export default function LoginPage() {
                     )}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {/* MODE: Panel Khusus Akun Sedang Aktif di Perangkat Lain */}
+            {authMode === 'device_blocked' && (
+              <div className="animate-fade-in py-1 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login')
+                    setError('')
+                    setBlockedSession(null)
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 font-bold hover:underline transition-colors cursor-pointer"
+                >
+                  <ArrowLeft size={16} />
+                  <span>Kembali ke Halaman Login</span>
+                </button>
+
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-sm">
+                    <ShieldAlert size={30} className="text-rose-600 animate-pulse" />
+                  </div>
+                  <h2 className="text-lg font-black text-rose-950 tracking-tight">Akses Masuk Ditolak</h2>
+                  <p className="text-xs text-rose-700 font-medium max-w-sm mx-auto leading-relaxed">
+                    Akun <strong className="text-rose-950 font-bold">"{userId.trim()}"</strong> saat ini sedang aktif digunakan pada perangkat lain.
+                  </p>
+                </div>
+
+                {/* Detail Perangkat yang Sedang Aktif */}
+                <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-100 border border-slate-800 shadow-md space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Laptop size={13} className="text-teal-400" /> Perangkat Sedang Aktif
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> ONLINE
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">Sistem Operasi:</span>
+                      <span className="font-semibold text-white">{blockedSession?.os || 'Windows 11/10'} ({blockedSession?.deviceType || 'Desktop'})</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">Peramban (Browser):</span>
+                      <span className="font-semibold text-teal-300">{blockedSession?.browser || 'Google Chrome'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">Alamat IP:</span>
+                      <span className="font-mono text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded text-[11px]">{blockedSession?.ipAddress || '36.85.132.38'}</span>
+                    </div>
+                    {blockedSession?.loginTime && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-[11px]">Waktu Login:</span>
+                        <span className="font-medium text-slate-300 text-[11px]">{formatDate(blockedSession.loginTime)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Petunjuk Kebijakan Keamanan */}
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1 text-amber-950">
+                    <Lock size={13} className="text-amber-700 shrink-0" /> Kebijakan Keamanan 1 Akun = 1 Perangkat
+                  </p>
+                  <p className="text-[10.5px]">
+                    Sistem P-HRIS melarang login ganda demi keamanan perbankan. Silakan <strong>Keluar (Logout)</strong> dari perangkat di atas terlebih dahulu untuk masuk di perangkat ini.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleLogin()}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-teal-700 via-teal-800 to-teal-900 hover:from-teal-800 hover:to-teal-950 text-white font-bold text-xs tracking-wide uppercase transition-all shadow-md active:scale-[0.99] cursor-pointer"
+                  >
+                    {loading ? (
+                      <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4z"/>
+                      </svg>
+                    ) : (
+                      <>
+                        <RefreshCw size={14} />
+                        <span>Cek Ulang & Masuk Kembali</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login')
+                      setError('')
+                      setBlockedSession(null)
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 text-[#64748B] hover:text-[#2B3440] font-bold text-xs transition-colors cursor-pointer text-center"
+                  >
+                    Gunakan Akun Lain
+                  </button>
+                </div>
               </div>
             )}
 

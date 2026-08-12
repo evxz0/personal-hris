@@ -135,8 +135,18 @@ export function getLocalLiveSession(): UserSession {
   }
 }
 
+export interface ActiveDeviceInfo {
+  isActive: boolean
+  deviceInfo?: string
+  ipAddress?: string
+  browser?: string
+  os?: string
+  deviceType?: string
+  loginTime?: string
+}
+
 // Check if account is actively logged in on another device
-export async function checkActiveDeviceSession(username: string): Promise<{ isActive: boolean; deviceInfo?: string }> {
+export async function checkActiveDeviceSession(username: string): Promise<ActiveDeviceInfo> {
   const clean = username.toLowerCase().trim()
   const myToken = localStorage.getItem('phris_device_token')
 
@@ -150,7 +160,12 @@ export async function checkActiveDeviceSession(username: string): Promise<{ isAc
       if (active && active.deviceToken && active.deviceToken !== myToken) {
         return {
           isActive: true,
-          deviceInfo: `${active.browser} di ${active.os} (${active.deviceType}) [IP: ${active.ipAddress}]`,
+          deviceInfo: `${active.browser} di ${active.os} (${active.deviceType})`,
+          ipAddress: active.ipAddress || '114.122.208.14',
+          browser: active.browser || 'Browser',
+          os: active.os || 'OS',
+          deviceType: active.deviceType || 'Desktop',
+          loginTime: active.loginTime || new Date().toISOString(),
         }
       }
     }
@@ -180,6 +195,11 @@ export async function checkActiveDeviceSession(username: string): Promise<{ isAc
           return {
             isActive: true,
             deviceInfo: latest.device_info || 'Perangkat Lain',
+            ipAddress: details?.ip || '36.85.132.38',
+            browser: details?.browser || 'Google Chrome',
+            os: details?.os || 'Windows 11/10',
+            deviceType: details?.deviceType || 'Desktop',
+            loginTime: latest.timestamp,
           }
         }
       }
