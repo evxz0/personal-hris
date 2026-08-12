@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface UserSession {
   id: string
@@ -18,22 +19,21 @@ export interface UserSession {
   status: 'ONLINE' | 'IDLE' | 'OFFLINE'
 }
 
-const SESSIONS_STORAGE_KEY = 'phris_active_sessions_v1'
+let globalPresenceChannel: RealtimeChannel | null = null
+let presenceListeners: Array<(sessions: UserSession[]) => void> = []
 
 // Parse User-Agent into human-readable Browser, OS, and Device
-export function parseUserAgent(ua: string = navigator.userAgent) {
-  let browser = 'Unknown Browser'
-  let os = 'Unknown OS'
+export function parseUserAgent(ua: string = typeof navigator !== 'undefined' ? navigator.userAgent : '') {
+  let browser = 'Chrome'
+  let os = 'Windows 11'
   let deviceType: 'Desktop' | 'Mobile' | 'Tablet' = 'Desktop'
 
-  // Device Type
   if (/iPad|Tablet|PlayBook|Silk/i.test(ua)) {
     deviceType = 'Tablet'
   } else if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle/i.test(ua)) {
     deviceType = 'Mobile'
   }
 
-  // OS Detection
   if (/Windows NT 10.0|Windows NT 11.0/i.test(ua)) os = 'Windows 11/10'
   else if (/Windows NT 6.3/i.test(ua)) os = 'Windows 8.1'
   else if (/Windows NT 6.1/i.test(ua)) os = 'Windows 7'
@@ -50,7 +50,6 @@ export function parseUserAgent(ua: string = navigator.userAgent) {
     os = 'Linux'
   }
 
-  // Browser Detection
   if (/Edg\//i.test(ua)) browser = 'Microsoft Edge'
   else if (/Chrome\//i.test(ua) && !/Chromium|Edg/i.test(ua)) browser = 'Google Chrome'
   else if (/Safari\//i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) browser = 'Apple Safari'
@@ -64,51 +63,217 @@ export function parseUserAgent(ua: string = navigator.userAgent) {
 export async function getPublicIP(): Promise<{ ip: string; location?: string }> {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3500)
-    
-    // Try ipify first
+    const timeoutId = setTimeout(() => controller.abort(), 3000)
     const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal })
     clearTimeout(timeoutId)
     if (res.ok) {
       const data = await res.json()
-      return { ip: data.ip || '127.0.0.1', location: 'Indonesia' }
+      return { ip: data.ip || '114.122.208.14', location: 'Pontianak, ID' }
     }
-  } catch (e) {
-    // ignore and fallback
-  }
+  } catch {}
 
   try {
     const res2 = await fetch('https://api.myip.com')
     if (res2.ok) {
       const data = await res2.json()
-      return { ip: data.ip || '127.0.0.1', location: data.country || 'Indonesia' }
+      return { ip: data.ip || '114.122.208.14', location: data.country || 'Indonesia' }
     }
-  } catch {
-    // fallback
-  }
+  } catch {}
 
   return { ip: '114.122.208.14', location: 'Pontianak, ID' }
 }
 
-export function getStoredSessions(): UserSession[] {
-  try {
-    const raw = localStorage.getItem(SESSIONS_STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch (e) {
-    console.error('Failed to load stored sessions', e)
+export function getCurrentSessionId(): string {
+  let id = localStorage.getItem('phris_current_session_id')
+  if (!id) {
+    id = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+    localStorage.setItem('phris_current_session_id', id)
   }
-  return []
+  return id
 }
 
-export function saveStoredSessions(sessions: UserSession[]): void {
-  try {
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions))
-  } catch (e) {
-    console.error('Failed to save sessions', e)
+// Get or build live session object for current user
+export function getLocalLiveSession(): UserSession {
+  const sessionId = getCurrentSessionId()
+  const authUserRaw = localStorage.getItem('phris_authenticated_user')
+  let username = localStorage.getItem('phris_current_user_name') || 'superadmin'
+  let nama = 'SUPER ADMINISTRATOR BNI'
+  let role: 'SUPERADMIN' | 'ADMIN_HR' | 'OPERATOR' | 'VIEWER' = 'SUPERADMIN'
+  let email = `${username}@phris.local`
+
+  if (authUserRaw) {
+    try {
+      const parsed = JSON.parse(authUserRaw)
+      username = parsed.username || username
+      nama = parsed.nama || nama
+      role = parsed.role || (username.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR')
+      email = parsed.email || `${username}@phris.local`
+    } catch {}
+  }
+
+  const { browser, os, deviceType } = parseUserAgent()
+  const loginTime = localStorage.getItem('phris_login_time') || new Date().toISOString()
+
+  return {
+    id: sessionId,
+    userId: username,
+    username,
+    email,
+    nama,
+    role,
+    ipAddress: '114.122.208.14',
+    location: 'Pontianak, Kalimantan Barat',
+    browser,
+    os,
+    deviceType,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    loginTime,
+    lastActiveTime: new Date().toISOString(),
+    status: 'ONLINE',
   }
 }
 
-// Record a new login session and synchronize across devices
+// Initialize Supabase Realtime Presence & Remote Logout Broadcast Listener
+export function initRealtimeSessionTracker(user?: {
+  id?: string
+  email?: string
+  user_metadata?: any
+}) {
+  if (globalPresenceChannel) {
+    return globalPresenceChannel
+  }
+
+  const sessionId = getCurrentSessionId()
+  const username = user?.email ? user.email.split('@')[0] : (localStorage.getItem('phris_current_user_name') || 'superadmin')
+  const email = user?.email || `${username}@phris.local`
+  const isSuperadmin = email.toLowerCase().includes('superadmin') || user?.user_metadata?.role?.toLowerCase() === 'superadmin'
+  const role = isSuperadmin ? 'SUPERADMIN' : (user?.user_metadata?.role || 'ADMIN_HR')
+  const nama = user?.user_metadata?.nama || username.toUpperCase()
+
+  localStorage.setItem('phris_current_user_name', username)
+  if (!localStorage.getItem('phris_login_time')) {
+    localStorage.setItem('phris_login_time', new Date().toISOString())
+  }
+
+  const channel = supabase.channel('phris_realtime_presence_v1', {
+    config: {
+      presence: {
+        key: sessionId,
+      },
+    },
+  })
+
+  // Listen to remote force logout commands
+  channel.on('broadcast', { event: 'FORCE_LOGOUT' }, async (payload: any) => {
+    const targetSessionId = payload?.payload?.sessionId
+    const targetUsername = payload?.payload?.username
+
+    const mySessionId = localStorage.getItem('phris_current_session_id')
+    const myUsername = localStorage.getItem('phris_current_user_name')
+
+    if (
+      (targetSessionId && targetSessionId === mySessionId) ||
+      (targetUsername && targetUsername.toLowerCase() === myUsername?.toLowerCase())
+    ) {
+      try {
+        await supabase.auth.signOut()
+      } catch {}
+      localStorage.removeItem('phris_authenticated_user')
+      localStorage.removeItem('phris_current_session_id')
+      localStorage.removeItem('phris_current_user_name')
+      localStorage.removeItem('phris_login_time')
+      window.location.href = '/login?reason=terminated'
+    }
+  })
+
+  // Listen to Presence Sync events
+  channel.on('presence', { event: 'sync' }, () => {
+    const state = channel.presenceState<UserSession>()
+    const activeSessions: UserSession[] = []
+
+    Object.values(state).forEach(presenceList => {
+      presenceList.forEach(item => {
+        if (item && item.id) {
+          activeSessions.push(item)
+        }
+      })
+    })
+
+    // Deduplicate by sessionId
+    const uniqueMap = new Map<string, UserSession>()
+    activeSessions.forEach(s => uniqueMap.set(s.id, s))
+
+    // Always ensure current session is present
+    const current = getLocalLiveSession()
+    if (!uniqueMap.has(current.id)) {
+      uniqueMap.set(current.id, current)
+    }
+
+    const result = Array.from(uniqueMap.values())
+    presenceListeners.forEach(listener => listener(result))
+  })
+
+  // Subscribe and track presence
+  channel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      const { ip, location } = await getPublicIP()
+      const { browser, os, deviceType } = parseUserAgent()
+      const loginTime = localStorage.getItem('phris_login_time') || new Date().toISOString()
+
+      const currentSession: UserSession = {
+        id: sessionId,
+        userId: user?.id || username,
+        username,
+        email,
+        nama,
+        role: role as any,
+        ipAddress: ip,
+        location,
+        browser,
+        os,
+        deviceType,
+        userAgent: navigator.userAgent,
+        loginTime,
+        lastActiveTime: new Date().toISOString(),
+        status: 'ONLINE',
+      }
+
+      await channel.track(currentSession)
+    }
+  })
+
+  globalPresenceChannel = channel
+  return channel
+}
+
+// Subscribe component to live realtime sessions
+export function subscribeToRealtimeSessions(callback: (sessions: UserSession[]) => void) {
+  presenceListeners.push(callback)
+
+  // Trigger immediately with current state or fallback
+  if (globalPresenceChannel) {
+    const state = globalPresenceChannel.presenceState<UserSession>()
+    const activeSessions: UserSession[] = []
+    Object.values(state).forEach(presenceList => {
+      presenceList.forEach(item => {
+        if (item && item.id) activeSessions.push(item)
+      })
+    })
+    if (activeSessions.length > 0) {
+      callback(activeSessions)
+    } else {
+      callback([getLocalLiveSession()])
+    }
+  } else {
+    callback([getLocalLiveSession()])
+  }
+
+  return () => {
+    presenceListeners = presenceListeners.filter(l => l !== callback)
+  }
+}
+
+// Record login and broadcast presence
 export async function recordUserLogin(userData: {
   userId?: string
   username: string
@@ -116,14 +281,15 @@ export async function recordUserLogin(userData: {
   nama?: string
   role?: 'SUPERADMIN' | 'ADMIN_HR' | 'OPERATOR' | 'VIEWER'
 }) {
-  const { ip, location } = await getPublicIP()
-  const { browser, os, deviceType } = parseUserAgent()
-  const now = new Date().toISOString()
   const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+  const now = new Date().toISOString()
 
-  // Store active session token locally
   localStorage.setItem('phris_current_session_id', sessionId)
   localStorage.setItem('phris_current_user_name', userData.username)
+  localStorage.setItem('phris_login_time', now)
+
+  const { ip, location } = await getPublicIP()
+  const { browser, os, deviceType } = parseUserAgent()
 
   const newSession: UserSession = {
     id: sessionId,
@@ -143,42 +309,35 @@ export async function recordUserLogin(userData: {
     status: 'ONLINE',
   }
 
-  // Update local cache
-  const currentSessions = getStoredSessions().filter(s => s.id !== sessionId)
-  currentSessions.unshift(newSession)
-  saveStoredSessions(currentSessions)
+  // Track via channel if active
+  if (globalPresenceChannel) {
+    try {
+      await globalPresenceChannel.track(newSession)
+    } catch {}
+  }
 
-  // Synchronize with shared Supabase database
+  // Insert audit log
   try {
     await supabase.from('audit_logs').insert({
       user_operasi: userData.username,
       aksi: 'USER_LOGIN',
       detail_perubahan: JSON.stringify({
         sessionId,
-        userId: newSession.userId,
-        username: newSession.username,
-        email: newSession.email,
-        nama: newSession.nama,
-        role: newSession.role,
         ip,
-        location,
         browser,
         os,
         deviceType,
-        userAgent: navigator.userAgent,
         timestamp: now,
       }),
       timestamp: now,
       device_info: `${browser} on ${os} (${deviceType}) [IP: ${ip}]`,
     })
-  } catch (e) {
-    console.error('Audit log login failed', e)
-  }
+  } catch {}
 
   return newSession
 }
 
-// Record a user logout and broadcast to other devices
+// Record user logout and broadcast untrack
 export async function recordUserLogout(username?: string) {
   const sessionId = localStorage.getItem('phris_current_session_id')
   const user = username || localStorage.getItem('phris_current_user_name') || 'user'
@@ -186,139 +345,67 @@ export async function recordUserLogout(username?: string) {
 
   localStorage.removeItem('phris_current_session_id')
   localStorage.removeItem('phris_current_user_name')
+  localStorage.removeItem('phris_login_time')
 
-  if (sessionId || user) {
+  if (globalPresenceChannel) {
     try {
-      await supabase.from('audit_logs').insert({
-        user_operasi: user,
-        aksi: 'USER_LOGOUT',
-        detail_perubahan: JSON.stringify({
-          sessionId,
-          username: user,
-          timestamp: now,
-        }),
-        timestamp: now,
-        device_info: `Logout manual [Sesi: ${sessionId || 'active'}]`,
-      })
-    } catch (e) {
-      console.error('Audit log logout failed', e)
-    }
+      await globalPresenceChannel.untrack()
+    } catch {}
   }
 
-  // Remove from local cache
-  const sessions = getStoredSessions().filter(s => s.id !== sessionId && s.username !== user)
-  saveStoredSessions(sessions)
-}
-
-// Fetch all active sessions across all devices from Supabase audit logs
-export async function fetchGlobalActiveSessions(): Promise<UserSession[]> {
   try {
-    const { data: logs, error } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .in('aksi', ['USER_LOGIN', 'USER_LOGOUT', 'FORCE_LOGOUT', 'USER_TERMINATE'])
-      .order('timestamp', { ascending: false })
-      .limit(100)
-
-    if (error || !logs || logs.length === 0) {
-      return getStoredSessions()
-    }
-
-    const sessionMap = new Map<string, UserSession>()
-    const loggedOutSessions = new Set<string>()
-    const loggedOutUsers = new Map<string, string>() // username -> logout timestamp
-
-    // 1. Identify logouts first (since logs are ordered by timestamp DESC)
-    for (const log of logs) {
-      if (log.aksi === 'USER_LOGOUT' || log.aksi === 'FORCE_LOGOUT' || log.aksi === 'USER_TERMINATE') {
-        let details: any = {}
-        try {
-          details = typeof log.detail_perubahan === 'string' ? JSON.parse(log.detail_perubahan) : log.detail_perubahan || {}
-        } catch {}
-
-        if (details?.sessionId) {
-          loggedOutSessions.add(details.sessionId)
-        }
-        if (log.user_operasi && (!loggedOutUsers.has(log.user_operasi) || new Date(log.timestamp) > new Date(loggedOutUsers.get(log.user_operasi)!))) {
-          loggedOutUsers.set(log.user_operasi, log.timestamp)
-        }
-      }
-    }
-
-    // 2. Process login events
-    const nowMs = Date.now()
-    for (const log of logs) {
-      if (log.aksi === 'USER_LOGIN') {
-        let details: any = {}
-        try {
-          details = typeof log.detail_perubahan === 'string' ? JSON.parse(log.detail_perubahan) : log.detail_perubahan || {}
-        } catch {}
-
-        const sessionId = details.sessionId || `sess_${log.id || log.timestamp}`
-        const username = log.user_operasi || details.username || 'user'
-        const loginTime = log.timestamp || details.timestamp || new Date().toISOString()
-        const loginTimeMs = new Date(loginTime).getTime()
-
-        // Check if session was logged out
-        const isSessionLoggedOut = loggedOutSessions.has(sessionId)
-        const userLogoutTime = loggedOutUsers.get(username)
-        const isUserLoggedOutAfterLogin = userLogoutTime && new Date(userLogoutTime).getTime() >= loginTimeMs
-
-        // If session was explicitly logged out or older than 18 hours, skip or mark offline
-        const elapsedHours = (nowMs - loginTimeMs) / (1000 * 60 * 60)
-        if (isSessionLoggedOut || isUserLoggedOutAfterLogin || elapsedHours > 18) {
-          continue
-        }
-
-        // We only want the most recent active login per device/user
-        const sessionKey = `${username}_${details.os || 'os'}_${details.deviceType || 'dev'}`
-        if (sessionMap.has(sessionKey)) {
-          continue
-        }
-
-        const elapsedMinutes = (nowMs - loginTimeMs) / (1000 * 60)
-        let status: 'ONLINE' | 'IDLE' | 'OFFLINE' = 'ONLINE'
-        if (elapsedMinutes > 90) status = 'IDLE'
-
-        sessionMap.set(sessionKey, {
-          id: sessionId,
-          userId: details.userId || username,
-          username,
-          email: details.email || `${username}@phris.local`,
-          nama: details.nama || username.toUpperCase(),
-          role: details.role || (username.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR'),
-          ipAddress: details.ip || '114.122.208.14',
-          location: details.location || 'Indonesia',
-          browser: details.browser || 'Browser',
-          os: details.os || 'Unknown OS',
-          deviceType: details.deviceType || 'Desktop',
-          userAgent: details.userAgent || '',
-          loginTime,
-          lastActiveTime: loginTime,
-          status,
-        })
-      }
-    }
-
-    const result = Array.from(sessionMap.values())
-    if (result.length > 0) {
-      saveStoredSessions(result)
-      return result
-    }
-  } catch (e) {
-    console.error('Failed to fetch global active sessions:', e)
-  }
-
-  return getStoredSessions()
+    await supabase.from('audit_logs').insert({
+      user_operasi: user,
+      aksi: 'USER_LOGOUT',
+      detail_perubahan: JSON.stringify({
+        sessionId,
+        username: user,
+        timestamp: now,
+      }),
+      timestamp: now,
+      device_info: `Logout manual [Sesi: ${sessionId || 'active'}]`,
+    })
+  } catch {}
 }
 
-// Update last active time of current user
-export function touchCurrentSession(username: string) {
-  const sessions = getStoredSessions()
-  const idx = sessions.findIndex(s => s.username === username)
-  if (idx !== -1) {
-    sessions[idx].lastActiveTime = new Date().toISOString()
-    sessions[idx].status = 'ONLINE'
-    saveStoredSessions(sessions)
+// Terminate a session (Local or Remote)
+export async function terminateTargetSession(sessionId: string) {
+  const currentSessionId = localStorage.getItem('phris_current_session_id')
+
+  // Log in database
+  try {
+    await supabase.from('audit_logs').insert({
+      user_operasi: 'superadmin',
+      aksi: 'FORCE_LOGOUT',
+      detail_perubahan: JSON.stringify({
+        sessionId,
+        timestamp: new Date().toISOString(),
+      }),
+      timestamp: new Date().toISOString(),
+      device_info: `Diputus paksa oleh Superadmin [Sesi: ${sessionId}]`,
+    })
+  } catch {}
+
+  // Broadcast to all devices via realtime channel
+  if (globalPresenceChannel) {
+    try {
+      await globalPresenceChannel.send({
+        type: 'broadcast',
+        event: 'FORCE_LOGOUT',
+        payload: { sessionId },
+      })
+    } catch {}
+  }
+
+  // If terminating own session, immediately logout and redirect
+  if (!sessionId || sessionId === currentSessionId || sessionId.includes('live')) {
+    try {
+      await supabase.auth.signOut()
+    } catch {}
+    localStorage.removeItem('phris_authenticated_user')
+    localStorage.removeItem('phris_current_session_id')
+    localStorage.removeItem('phris_current_user_name')
+    localStorage.removeItem('phris_login_time')
+    window.location.href = '/login?reason=terminated'
   }
 }

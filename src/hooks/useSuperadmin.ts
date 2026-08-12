@@ -1,8 +1,13 @@
-import { useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { logAudit } from '../lib/utils'
-import { getStoredSessions, saveStoredSessions, fetchGlobalActiveSessions } from '../lib/sessionTracker'
+import {
+  subscribeToRealtimeSessions,
+  terminateTargetSession,
+  getLocalLiveSession,
+  type UserSession
+} from '../lib/sessionTracker'
 
 export type UserRole = 'SUPERADMIN' | 'ADMIN_HR' | 'OPERATOR' | 'VIEWER'
 export type UserStatus = 'AKTIF' | 'NONAKTIF' | 'SUSPENDED'
@@ -80,9 +85,6 @@ export function saveLocalUsers(users: UserAccount[]): void {
   }
 }
 
-// ----------------------------------------------------------------------
-// User Management Hooks
-// ----------------------------------------------------------------------
 export function useUsers() {
   return useQuery({
     queryKey: ['superadmin-users'],
@@ -90,64 +92,41 @@ export function useUsers() {
   })
 }
 
+export function useManageUsers() {
+  const query = useUsers()
+  return {
+    users: query.data ?? INITIAL_USERS,
+    isLoading: query.isLoading,
+  }
+}
+
 export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: {
-      username: string
-      nama: string
-      email: string
-      role: UserRole
-      password?: string
-      department?: string
-    }) => {
+    mutationFn: async (newUser: Omit<UserAccount, 'id' | 'created_at' | 'status'>) => {
       const users = getLocalUsers()
-      const cleanUsername = payload.username.trim().toLowerCase()
-
-      if (users.some(u => u.username.toLowerCase() === cleanUsername)) {
-        throw new Error(`Username "${cleanUsername}" sudah digunakan. Silakan gunakan username lain.`)
+      if (users.some(u => u.username.toLowerCase() === newUser.username.toLowerCase())) {
+        throw new Error('Username sudah digunakan. Silakan pilih username lain.')
       }
 
-      const initialPassword = payload.password?.trim() || 'BNI#123456'
-      const newUser: UserAccount = {
+      const created: UserAccount = {
+        ...newUser,
         id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        username: cleanUsername,
-        nama: payload.nama.trim().toUpperCase(),
-        email: payload.email.trim().toLowerCase() || `${cleanUsername}@phris.local`,
-        password: initialPassword,
-        role: payload.role,
         status: 'AKTIF',
         created_at: new Date().toISOString(),
-        department: payload.department || 'Regional Office 09'
+        last_login: new Date().toISOString(),
       }
 
-      users.unshift(newUser)
+      users.unshift(created)
       saveLocalUsers(users)
-
-      // Also create in Supabase Auth if possible
-      try {
-        await supabase.auth.signUp({
-          email: newUser.email,
-          password: initialPassword,
-          options: {
-            data: {
-              name: newUser.nama,
-              username: newUser.username,
-              role: newUser.role,
-            }
-          }
-        })
-      } catch (e) {
-        console.error('Supabase signup during user creation:', e)
-      }
 
       await logAudit(
         'CREATE_USER',
-        `Membuat akun user baru: ${newUser.username} (${newUser.role}) - ${newUser.nama}`,
+        `Membuat user baru: ${created.username} (${created.nama}) dengan role ${created.role}`,
         'superadmin'
       )
 
-      return newUser
+      return created
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
   })
@@ -156,29 +135,20 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: {
-      id: string
-      nama?: string
-      role?: UserRole
-      status?: UserStatus
-      department?: string
-      email?: string
-    }) => {
+    mutationFn: async (updated: Partial<UserAccount> & { id: string }) => {
       const users = getLocalUsers()
-      const idx = users.findIndex(u => u.id === payload.id)
+      const idx = users.findIndex(u => u.id === updated.id)
       if (idx === -1) throw new Error('User tidak ditemukan')
 
-      users[idx] = {
-        ...users[idx],
-        ...payload,
-      }
+      users[idx] = { ...users[idx], ...updated }
       saveLocalUsers(users)
 
       await logAudit(
         'UPDATE_USER',
-        `Memperbarui profil akun user: ${users[idx].username}`,
+        `Memperbarui profil user: ${users[idx].username}`,
         'superadmin'
       )
+
       return users[idx]
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
@@ -193,16 +163,13 @@ export function useResetPassword() {
       const idx = users.findIndex(u => u.id === userId)
       if (idx === -1) throw new Error('User tidak ditemukan')
 
-      const generatedPassword = newPassword || `BNI#${Math.floor(100000 + Math.random() * 900000)}`
+      const generatedPassword = newPassword || `BNI${Math.floor(100000 + Math.random() * 900000)}!`
       users[idx].password = generatedPassword
       saveLocalUsers(users)
 
-      // If user exists in supabase auth, we also try updating via admin API if available
       try {
         await supabase.auth.updateUser({ password: generatedPassword })
-      } catch {
-        // local simulated auth
-      }
+      } catch {}
 
       await logAudit(
         'RESET_PASSWORD',
@@ -240,48 +207,41 @@ export function useDeleteUser() {
 }
 
 // ----------------------------------------------------------------------
-// Active Sessions Monitoring Hook
+// Active Sessions Monitoring Hook (Real-Time Presence)
 // ----------------------------------------------------------------------
 export function useActiveSessions() {
-  const qc = useQueryClient()
+  const [sessions, setSessions] = useState<UserSession[]>([getLocalLiveSession()])
+  const [isTerminating, setIsTerminating] = useState(false)
 
-  const query = useQuery({
-    queryKey: ['superadmin-sessions'],
-    queryFn: async () => {
-      return await fetchGlobalActiveSessions()
-    },
-    refetchInterval: 5000,
-  })
+  useEffect(() => {
+    const unsubscribe = subscribeToRealtimeSessions((newSessions) => {
+      setSessions(newSessions)
+    })
+    return () => unsubscribe()
+  }, [])
 
-  const terminateMutation = useMutation({
-    mutationFn: async (sessionId: string) => {
-      const sessions = getStoredSessions().filter(s => s.id !== sessionId)
-      saveStoredSessions(sessions)
+  const terminateSession = async (sessionId: string) => {
+    setIsTerminating(true)
+    try {
+      await terminateTargetSession(sessionId)
+      setSessions(prev => prev.filter(s => s.id !== sessionId))
+    } finally {
+      setIsTerminating(false)
+    }
+  }
 
-      try {
-        await supabase.from('audit_logs').insert({
-          user_operasi: 'superadmin',
-          aksi: 'FORCE_LOGOUT',
-          detail_perubahan: JSON.stringify({
-            sessionId,
-            timestamp: new Date().toISOString(),
-          }),
-          timestamp: new Date().toISOString(),
-          device_info: `Diputus paksa oleh Superadmin [Sesi: ${sessionId}]`,
-        })
-      } catch (e) {
-        console.error('Failed to log force logout:', e)
-      }
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-sessions'] }),
-  })
+  const refetch = () => {
+    subscribeToRealtimeSessions((newSessions) => {
+      setSessions(newSessions)
+    })
+  }
 
   return {
-    sessions: query.data ?? [],
-    isLoading: query.isLoading,
-    refetch: query.refetch,
-    terminateSession: terminateMutation.mutateAsync,
-    isTerminating: terminateMutation.isPending,
+    sessions,
+    isLoading: false,
+    refetch,
+    terminateSession,
+    isTerminating,
   }
 }
 

@@ -46,6 +46,8 @@ function LoginRoute({ session }: { session: Session | null }) {
   return <LoginPage />
 }
 
+import { initRealtimeSessionTracker } from './lib/sessionTracker'
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -57,11 +59,17 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
+      if (session?.user) {
+        initRealtimeSessionTracker(session.user)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setLoading(false)
+      if (session?.user) {
+        initRealtimeSessionTracker(session.user)
+      }
     })
 
     return () => subscription.unsubscribe()

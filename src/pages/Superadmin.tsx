@@ -160,7 +160,7 @@ export default function SuperadminPage() {
   }
 
   // Filtered Users
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = (users as UserAccount[]).filter((u: UserAccount) => {
     const matchSearch =
       u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
       u.nama.toLowerCase().includes(userSearch.toLowerCase()) ||
