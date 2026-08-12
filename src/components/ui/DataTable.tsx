@@ -700,7 +700,11 @@ export function DataTable<T extends Record<string, unknown>>({
                     </th>
                   )
                 })}
-                {actions && <th className="px-3 py-2 text-center text-[11px] font-semibold w-32">Aksi</th>}
+                {actions && (
+                  <th className="sticky right-0 z-20 px-3 py-2 text-center text-[11px] font-semibold w-28 bg-teal-600 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.18)] whitespace-nowrap">
+                    Aksi
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -720,7 +724,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   return (
                     <tr
                       key={rowId || i}
-                      className={`border-b border-gray-50 hover:bg-teal-50/40 transition-colors duration-150 ${isSelected ? 'bg-teal-50/20' : ''}`}
+                      className={`group border-b border-gray-50 hover:bg-teal-50/40 transition-colors duration-150 ${isSelected ? 'bg-teal-50/20' : 'bg-white'}`}
                     >
                       {selectable && showSelectColumn && (
                         <td className="px-3 py-1.5 text-center">
@@ -741,7 +745,9 @@ export function DataTable<T extends Record<string, unknown>>({
                         </td>
                       ))}
                       {actions && (
-                        <td className="px-3 py-1.5">
+                        <td className={`sticky right-0 z-10 px-3 py-1.5 text-center shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.08)] transition-colors ${
+                          isSelected ? 'bg-[#edf7f7]' : 'bg-white group-hover:bg-[#f2f9f9]'
+                        }`}>
                           <div className="flex items-center justify-center gap-1.5">
                             {actions(row)}
                           </div>

@@ -350,12 +350,12 @@ export default function SuperadminPage() {
                       <th className="py-3.5 px-4">Alamat IP & Lokasi</th>
                       <th className="py-3.5 px-4">Waktu Login</th>
                       <th className="py-3.5 px-4 text-center">Status</th>
-                      <th className="py-3.5 px-4 text-right">Aksi</th>
+                      <th className="sticky right-0 z-20 py-3.5 px-4 text-right bg-slate-950/95 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)]">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-slate-200">
                     {sessions.map(s => (
-                      <tr key={s.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr key={s.id} className="group hover:bg-slate-800/40 transition-colors">
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-600 to-emerald-700 text-white font-bold flex items-center justify-center text-xs">
@@ -410,7 +410,7 @@ export default function SuperadminPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> ONLINE
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="sticky right-0 z-10 py-3.5 px-4 text-right bg-slate-900/95 group-hover:bg-slate-800/95 transition-colors shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.4)]">
                           <button
                             onClick={() => terminateSession(s.id)}
                             disabled={isTerminating}
@@ -483,12 +483,12 @@ export default function SuperadminPage() {
                       <th className="py-3.5 px-4">Departemen / Unit</th>
                       <th className="py-3.5 px-4 text-center">Status</th>
                       <th className="py-3.5 px-4">Terakhir Login</th>
-                      <th className="py-3.5 px-4 text-right">Aksi Kelola</th>
+                      <th className="sticky right-0 z-20 py-3.5 px-4 text-right bg-slate-950/95 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)]">Aksi Kelola</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-slate-200">
                     {filteredUsers.map(u => (
-                      <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr key={u.id} className="group hover:bg-slate-800/40 transition-colors">
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-slate-800 text-teal-400 font-black flex items-center justify-center border border-slate-700">
@@ -529,7 +529,7 @@ export default function SuperadminPage() {
                         <td className="py-3.5 px-4 text-slate-400">
                           {u.last_login ? formatDate(u.last_login) : 'Belum pernah'}
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="sticky right-0 z-10 py-3.5 px-4 text-right bg-slate-900/95 group-hover:bg-slate-800/95 transition-colors shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.4)]">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => {
