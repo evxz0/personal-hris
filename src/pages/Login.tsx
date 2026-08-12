@@ -27,7 +27,10 @@ export default function LoginPage() {
   const [infoMessage, setInfoMessage] = useState('')
 
   const navigate = useNavigate()
-  const isTimeout = new URLSearchParams(window.location.search).get('reason') === 'timeout'
+  const searchParamsObj = new URLSearchParams(window.location.search)
+  const isTimeout = searchParamsObj.get('reason') === 'timeout'
+  const isConcurrent = searchParamsObj.get('reason') === 'concurrent_device'
+  const isTerminated = searchParamsObj.get('reason') === 'terminated'
 
   // Automatically detect recovery link from email & transition to reset password view
   useEffect(() => {
@@ -355,11 +358,23 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Timeout Banner */}
+            {/* Session Expiry / Single-Device Conflict Banner */}
             {isTimeout && authMode === 'login' && (
               <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-semibold mb-6 shadow-sm animate-fade-in">
                 <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
                 <span className="leading-snug">Sesi Anda telah berakhir karena tidak ada aktivitas selama 25 menit. Silakan masuk kembali.</span>
+              </div>
+            )}
+            {isConcurrent && authMode === 'login' && (
+              <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 font-semibold mb-6 shadow-sm animate-fade-in">
+                <Shield size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                <span className="leading-snug">Akun Anda baru saja digunakan untuk login di perangkat lain. Sistem menerapkan kebijakan ketat <strong>1 Akun = 1 Perangkat</strong>, sehingga sesi pada perangkat ini telah dinonaktifkan.</span>
+              </div>
+            )}
+            {isTerminated && authMode === 'login' && (
+              <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-100 border border-slate-300 text-xs text-slate-900 font-semibold mb-6 shadow-sm animate-fade-in">
+                <Shield size={18} className="text-slate-600 shrink-0 mt-0.5" />
+                <span className="leading-snug">Sesi login Anda telah diputuskan oleh Superadmin. Silakan hubungi administrator jika Anda memerlukan akses kembali.</span>
               </div>
             )}
 
