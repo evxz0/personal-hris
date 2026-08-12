@@ -108,7 +108,7 @@ export function saveStoredSessions(sessions: UserSession[]): void {
   }
 }
 
-// Record a new login session
+// Record a new login session and synchronize across devices
 export async function recordUserLogin(userData: {
   userId?: string
   username: string
@@ -119,11 +119,14 @@ export async function recordUserLogin(userData: {
   const { ip, location } = await getPublicIP()
   const { browser, os, deviceType } = parseUserAgent()
   const now = new Date().toISOString()
+  const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
 
-  const currentSessions = getStoredSessions().filter(s => s.username !== userData.username)
+  // Store active session token locally
+  localStorage.setItem('phris_current_session_id', sessionId)
+  localStorage.setItem('phris_current_user_name', userData.username)
 
   const newSession: UserSession = {
-    id: `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: sessionId,
     userId: userData.userId || userData.username,
     username: userData.username,
     email: userData.email || `${userData.username}@phris.local`,
@@ -140,19 +143,29 @@ export async function recordUserLogin(userData: {
     status: 'ONLINE',
   }
 
+  // Update local cache
+  const currentSessions = getStoredSessions().filter(s => s.id !== sessionId)
   currentSessions.unshift(newSession)
   saveStoredSessions(currentSessions)
 
-  // Also log into Supabase audit logs
+  // Synchronize with shared Supabase database
   try {
     await supabase.from('audit_logs').insert({
       user_operasi: userData.username,
       aksi: 'USER_LOGIN',
       detail_perubahan: JSON.stringify({
+        sessionId,
+        userId: newSession.userId,
+        username: newSession.username,
+        email: newSession.email,
+        nama: newSession.nama,
+        role: newSession.role,
         ip,
+        location,
         browser,
         os,
         deviceType,
+        userAgent: navigator.userAgent,
         timestamp: now,
       }),
       timestamp: now,
@@ -163,6 +176,140 @@ export async function recordUserLogin(userData: {
   }
 
   return newSession
+}
+
+// Record a user logout and broadcast to other devices
+export async function recordUserLogout(username?: string) {
+  const sessionId = localStorage.getItem('phris_current_session_id')
+  const user = username || localStorage.getItem('phris_current_user_name') || 'user'
+  const now = new Date().toISOString()
+
+  localStorage.removeItem('phris_current_session_id')
+  localStorage.removeItem('phris_current_user_name')
+
+  if (sessionId || user) {
+    try {
+      await supabase.from('audit_logs').insert({
+        user_operasi: user,
+        aksi: 'USER_LOGOUT',
+        detail_perubahan: JSON.stringify({
+          sessionId,
+          username: user,
+          timestamp: now,
+        }),
+        timestamp: now,
+        device_info: `Logout manual [Sesi: ${sessionId || 'active'}]`,
+      })
+    } catch (e) {
+      console.error('Audit log logout failed', e)
+    }
+  }
+
+  // Remove from local cache
+  const sessions = getStoredSessions().filter(s => s.id !== sessionId && s.username !== user)
+  saveStoredSessions(sessions)
+}
+
+// Fetch all active sessions across all devices from Supabase audit logs
+export async function fetchGlobalActiveSessions(): Promise<UserSession[]> {
+  try {
+    const { data: logs, error } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .in('aksi', ['USER_LOGIN', 'USER_LOGOUT', 'FORCE_LOGOUT', 'USER_TERMINATE'])
+      .order('timestamp', { ascending: false })
+      .limit(100)
+
+    if (error || !logs || logs.length === 0) {
+      return getStoredSessions()
+    }
+
+    const sessionMap = new Map<string, UserSession>()
+    const loggedOutSessions = new Set<string>()
+    const loggedOutUsers = new Map<string, string>() // username -> logout timestamp
+
+    // 1. Identify logouts first (since logs are ordered by timestamp DESC)
+    for (const log of logs) {
+      if (log.aksi === 'USER_LOGOUT' || log.aksi === 'FORCE_LOGOUT' || log.aksi === 'USER_TERMINATE') {
+        let details: any = {}
+        try {
+          details = typeof log.detail_perubahan === 'string' ? JSON.parse(log.detail_perubahan) : log.detail_perubahan || {}
+        } catch {}
+
+        if (details?.sessionId) {
+          loggedOutSessions.add(details.sessionId)
+        }
+        if (log.user_operasi && (!loggedOutUsers.has(log.user_operasi) || new Date(log.timestamp) > new Date(loggedOutUsers.get(log.user_operasi)!))) {
+          loggedOutUsers.set(log.user_operasi, log.timestamp)
+        }
+      }
+    }
+
+    // 2. Process login events
+    const nowMs = Date.now()
+    for (const log of logs) {
+      if (log.aksi === 'USER_LOGIN') {
+        let details: any = {}
+        try {
+          details = typeof log.detail_perubahan === 'string' ? JSON.parse(log.detail_perubahan) : log.detail_perubahan || {}
+        } catch {}
+
+        const sessionId = details.sessionId || `sess_${log.id || log.timestamp}`
+        const username = log.user_operasi || details.username || 'user'
+        const loginTime = log.timestamp || details.timestamp || new Date().toISOString()
+        const loginTimeMs = new Date(loginTime).getTime()
+
+        // Check if session was logged out
+        const isSessionLoggedOut = loggedOutSessions.has(sessionId)
+        const userLogoutTime = loggedOutUsers.get(username)
+        const isUserLoggedOutAfterLogin = userLogoutTime && new Date(userLogoutTime).getTime() >= loginTimeMs
+
+        // If session was explicitly logged out or older than 18 hours, skip or mark offline
+        const elapsedHours = (nowMs - loginTimeMs) / (1000 * 60 * 60)
+        if (isSessionLoggedOut || isUserLoggedOutAfterLogin || elapsedHours > 18) {
+          continue
+        }
+
+        // We only want the most recent active login per device/user
+        const sessionKey = `${username}_${details.os || 'os'}_${details.deviceType || 'dev'}`
+        if (sessionMap.has(sessionKey)) {
+          continue
+        }
+
+        const elapsedMinutes = (nowMs - loginTimeMs) / (1000 * 60)
+        let status: 'ONLINE' | 'IDLE' | 'OFFLINE' = 'ONLINE'
+        if (elapsedMinutes > 90) status = 'IDLE'
+
+        sessionMap.set(sessionKey, {
+          id: sessionId,
+          userId: details.userId || username,
+          username,
+          email: details.email || `${username}@phris.local`,
+          nama: details.nama || username.toUpperCase(),
+          role: details.role || (username.toLowerCase().includes('super') ? 'SUPERADMIN' : 'ADMIN_HR'),
+          ipAddress: details.ip || '114.122.208.14',
+          location: details.location || 'Indonesia',
+          browser: details.browser || 'Browser',
+          os: details.os || 'Unknown OS',
+          deviceType: details.deviceType || 'Desktop',
+          userAgent: details.userAgent || '',
+          loginTime,
+          lastActiveTime: loginTime,
+          status,
+        })
+      }
+    }
+
+    const result = Array.from(sessionMap.values())
+    if (result.length > 0) {
+      saveStoredSessions(result)
+      return result
+    }
+  } catch (e) {
+    console.error('Failed to fetch global active sessions:', e)
+  }
+
+  return getStoredSessions()
 }
 
 // Update last active time of current user

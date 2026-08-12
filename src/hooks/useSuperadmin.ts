@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { logAudit } from '../lib/utils'
-import { getStoredSessions, saveStoredSessions } from '../lib/sessionTracker'
+import { getStoredSessions, saveStoredSessions, fetchGlobalActiveSessions } from '../lib/sessionTracker'
 
 export type UserRole = 'SUPERADMIN' | 'ADMIN_HR' | 'OPERATOR' | 'VIEWER'
 export type UserStatus = 'AKTIF' | 'NONAKTIF' | 'SUSPENDED'
@@ -247,40 +247,31 @@ export function useActiveSessions() {
 
   const query = useQuery({
     queryKey: ['superadmin-sessions'],
-    queryFn: () => {
-      const sessions = getStoredSessions()
-      // If empty, supply current live user session
-      if (sessions.length === 0) {
-        return [
-          {
-            id: 'sess_live_current',
-            userId: 'superadmin',
-            username: 'superadmin',
-            email: 'superadmin@phris.local',
-            nama: 'SUPER ADMINISTRATOR BNI',
-            role: 'SUPERADMIN' as UserRole,
-            ipAddress: '114.122.208.14',
-            location: 'Pontianak, Kalimantan Barat',
-            browser: 'Google Chrome 125',
-            os: 'Windows 11 (64-bit)',
-            deviceType: 'Desktop' as const,
-            userAgent: navigator.userAgent,
-            loginTime: new Date().toISOString(),
-            lastActiveTime: new Date().toISOString(),
-            status: 'ONLINE' as const,
-          }
-        ]
-      }
-      return sessions
+    queryFn: async () => {
+      return await fetchGlobalActiveSessions()
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000,
   })
 
   const terminateMutation = useMutation({
     mutationFn: async (sessionId: string) => {
       const sessions = getStoredSessions().filter(s => s.id !== sessionId)
       saveStoredSessions(sessions)
-      await logAudit('TERMINATE_SESSION', `Memutus paksa sesi login [ID: ${sessionId}]`, 'superadmin')
+
+      try {
+        await supabase.from('audit_logs').insert({
+          user_operasi: 'superadmin',
+          aksi: 'FORCE_LOGOUT',
+          detail_perubahan: JSON.stringify({
+            sessionId,
+            timestamp: new Date().toISOString(),
+          }),
+          timestamp: new Date().toISOString(),
+          device_info: `Diputus paksa oleh Superadmin [Sesi: ${sessionId}]`,
+        })
+      } catch (e) {
+        console.error('Failed to log force logout:', e)
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-sessions'] }),
   })
@@ -288,6 +279,7 @@ export function useActiveSessions() {
   return {
     sessions: query.data ?? [],
     isLoading: query.isLoading,
+    refetch: query.refetch,
     terminateSession: terminateMutation.mutateAsync,
     isTerminating: terminateMutation.isPending,
   }

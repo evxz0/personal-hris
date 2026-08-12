@@ -6,6 +6,7 @@ import {
   ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck, ShieldAlert
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { recordUserLogout } from '../../lib/sessionTracker'
 
 const navItems = [
   { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
@@ -59,6 +60,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   }, [])
 
   const handleLogout = async () => {
+    await recordUserLogout().catch(console.error)
     localStorage.removeItem('phris_authenticated_user')
     await supabase.auth.signOut()
     navigate('/login')

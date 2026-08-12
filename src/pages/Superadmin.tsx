@@ -28,7 +28,7 @@ export default function SuperadminPage() {
   const deleteUserMutation = useDeleteUser()
 
   // Active Sessions
-  const { sessions, terminateSession, isTerminating } = useActiveSessions()
+  const { sessions, terminateSession, isTerminating, refetch: refetchSessions } = useActiveSessions()
 
   // Server Ping Telemetry
   const { history: pingHistory, currentPings, runPingTest } = useServerPing()
@@ -333,9 +333,7 @@ export default function SuperadminPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    useActiveSessions()
-                  }}
+                  onClick={() => refetchSessions()}
                   className="text-slate-300 border-slate-700 hover:bg-slate-800 text-xs"
                 >
                   <RefreshCw size={12} className="mr-1" /> Segarkan Sesi
