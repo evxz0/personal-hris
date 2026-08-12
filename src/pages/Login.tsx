@@ -145,7 +145,16 @@ export default function LoginPage() {
     }
 
     if (!activeUser) {
-      setError(signInError?.message || 'ID Pengguna atau kata sandi tidak sesuai.')
+      const errMsg = signInError?.message || ''
+      if (errMsg.toLowerCase().includes('email not confirmed')) {
+        setError('Email belum dikonfirmasi di Supabase. Saat membuat user di Supabase Dashboard, pastikan mencentang "Auto Confirm User".')
+      } else if (errMsg.toLowerCase().includes('invalid login credentials')) {
+        setError('ID Pengguna / Email atau kata sandi tidak cocok dengan data di Supabase Authentication.')
+      } else if (errMsg) {
+        setError(errMsg)
+      } else {
+        setError('ID Pengguna atau kata sandi tidak sesuai.')
+      }
       setLoading(false)
       return
     }
