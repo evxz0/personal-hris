@@ -13,7 +13,7 @@ import { ImportModal } from '../components/ui/ImportModal'
 import { ImportDropdown, type ImportMode } from '../components/ui/ImportDropdown'
 import { exportToXLSX, exportToPDF } from '../lib/importExport'
 import { formatDate } from '../lib/utils'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 const EMPTY: KaryawanInsert = {
   npp: '', nama: '', kategori: 'BINA', outlet: null, tanggal_lahir: null,
@@ -108,7 +108,7 @@ export default function BinaPage() {
   const mutasiMutation   = useAddMutasi()
 
   const binaData = useMemo(() => {
-    return rawData.filter(k => k.kategori === 'BINA')
+    return rawData.filter((k: Karyawan) => k.kategori === 'BINA')
   }, [rawData])
 
   // Dynamic Jabatan Options for Bina
@@ -117,7 +117,7 @@ export default function BinaPage() {
     jabatansBina.forEach(j => {
       if (j.nama_referensi?.trim()) set.add(j.nama_referensi.trim())
     })
-    binaData.forEach(k => {
+    binaData.forEach((k: Karyawan) => {
       if (k.jabatan?.trim()) set.add(k.jabatan.trim())
     })
     return Array.from(set)
@@ -131,7 +131,7 @@ export default function BinaPage() {
     outlets.forEach(o => {
       if (o.nama_referensi?.trim()) set.add(o.nama_referensi.trim())
     })
-    binaData.forEach(k => {
+    binaData.forEach((k: Karyawan) => {
       if (k.outlet?.trim()) set.add(k.outlet.trim())
     })
     return Array.from(set)
@@ -141,7 +141,7 @@ export default function BinaPage() {
 
   // Filter BINA only
   const data = binaData
-    .filter(k => {
+    .filter((k: Karyawan) => {
       if (filterOutlet.length > 0) {
         const userOutlet = (k.outlet || '').trim().toUpperCase()
         const matchOutlet = filterOutlet.some(fo => fo.trim().toUpperCase() === userOutlet)
@@ -281,7 +281,7 @@ export default function BinaPage() {
   }
 
   const handleExportXLSX = () => {
-    exportToXLSX(data.map(k => ({
+    exportToXLSX(data.map((k: Karyawan) => ({
       NPP: k.npp,
       Nama: k.nama,
       Kategori: k.kategori,
@@ -298,7 +298,7 @@ export default function BinaPage() {
 
   const handleExportPDF = () => {
     exportToPDF(
-      data.map(k => ({
+      data.map((k: Karyawan) => ({
         ...k,
         tanggal_lahir: formatDate(k.tanggal_lahir),
         tanggal_mulai: formatDate(k.tanggal_mulai),
