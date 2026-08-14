@@ -3,6 +3,7 @@ import React from 'react';
 export interface SkPgsData {
   nomorSurat: string;
   tanggalSurat: string;
+  memperhatikan?: string;
   pegawai: {
     nama: string;
     npp: string;
@@ -210,7 +211,7 @@ export const SkPgsTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, 
           <tr>
             <td style={{ width: '110px' }}>Memperhatikan</td>
             <td style={{ width: '15px' }}>:</td>
-            <td colSpan={2}>Keputusan Area Head - W09.</td>
+            <td colSpan={2}>{data.memperhatikan || 'Keputusan Area Head - W09.'}</td>
           </tr>
         </tbody>
       </table>

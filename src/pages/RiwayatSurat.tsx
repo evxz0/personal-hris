@@ -322,7 +322,7 @@ function renderSkPgsHtml(data: SkPgsData): string {
       </table>
 
       <table style="width: 100%; margin-bottom: 8px;">
-        <tr><td style="width: 110px;">Memperhatikan</td><td style="width: 15px;">:</td><td colspan="2">Keputusan Area Head - W09.</td></tr>
+        <tr><td style="width: 110px;">Memperhatikan</td><td style="width: 15px;">:</td><td colspan="2">${data.memperhatikan || 'Keputusan Area Head - W09.'}</td></tr>
       </table>
 
       <div style="text-align: center; font-weight: bold; margin: 8px 0;">MEMUTUSKAN</div>

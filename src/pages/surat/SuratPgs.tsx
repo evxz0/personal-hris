@@ -36,6 +36,7 @@ export default function SuratPgsPage() {
   const [formData, setFormData] = useState<SkPgsData>({
     nomorSurat: '',
     tanggalSurat: getTodayIndonesian(),
+    memperhatikan: 'Keputusan Area Head - W09.',
     pegawai: {
       nama: '',
       npp: '',
@@ -60,6 +61,7 @@ export default function SuratPgsPage() {
     }
   })
 
+  const [isManualMemperhatikan, setIsManualMemperhatikan] = useState(false)
   const [selectedNpp, setSelectedNpp] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
 
@@ -197,10 +199,10 @@ export default function SuratPgsPage() {
             </select>
           </div>
 
-          {/* Section 1: Header Metadata */}
+          {/* Section 1: Header Metadata & Dasar Keputusan */}
           <div className="space-y-3 pt-2">
             <p className="text-xs font-extrabold text-teal-800 uppercase tracking-wide border-l-2 border-teal-600 pl-2">
-              1. Metadata Surat
+              1. Metadata & Dasar Keputusan
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -219,6 +221,60 @@ export default function SuratPgsPage() {
                   onChange={val => setFormData({ ...formData, tanggalSurat: val })}
                 />
               </div>
+            </div>
+
+            {/* Pilihan Dasar Keputusan (Memperhatikan) */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[#64748B]">
+                  Dasar Keputusan (Memperhatikan)
+                </label>
+                {isManualMemperhatikan && (
+                  <span className="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-bold border border-teal-200">
+                    Mode Isi Manual
+                  </span>
+                )}
+              </div>
+              <select
+                value={
+                  isManualMemperhatikan
+                    ? 'MANUAL'
+                    : ['Keputusan Area Head - W09.', 'Keputusan Area Business Support - W09.', 'Keputusan Area Head', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '')
+                    ? formData.memperhatikan
+                    : 'MANUAL'
+                }
+                onChange={e => {
+                  const val = e.target.value
+                  if (val === 'MANUAL') {
+                    setIsManualMemperhatikan(true)
+                  } else {
+                    setIsManualMemperhatikan(false)
+                    setFormData({ ...formData, memperhatikan: val })
+                  }
+                }}
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
+              >
+                <option value="Keputusan Area Head - W09.">1. Keputusan Area Head - W09. (Default)</option>
+                <option value="Keputusan Area Business Support - W09.">2. Keputusan Area Business Support - W09.</option>
+                <option value="Keputusan Area Head">3. Keputusan Area Head</option>
+                <option value="Keputusan Area Business Support">4. Keputusan Area Business Support</option>
+                <option value="MANUAL">✍️ Isi Manual / Kustom...</option>
+              </select>
+
+              {(isManualMemperhatikan || (!['Keputusan Area Head - W09.', 'Keputusan Area Business Support - W09.', 'Keputusan Area Head', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '') && formData.memperhatikan)) && (
+                <div className="pt-1 space-y-1">
+                  <input
+                    type="text"
+                    placeholder="Ketik teks keputusan di sini (contoh: Keputusan Area Business Support - W09.)"
+                    value={formData.memperhatikan || ''}
+                    onChange={e => setFormData({ ...formData, memperhatikan: e.target.value })}
+                    className="w-full px-3 py-1.5 text-xs border border-teal-300 bg-teal-50/40 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
+                  />
+                  <p className="text-[10px] text-[#64748B]">
+                    Teks di atas akan tampil pada baris: <span className="font-semibold text-teal-800">Memperhatikan : {formData.memperhatikan || '-'}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -352,20 +408,26 @@ export default function SuratPgsPage() {
                 onChange={e => {
                   const val = e.target.value
                   if (val === 'UCOK') {
-                    setFormData({
-                      ...formData,
-                      penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'Area Business Support Team Leader' }
-                    })
+                    setFormData(prev => ({
+                      ...prev,
+                      penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'Area Business Support Team Leader' },
+                      memperhatikan: !isManualMemperhatikan && (prev.memperhatikan === 'Keputusan Area Head - W09.' || !prev.memperhatikan)
+                        ? 'Keputusan Area Business Support - W09.'
+                        : prev.memperhatikan
+                    }))
                   } else if (val === 'NOVACHRISTO') {
-                    setFormData({
-                      ...formData,
-                      penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' }
-                    })
+                    setFormData(prev => ({
+                      ...prev,
+                      penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' },
+                      memperhatikan: !isManualMemperhatikan && (prev.memperhatikan === 'Keputusan Area Business Support - W09.' || !prev.memperhatikan)
+                        ? 'Keputusan Area Head - W09.'
+                        : prev.memperhatikan
+                    }))
                   } else {
-                    setFormData({
-                      ...formData,
+                    setFormData(prev => ({
+                      ...prev,
                       penandatangan: { nama: '', jabatan: '' }
-                    })
+                    }))
                   }
                 }}
                 className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
