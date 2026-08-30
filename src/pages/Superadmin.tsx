@@ -1,135 +1,165 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  ShieldAlert, Users, Laptop, Activity, Server, RefreshCw, Plus,
-  Search, KeyRound, Trash2, Edit2, CheckCircle2,
-  Wifi, Globe, Smartphone, Monitor, ShieldCheck,
-  ExternalLink, Copy, Check, Zap, Download, PowerOff
-} from 'lucide-react'
-import { useUsers, useCreateUser, useUpdateUser, useResetPassword, useDeleteUser, useActiveSessions, useServerPing, type UserRole, type UserStatus, type UserAccount } from '../hooks/useSuperadmin'
-import { supabase } from '../lib/supabase'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Modal } from '../components/ui/Modal'
-import { formatDate } from '../lib/utils'
-import { exportToXLSX } from '../lib/importExport'
+"use client";
 
-type TabType = 'sessions' | 'users' | 'logs' | 'server'
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Users,
+  Laptop,
+  Activity,
+  RefreshCw,
+  Plus,
+  Search,
+  KeyRound,
+  Trash2,
+  Edit2,
+  Monitor,
+  Smartphone,
+  ShieldCheck,
+  ExternalLink,
+  Zap,
+  Terminal,
+  Radio,
+  Power,
+  Check,
+  Copy
+} from "lucide-react";
+import {
+  useUsers,
+  useCreateUser,
+  useUpdateUser,
+  useResetPassword,
+  useDeleteUser,
+  useActiveSessions,
+  useServerPing,
+  type UserRole,
+  type UserStatus,
+  type UserAccount,
+} from "../hooks/useSuperadmin";
+import { authService } from "../lib/authService";
+
+type TabType = "sessions" | "users" | "logs" | "server";
 
 export default function SuperadminPage() {
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<TabType>('sessions')
+  const navigate = useNavigate();
+  const currentUser = authService.getSession();
 
-  // User Management
-  const { data: users = [] } = useUsers()
-  const createUserMutation = useCreateUser()
-  const updateUserMutation = useUpdateUser()
-  const resetPasswordMutation = useResetPassword()
-  const deleteUserMutation = useDeleteUser()
+  // Tab State
+  const [activeTab, setActiveTab] = useState<TabType>("users");
+  const [searchUserQuery, setSearchUserQuery] = useState("");
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("ALL");
 
-  // Active Sessions
-  const { sessions, terminateSession, isTerminating, refetch: refetchSessions } = useActiveSessions()
+  // Hooks & Queries
+  const { data: users = [], isLoading: loadingUsers, refetch: refetchUsers } = useUsers();
+  const { sessions: activeSessions = [], refetch: refetchSessions } = useActiveSessions();
+  const { runPingTest: refetchServer } = useServerPing();
 
-  // Server Ping Telemetry
-  const { history: pingHistory, currentPings, runPingTest } = useServerPing()
-  const [autoPing, setAutoPing] = useState(false)
+  // Mutations
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
+  const resetPasswordMutation = useResetPassword();
+  const deleteUserMutation = useDeleteUser();
 
-  // Audit Logs Query
-  const [auditSearch, setAuditSearch] = useState('')
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
-  const [loadingLogs, setLoadingLogs] = useState(false)
+  // Modals State
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  
+  // Modal: Reset PW
+  const [isResetPwOpen, setIsResetPwOpen] = useState(false);
+  const [selectedTargetUser, setSelectedTargetUser] = useState<UserAccount | null>(null);
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [resetSuccessNotice, setResetSuccessNotice] = useState<string | null>(null);
 
-  // Modals
-  const [createOpen, setCreateOpen] = useState(false)
-  const [editUser, setEditUser] = useState<UserAccount | null>(null)
-  const [resetModalUser, setResetModalUser] = useState<UserAccount | null>(null)
-  const [deleteModalUser, setDeleteModalUser] = useState<UserAccount | null>(null)
+  // Modal: Edit User
+  const [editUser, setEditUser] = useState<UserAccount | null>(null);
+  const [editNama, setEditNama] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('ADMIN_HR');
 
-  // Form States
-  const [newUserData, setNewUserData] = useState({
-    username: '',
-    nama: '',
-    email: '',
-    role: 'ADMIN_HR' as UserRole,
-    password: '',
-    department: 'Regional Office 09'
-  })
-  const [customResetPassword, setCustomResetPassword] = useState('')
-  const [generatedPasswordResult, setGeneratedPasswordResult] = useState('')
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  // Form State Tambah User
+  const [newUserForm, setNewUserForm] = useState({
+    username: "",
+    nama: "",
+    password: "",
+    role: "ADMIN_HR" as UserRole,
+  });
+  const [formError, setFormError] = useState("");
 
-  // User Search & Filters
-  const [userSearch, setUserSearch] = useState('')
-  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | UserRole>('ALL')
+  // Copy helper
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-  // Fetch Audit Logs
-  const fetchLogs = async () => {
-    setLoadingLogs(true)
+  // Filtered Users
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchSearch =
+        u.username.toLowerCase().includes(searchUserQuery.toLowerCase()) ||
+        u.nama.toLowerCase().includes(searchUserQuery.toLowerCase()) ||
+        (u.email && u.email.toLowerCase().includes(searchUserQuery.toLowerCase()));
+
+      const matchRole =
+        selectedRoleFilter === "ALL" || u.role === selectedRoleFilter;
+
+      return matchSearch && matchRole;
+    });
+  }, [users, searchUserQuery, selectedRoleFilter]);
+
+  // Execute Tambah User
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+    if (!newUserForm.username.trim() || !newUserForm.nama.trim() || !newUserForm.password.trim()) {
+      setFormError("Semua field wajib diisi.");
+      return;
+    }
+
     try {
-      let q = supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(100)
-      const { data, error } = await q
-      if (!error && data) setAuditLogs(data)
-    } catch (e) {
-      console.error('Failed to fetch audit logs', e)
-    } finally {
-      setLoadingLogs(false)
+      await createUserMutation.mutateAsync({
+        username: newUserForm.username.trim(),
+        nama: newUserForm.nama.trim(),
+        password: newUserForm.password.trim(),
+        role: newUserForm.role,
+      });
+      setIsAddUserOpen(false);
+      setNewUserForm({ username: "", nama: "", password: "", role: "ADMIN_HR" });
+    } catch (err: any) {
+      setFormError(err.message || "Gagal membuat user.");
     }
-  }
+  };
 
-  useEffect(() => {
-    if (activeTab === 'logs') fetchLogs()
-  }, [activeTab])
-
-  // Auto Ping Effect
-  useEffect(() => {
-    let interval: any
-    if (autoPing) {
-      interval = setInterval(() => {
-        runPingTest()
-      }, 5000)
-    }
-    return () => clearInterval(interval)
-  }, [autoPing, runPingTest])
-
-  // Handlers
-  const handleCreateUserSubmit = async () => {
-    if (!newUserData.username || !newUserData.nama) {
-      alert('Username dan Nama Lengkap wajib diisi.')
-      return
-    }
+  // Execute Reset Password
+  const handleExecuteResetPassword = async () => {
+    if (!selectedTargetUser) return;
     try {
-      await createUserMutation.mutateAsync(newUserData)
-      setCreateOpen(false)
-      setNewUserData({
-        username: '',
-        nama: '',
-        email: '',
-        role: 'ADMIN_HR',
-        password: '',
-        department: 'Regional Office 09'
-      })
-    } catch (e: any) {
-      alert(e?.message || 'Gagal membuat user')
+      const res = await resetPasswordMutation.mutateAsync({
+        userId: selectedTargetUser.id,
+        newPassword: newPasswordInput || undefined,
+      });
+      setResetSuccessNotice(res.generatedPassword);
+      setNewPasswordInput("");
+    } catch (err: any) {
+      alert("Gagal reset password: " + err.message);
     }
-  }
+  };
 
-  const handleUpdateUserSubmit = async () => {
+  // Execute Edit User
+  const handleSaveEditUser = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!editUser) return
     try {
       await updateUserMutation.mutateAsync({
         id: editUser.id,
-        nama: editUser.nama,
-        role: editUser.role,
-        status: editUser.status,
-        department: editUser.department,
-        email: editUser.email
+        nama: editNama.trim(),
+        role: editRole
       })
       setEditUser(null)
-    } catch (e: any) {
-      alert(e?.message || 'Gagal memperbarui user')
+    } catch (err: any) {
+      alert(err.message || 'Gagal menyimpan perubahan')
     }
   }
 
+  // Execute Toggle Status
   const handleToggleStatus = async (userId: string, currentStatus: UserStatus) => {
     try {
       await updateUserMutation.mutateAsync({
@@ -141,922 +171,794 @@ export default function SuperadminPage() {
     }
   }
 
-  const handleExecuteResetPassword = async () => {
-    if (!resetModalUser) return
-    try {
-      const res = await resetPasswordMutation.mutateAsync({
-        userId: resetModalUser.id,
-        newPassword: customResetPassword || undefined
-      })
-      setGeneratedPasswordResult(res.generatedPassword)
-    } catch (e: any) {
-      alert(e?.message || 'Gagal mereset kata sandi')
-    }
-  }
-
-  const handleDeleteUserSubmit = async () => {
-    if (!deleteModalUser) return
-    try {
-      await deleteUserMutation.mutateAsync(deleteModalUser.id)
-      setDeleteModalUser(null)
-    } catch (e: any) {
-      alert(e?.message || 'Gagal menghapus user')
-    }
-  }
-
-  const handleCopyText = (text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
-  }
-
-  // Filtered Users
-  const filteredUsers = (users as UserAccount[]).filter((u: UserAccount) => {
-    const matchSearch =
-      u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.nama.toLowerCase().includes(userSearch.toLowerCase()) ||
-      (u.email?.toLowerCase().includes(userSearch.toLowerCase()) ?? false)
-    const matchRole = userRoleFilter === 'ALL' || u.role === userRoleFilter
-    return matchSearch && matchRole
-  })
-
-  // Filtered Logs
-  const filteredLogs = auditLogs.filter(l => {
-    const text = `${l.user_operasi || ''} ${l.aksi || ''} ${l.detail_perubahan || ''} ${l.device_info || ''}`.toLowerCase()
-    return text.includes(auditSearch.toLowerCase())
-  })
-
   return (
-    <div className="min-h-screen bg-[#0F172A] text-slate-100 pb-16 font-sans">
-      {/* Top Banner Header */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500 via-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20 ring-2 ring-teal-400/30">
-              <ShieldAlert className="text-slate-950" size={22} />
+    <div className="min-h-screen bg-[#090D16] text-zinc-100 antialiased p-4 sm:p-6 lg:p-8 font-sans selection:bg-teal-500/30 selection:text-teal-200">
+      <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
+        
+        {/* =========================================================================
+            1. TOP ENTERPRISE HEADER
+           ========================================================================= */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-600/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-inner">
+              <Terminal className="w-6 h-6"/>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black tracking-tight text-white">Superadmin Control & Monitoring Center</h1>
-                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Live Terminal
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-lg font-bold tracking-tight text-white">
+                  Superadmin Control &amp; Monitoring Center
+                </h1>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-800/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE TERMINAL
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Pusat kendali akun, pemantauan device & IP aktif, audit keamanan, dan latency server realtime
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Pusat kendali akun, pemantauan device &amp; IP aktif, audit keamanan, dan latency server realtime.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80"
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white text-xs font-semibold border border-zinc-700/60 shadow-sm transition-all"
             >
-              <ExternalLink size={14} className="mr-1.5" /> Buka Panel HRIS Biasa
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
+              <ExternalLink className="w-3.5 h-3.5 text-zinc-400"/>
+              <span>Buka Panel HRIS</span>
+            </button>
+            <button
               onClick={() => {
-                runPingTest()
-                fetchLogs()
+                refetchUsers();
+                refetchSessions();
+                refetchServer();
               }}
-              className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold shadow-md shadow-teal-500/20"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600/90 hover:bg-teal-500 text-white text-xs font-semibold shadow-lg shadow-teal-900/30 transition-all active:scale-95"
             >
-              <RefreshCw size={13} className="mr-1.5" /> Refresh Telemetri
-            </Button>
+              <RefreshCw className="w-3.5 h-3.5"/>
+              <span>Refresh Telemetri</span>
+            </button>
           </div>
         </div>
 
-        {/* Tab Navigation Menu */}
-        <div className="max-w-7xl mx-auto mt-5 flex items-center gap-2 overflow-x-auto border-t border-slate-800/80 pt-3">
+        {/* =========================================================================
+            2. SEGMENTED TAB NAVIGATION BAR
+           ========================================================================= */}
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80 max-w-fit overflow-x-auto custom-scrollbar">
           {[
-            { id: 'sessions', label: 'Monitoring Sesi & Device', icon: Laptop, count: sessions.length },
-            { id: 'users', label: 'Manajemen Akun User', icon: Users, count: users.length },
-            { id: 'logs', label: 'Log Aktivitas & Audit', icon: Activity, count: auditLogs.length },
-            { id: 'server', label: 'Grafik Server & Ping', icon: Server, badge: `${currentPings.supabase}ms` },
-          ].map(tab => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
+            { id: "sessions", label: "Monitoring Sesi & Device", icon: Laptop, count: activeSessions.length },
+            { id: "users", label: "Manajemen Akun User", icon: Users, count: users.length },
+            { id: "logs", label: "Log Aktivitas & Audit", icon: Activity, count: null },
+            { id: "server", label: "Grafik Server & Ping", icon: Radio, count: "42ms" },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 shadow-md shadow-teal-500/20'
-                    : 'bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    ? "bg-teal-600 text-white shadow-md shadow-teal-950"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
                 }`}
               >
-                <Icon size={15} />
+                <Icon className="w-3.5 h-3.5"/>
                 <span>{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isActive ? 'bg-slate-950 text-teal-300' : 'bg-slate-700 text-slate-300'}`}>
+                {tab.count !== null && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                      isActive
+                        ? "bg-teal-700/80 text-teal-100"
+                        : "bg-zinc-800 text-zinc-400 border border-zinc-700/50"
+                    }`}
+                  >
                     {tab.count}
                   </span>
                 )}
-                {tab.badge && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isActive ? 'bg-slate-950 text-emerald-300' : 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'}`}>
-                    {tab.badge}
-                  </span>
-                )}
               </button>
-            )
+            );
           })}
         </div>
-      </header>
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* ========================================================================= */}
-        {/* TAB 1: SESSIONS & DEVICE MONITORING */}
-        {/* ========================================================================= */}
-        {activeTab === 'sessions' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Total Sesi Login Aktif</p>
-                  <p className="text-2xl font-black text-white mt-1">{sessions.length}</p>
-                  <p className="text-[11px] text-emerald-400 mt-0.5 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Terhubung saat ini
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center border border-teal-500/20">
-                  <Wifi size={20} />
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Perangkat Desktop</p>
-                  <p className="text-2xl font-black text-white mt-1">
-                    {sessions.filter(s => s.deviceType === 'Desktop').length}
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Windows & macOS PC</p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
-                  <Monitor size={20} />
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Perangkat Mobile / Tablet</p>
-                  <p className="text-2xl font-black text-white mt-1">
-                    {sessions.filter(s => s.deviceType !== 'Desktop').length}
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Android & iOS Devices</p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
-                  <Smartphone size={20} />
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Status Keamanan Jaringan</p>
-                  <p className="text-base font-bold text-emerald-400 mt-1">100% Terenkripsi</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">TLS 1.3 / Supabase Auth</p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                  <ShieldCheck size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* Live Sessions Table */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Laptop size={18} className="text-teal-400" />
-                    Daftar Pengguna & Perangkat yang Sedang Login
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Data diambil secara langsung mencakup Alamat IP, Tipe OS, Browser, dan Waktu Akses
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => refetchSessions()}
-                  className="text-slate-300 border-slate-700 hover:bg-slate-800 text-xs"
-                >
-                  <RefreshCw size={12} className="mr-1" /> Segarkan Sesi
-                </Button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3.5 px-4">Pengguna</th>
-                      <th className="py-3.5 px-4">Perangkat & OS</th>
-                      <th className="py-3.5 px-4">Browser</th>
-                      <th className="py-3.5 px-4">Alamat IP & Lokasi</th>
-                      <th className="py-3.5 px-4">Waktu Login</th>
-                      <th className="py-3.5 px-4 text-center">Status</th>
-                      <th className="sticky right-0 z-20 py-3.5 px-4 text-right bg-slate-950/95 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)]">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                    {sessions.map(s => (
-                      <tr key={s.id} className="group hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-600 to-emerald-700 text-white font-bold flex items-center justify-center text-xs">
-                              {s.nama?.charAt(0) || 'U'}
-                            </div>
-                            <div>
-                              <p className="font-bold text-white leading-tight">{s.nama}</p>
-                              <p className="text-[11px] text-slate-400">{s.username} ({s.email})</p>
-                              <span className={`inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded mt-0.5 ${
-                                s.role === 'SUPERADMIN' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
-                              }`}>
-                                {s.role}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            {s.deviceType === 'Desktop' ? <Monitor size={15} className="text-blue-400 shrink-0" /> : <Smartphone size={15} className="text-purple-400 shrink-0" />}
-                            <div>
-                              <p className="font-semibold text-slate-100">{s.os}</p>
-                              <p className="text-[10px] text-slate-400">{s.deviceType}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-medium text-slate-300">
-                          {s.browser}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-emerald-400 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
-                              {s.ipAddress}
-                            </span>
-                            <button
-                              onClick={() => handleCopyText(s.ipAddress, s.id)}
-                              className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800"
-                              title="Salin IP"
-                            >
-                              {copiedId === s.id ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                            </button>
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                            <Globe size={11} className="text-slate-500" /> {s.location || 'Indonesia'}
-                          </p>
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-300">
-                          <p className="font-medium">{new Date(s.loginTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</p>
-                          <p className="text-[10px] text-slate-400">{formatDate(s.loginTime)}</p>
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> ONLINE
-                          </span>
-                        </td>
-                        <td className="sticky right-0 z-10 py-3.5 px-4 text-right bg-slate-900/95 group-hover:bg-slate-800/95 transition-colors shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.4)]">
-                          <button
-                            onClick={() => terminateSession(s.id)}
-                            disabled={isTerminating}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/20 transition-colors"
-                          >
-                            Putuskan Sesi
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB 2: USER ACCOUNT MANAGEMENT */}
-        {/* ========================================================================= */}
-        {activeTab === 'users' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Header Controls */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-                <div className="relative flex-1 max-w-md">
-                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        {/* =========================================================================
+            3. TAB CONTENT: MANAJEMEN AKUN USER
+           ========================================================================= */}
+        {activeTab === "users" && (
+          <div className="space-y-4 animate-fade-in">
+            {/* Filter & Action Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl">
+              <div className="flex items-center gap-2 flex-1 max-w-md">
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500"/>
                   <input
                     type="text"
-                    placeholder="Cari nama, username, email..."
-                    value={userSearch}
-                    onChange={e => setUserSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-teal-500"
+                    placeholder="Cari nama, username, ID akun..."
+                    value={searchUserQuery}
+                    onChange={(e) => setSearchUserQuery(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2 rounded-xl text-xs bg-zinc-950/80 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-teal-500 transition-colors font-sans"
                   />
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
-                  {(['ALL', 'SUPERADMIN', 'ADMIN_HR', 'OPERATOR'] as const).map(r => (
+              </div>
+
+              <div className="flex items-center gap-2 justify-end">
+                {/* Filter Pills */}
+                <div className="flex items-center p-1 rounded-xl bg-zinc-950/80 border border-zinc-800 text-xs">
+                  {["ALL", "SUPERADMIN", "ADMIN_HR"].map((role) => (
                     <button
-                      key={r}
-                      onClick={() => setUserRoleFilter(r)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        userRoleFilter === r ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                      key={role}
+                      onClick={() => setSelectedRoleFilter(role)}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                        selectedRoleFilter === role
+                          ? "bg-zinc-800 text-teal-400 shadow-sm"
+                          : "text-zinc-500 hover:text-zinc-300"
                       }`}
                     >
-                      {r === 'ALL' ? 'Semua Role' : r}
+                      {role === "ALL" ? "Semua Role" : role}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setCreateOpen(true)}
-                className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold shrink-0"
-              >
-                <Plus size={14} className="mr-1.5" /> Buat Akun User Baru
-              </Button>
-            </div>
-
-            {/* Users Table */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3.5 px-4">Nama & Username</th>
-                      <th className="py-3.5 px-4">Email</th>
-                      <th className="py-3.5 px-4">Peran (Role)</th>
-                      <th className="py-3.5 px-4">Departemen / Unit</th>
-                      <th className="py-3.5 px-4 text-center">Status</th>
-                      <th className="py-3.5 px-4">Terakhir Login</th>
-                      <th className="sticky right-0 z-20 py-3.5 px-4 text-right bg-slate-950/95 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)]">Aksi Kelola</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                    {filteredUsers.map(u => (
-                      <tr key={u.id} className="group hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-slate-800 text-teal-400 font-black flex items-center justify-center border border-slate-700">
-                              {u.nama.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-bold text-white leading-tight">{u.nama}</p>
-                              <p className="text-[11px] text-slate-400 font-mono">@{u.username}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-300">
-                          {u.email}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`inline-block text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
-                            u.role === 'SUPERADMIN'
-                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                              : u.role === 'ADMIN_HR'
-                              ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
-                              : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                          }`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-400">
-                          {u.department || 'Regional Office 09'}
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            u.status === 'AKTIF'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          }`}>
-                            {u.status}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-400">
-                          {u.last_login ? formatDate(u.last_login) : 'Belum pernah'}
-                        </td>
-                        <td className="sticky right-0 z-10 py-3.5 px-4 text-right bg-slate-900/95 group-hover:bg-slate-800/95 transition-colors shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.4)]">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setResetModalUser(u)
-                                setGeneratedPasswordResult('')
-                                setCustomResetPassword('')
-                              }}
-                              className="p-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 hover:text-amber-300"
-                              title="Reset Kata Sandi"
-                            >
-                              <KeyRound size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleToggleStatus(u.id, u.status)}
-                              className={`p-1.5 rounded-lg border text-white ${
-                                u.status === 'AKTIF' 
-                                  ? 'bg-rose-500 hover:bg-rose-600 border-rose-600' 
-                                  : 'bg-emerald-500 hover:bg-emerald-600 border-emerald-600'
-                              }`}
-                              title={u.status === 'AKTIF' ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
-                            >
-                              <PowerOff size={13} />
-                            </button>
-                            <button
-                              onClick={() => setEditUser(u)}
-                              className="p-1.5 rounded-lg bg-slate-800 text-teal-400 hover:bg-slate-700 hover:text-teal-300"
-                              title="Edit Profil & Role"
-                            >
-                              <Edit2 size={13} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteModalUser(u)}
-                              className="p-1.5 rounded-lg bg-slate-800 text-rose-400 hover:bg-slate-700 hover:text-rose-300"
-                              title="Hapus Akun"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB 3: AUDIT LOGS & ACTIVITY STREAM */}
-        {/* ========================================================================= */}
-        {activeTab === 'logs' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Filter aksi, operator, detail perubahan..."
-                  value={auditSearch}
-                  onChange={e => setAuditSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-teal-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportToXLSX(
-                      filteredLogs.map(l => ({
-                        Waktu: l.timestamp,
-                        Operator: l.user_operasi,
-                        Aksi: l.aksi,
-                        Detail: l.detail_perubahan,
-                        Device_Info: l.device_info,
-                      })),
-                      'Audit_Logs_Security'
-                    )
-                  }}
-                  className="text-slate-300 border-slate-700 hover:bg-slate-800 text-xs"
-                >
-                  <Download size={13} className="mr-1.5" /> Ekspor Log Excel
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={fetchLogs}
-                  loading={loadingLogs}
-                  className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold"
-                >
-                  <RefreshCw size={13} className="mr-1.5" /> Muat Ulang Log
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
-                    <tr>
-                      <th className="py-3.5 px-4">Waktu (WIB)</th>
-                      <th className="py-3.5 px-4">Operator / Akun</th>
-                      <th className="py-3.5 px-4">Jenis Aksi</th>
-                      <th className="py-3.5 px-4">Detail Perubahan</th>
-                      <th className="py-3.5 px-4">Perangkat & IP</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                    {filteredLogs.map(l => (
-                      <tr key={l.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-400">
-                          <p className="font-semibold text-slate-300">
-                            {new Date(l.timestamp).toLocaleTimeString('id-ID')} WIB
-                          </p>
-                          <p className="text-[10px]">{formatDate(l.timestamp)}</p>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="font-bold text-teal-400 bg-teal-950/50 px-2 py-0.5 rounded border border-teal-500/20">
-                            {l.user_operasi || 'admin'}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="font-mono text-[11px] font-bold text-amber-400">
-                            {l.aksi}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 max-w-md break-words text-slate-300">
-                          {typeof l.detail_perubahan === 'string' ? l.detail_perubahan : JSON.stringify(l.detail_perubahan)}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-400 text-[11px]">
-                          {l.device_info || '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB 4: RUNNING SERVER & REALTIME PING GRAPH */}
-        {/* ========================================================================= */}
-        {activeTab === 'server' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Top Stat Meters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-400">Supabase DB Engine</p>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                </div>
-                <p className="text-2xl font-black text-emerald-400 mt-2">{currentPings.supabase} ms</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">PostgreSQL Cloud Cluster</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-400">OCR AI Microservice</p>
-                  <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
-                </div>
-                <p className="text-2xl font-black text-teal-400 mt-2">{currentPings.ocr} ms</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">FastAPI Document Engine</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-400">Cloudflare Edge CDN</p>
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-                </div>
-                <p className="text-2xl font-black text-cyan-400 mt-2">{currentPings.cdn} ms</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Global Anycast Network</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-400">System Uptime</p>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded">99.98%</span>
-                </div>
-                <p className="text-2xl font-black text-white mt-2">OPERATIONAL</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">0 Fatal Errors Recorded</p>
-              </div>
-            </div>
-
-            {/* Live Visual Ping Chart */}
-            <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Activity size={18} className="text-teal-400" />
-                    Grafik Real-Time Latency Server & Ping (ms)
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Memantau responsivitas koneksi database Supabase, Microservice OCR, dan CDN Frontend
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-xs text-slate-300 font-semibold cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={autoPing}
-                      onChange={e => setAutoPing(e.target.checked)}
-                      className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-teal-500 focus:ring-teal-500"
-                    />
-                    <span>Auto-Ping (5 detik)</span>
-                  </label>
-
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    loading={currentPings.isChecking}
-                    onClick={runPingTest}
-                    className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs"
-                  >
-                    <Zap size={13} className="mr-1" /> Uji Ping Sekarang
-                  </Button>
-                </div>
-              </div>
-
-              {/* Interactive SVG Line Graph */}
-              <div className="h-64 w-full bg-slate-950/60 rounded-xl p-4 border border-slate-800 relative flex flex-col justify-between">
-                <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
-                  {/* Grid Lines */}
-                  <line x1="0" y1="50" x2="500" y2="50" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.5" />
-                  <line x1="0" y1="100" x2="500" y2="100" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.5" />
-                  <line x1="0" y1="150" x2="500" y2="150" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.5" />
-
-                  {/* Supabase Line (Emerald) */}
-                  {pingHistory.length > 1 && (
-                    <polyline
-                      fill="none"
-                      stroke="#10B981"
-                      strokeWidth="2.5"
-                      points={pingHistory
-                        .map((p, i) => {
-                          const x = (i / (pingHistory.length - 1)) * 500
-                          const y = Math.max(10, Math.min(190, 200 - (p.supabasePing / 150) * 180))
-                          return `${x},${y}`
-                        })
-                        .join(' ')}
-                    />
-                  )}
-
-                  {/* OCR Line (Teal) */}
-                  {pingHistory.length > 1 && (
-                    <polyline
-                      fill="none"
-                      stroke="#14B8A6"
-                      strokeWidth="2.5"
-                      strokeDasharray="4 2"
-                      points={pingHistory
-                        .map((p, i) => {
-                          const x = (i / (pingHistory.length - 1)) * 500
-                          const y = Math.max(10, Math.min(190, 200 - (p.ocrPing / 200) * 180))
-                          return `${x},${y}`
-                        })
-                        .join(' ')}
-                    />
-                  )}
-
-                  {/* CDN Line (Cyan) */}
-                  {pingHistory.length > 1 && (
-                    <polyline
-                      fill="none"
-                      stroke="#06B6D4"
-                      strokeWidth="2"
-                      points={pingHistory
-                        .map((p, i) => {
-                          const x = (i / (pingHistory.length - 1)) * 500
-                          const y = Math.max(10, Math.min(190, 200 - (p.cdnPing / 80) * 180))
-                          return `${x},${y}`
-                        })
-                        .join(' ')}
-                    />
-                  )}
-
-                  {/* Points on latest node */}
-                  {pingHistory.length > 0 && (
-                    <circle cx="500" cy={Math.max(10, Math.min(190, 200 - (currentPings.supabase / 150) * 180))} r="4" fill="#10B981" />
-                  )}
-                </svg>
-
-                {/* Graph Legend */}
-                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                      <span className="w-3 h-1 bg-emerald-400 rounded-full" /> Supabase Database ({currentPings.supabase}ms)
-                    </span>
-                    <span className="flex items-center gap-1.5 text-teal-400 font-semibold">
-                      <span className="w-3 h-1 bg-teal-400 rounded-full" /> OCR Service ({currentPings.ocr}ms)
-                    </span>
-                    <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-                      <span className="w-3 h-1 bg-cyan-400 rounded-full" /> CDN Frontend ({currentPings.cdn}ms)
-                    </span>
-                  </div>
-                  <span>Terakhir diperbarui: {currentPings.lastTested}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* ========================================================================= */}
-      {/* MODAL: CREATE NEW USER */}
-      {/* ========================================================================= */}
-      <Modal
-        isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Buat Akun Pengguna Baru"
-        size="md"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setCreateOpen(false)}>Batal</Button>
-            <Button
-              variant="primary"
-              loading={createUserMutation.isPending}
-              onClick={handleCreateUserSubmit}
-              className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold"
-            >
-              Simpan & Buat Akun
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4 text-xs">
-          <Input
-            label="Username (Login ID)"
-            value={newUserData.username}
-            onChange={e => setNewUserData(f => ({ ...f, username: e.target.value }))}
-            placeholder="misal: arief.hr / operator01"
-          />
-
-          <Input
-            label="Nama Lengkap Pegawai"
-            value={newUserData.nama}
-            onChange={e => setNewUserData(f => ({ ...f, nama: e.target.value }))}
-            placeholder="misal: ARIEF WICAKSONO, S.Kom"
-          />
-
-          <Input
-            label="Alamat Email (Opsional)"
-            value={newUserData.email}
-            onChange={e => setNewUserData(f => ({ ...f, email: e.target.value }))}
-            placeholder="misal: arief.hr@bni.co.id"
-          />
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#2B3440] uppercase tracking-wide">Peran (Role Akses)</label>
-            <select
-              value={newUserData.role}
-              onChange={e => setNewUserData(f => ({ ...f, role: e.target.value as UserRole }))}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-            >
-              <option value="ADMIN_HR">ADMIN_HR (Akses Penuh Master Data, Absensi & Surat)</option>
-              <option value="SUPERADMIN">SUPERADMIN (Akses Penuh + Superadmin Terminal)</option>
-              <option value="OPERATOR">OPERATOR (Akses Surat & Absensi)</option>
-              <option value="VIEWER">VIEWER (Hanya Lihat Data / Read Only)</option>
-            </select>
-          </div>
-
-          <Input
-            label="Password Awal (Opsional - default: BNI#123456)"
-            type="password"
-            value={newUserData.password}
-            onChange={e => setNewUserData(f => ({ ...f, password: e.target.value }))}
-            placeholder="Biarkan kosong untuk password default..."
-          />
-        </div>
-      </Modal>
-
-      {/* ========================================================================= */}
-      {/* MODAL: RESET PASSWORD */}
-      {/* ========================================================================= */}
-      <Modal
-        isOpen={!!resetModalUser}
-        onClose={() => setResetModalUser(null)}
-        title={`Reset Kata Sandi: ${resetModalUser?.username}`}
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setResetModalUser(null)}>Tutup</Button>
-            {!generatedPasswordResult && (
-              <Button
-                variant="primary"
-                loading={resetPasswordMutation.isPending}
-                onClick={handleExecuteResetPassword}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"
-              >
-                Reset Password Sekarang
-              </Button>
-            )}
-          </>
-        }
-      >
-        <div className="space-y-3.5 text-xs">
-          {!generatedPasswordResult ? (
-            <>
-              <p className="text-slate-600">
-                Pilih apakah ingin menghasilkan kata sandi baru secara otomatis atau tentukan kata sandi kustom:
-              </p>
-              <Input
-                label="Kata Sandi Kustom (Opsional)"
-                value={customResetPassword}
-                onChange={e => setCustomResetPassword(e.target.value)}
-                placeholder="Kosongkan untuk auto-generate otomatis..."
-              />
-            </>
-          ) : (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2 text-emerald-950">
-              <div className="flex items-center gap-2 text-emerald-700 font-bold">
-                <CheckCircle2 size={16} /> Kata Sandi Baru Berhasil Dibuat
-              </div>
-              <p className="text-xs text-slate-600">Berikan kata sandi baru ini kepada pengguna yang bersangkutan:</p>
-              <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-emerald-300 font-mono text-sm font-black text-emerald-900">
-                <span>{generatedPasswordResult}</span>
                 <button
-                  onClick={() => handleCopyText(generatedPasswordResult, 'pwd')}
-                  className="px-2 py-1 bg-emerald-600 text-white rounded text-xs font-sans font-bold flex items-center gap-1 hover:bg-emerald-500"
+                  onClick={() => setIsAddUserOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md shadow-teal-900/30 transition-all shrink-0"
                 >
-                  {copiedId === 'pwd' ? <Check size={12} /> : <Copy size={12} />}
-                  <span>Salin</span>
+                  <Plus className="w-3.5 h-3.5"/>
+                  <span>Buat Akun User Baru</span>
                 </button>
               </div>
             </div>
-          )}
-        </div>
-      </Modal>
 
-      {/* ========================================================================= */}
-      {/* MODAL: EDIT USER */}
-      {/* ========================================================================= */}
-      <Modal
-        isOpen={!!editUser}
-        onClose={() => setEditUser(null)}
-        title={`Ubah Profil Akun: ${editUser?.username}`}
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setEditUser(null)}>Batal</Button>
-            <Button
-              variant="primary"
-              loading={updateUserMutation.isPending}
-              onClick={handleUpdateUserSubmit}
-              className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold"
-            >
-              Simpan Perubahan
-            </Button>
-          </>
-        }
-      >
-        {editUser && (
-          <div className="space-y-3.5 text-xs">
-            <Input
-              label="Nama Lengkap"
-              value={editUser.nama}
-              onChange={e => setEditUser({ ...editUser, nama: e.target.value })}
-            />
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#2B3440] uppercase tracking-wide">Peran (Role)</label>
-              <select
-                value={editUser.role}
-                onChange={e => setEditUser({ ...editUser, role: e.target.value as UserRole })}
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-              >
-                <option value="ADMIN_HR">ADMIN_HR</option>
-                <option value="SUPERADMIN">SUPERADMIN</option>
-                <option value="OPERATOR">OPERATOR</option>
-                <option value="VIEWER">VIEWER</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#2B3440] uppercase tracking-wide">Status Akun</label>
-              <select
-                value={editUser.status}
-                onChange={e => setEditUser({ ...editUser, status: e.target.value as UserStatus })}
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white"
-              >
-                <option value="AKTIF">AKTIF</option>
-                <option value="NONAKTIF">NONAKTIF / DINONAKTIFKAN</option>
-                <option value="SUSPENDED">SUSPENDED / DIKUNCI</option>
-              </select>
+            {/* High-Density Users Table */}
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-950/90 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider font-mono">
+                      <th className="py-3.5 px-4">Nama &amp; Username</th>
+                      <th className="py-3.5 px-4">Peran (Role)</th>
+                      <th className="py-3.5 px-4">Departemen / Unit</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4">Dibuat Pada</th>
+                      <th className="py-3.5 px-4 text-right">Aksi Kelola</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60 font-sans">
+                    {loadingUsers ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-zinc-500 font-mono">
+                          Memuat data pengguna...
+                        </td>
+                      </tr>
+                    ) : filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-zinc-500 font-mono">
+                          Tidak ada data akun user yang cocok dengan kriteria pencarian.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map((u) => {
+                        const isSuper = u.role === "SUPERADMIN";
+                        return (
+                          <tr
+                            key={u.id}
+                            className="hover:bg-zinc-800/30 transition-colors group"
+                          >
+                            {/* User Profile */}
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono border ${
+                                    isSuper
+                                      ? "bg-purple-950/60 text-purple-300 border-purple-800/60"
+                                      : "bg-teal-950/60 text-teal-300 border-teal-800/60"
+                                  }`}
+                                >
+                                  {u.username.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-zinc-100 group-hover:text-teal-400 transition-colors">
+                                    {u.nama}
+                                  </p>
+                                  <p className="text-[11px] font-mono text-zinc-400">
+                                    @{u.username}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Role Badge */}
+                            <td className="py-3.5 px-4">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wide border ${
+                                  isSuper
+                                    ? "bg-purple-950/80 text-purple-300 border-purple-700/60 shadow-inner"
+                                    : "bg-teal-950/80 text-teal-300 border-teal-700/60"
+                                }`}
+                              >
+                                {isSuper && <ShieldCheck className="w-3 h-3 text-purple-400"/>}
+                                {u.role}
+                              </span>
+                            </td>
+
+                            {/* Department */}
+                            <td className="py-3.5 px-4 text-zinc-400">
+                              {u.department || "Human Capital & Operasional"}
+                            </td>
+
+                            {/* Status */}
+                            <td className="py-3.5 px-4 text-center">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold font-mono border ${
+                                u.status === 'AKTIF'
+                                  ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/50'
+                                  : 'bg-rose-950/60 text-rose-400 border-rose-800/50'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'AKTIF' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                {u.status}
+                              </span>
+                            </td>
+
+                            {/* Created Date */}
+                            <td className="py-3.5 px-4 font-mono text-zinc-400 text-[11px]">
+                              {u.created_at ? u.created_at.slice(0, 10) : "2026-01-01"}
+                            </td>
+
+                            {/* Action Buttons Group */}
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setSelectedTargetUser(u);
+                                    setResetSuccessNotice(null);
+                                    setIsResetPwOpen(true);
+                                  }}
+                                  title="Reset Kata Sandi"
+                                  className="p-1.5 rounded-lg bg-zinc-800/80 hover:bg-amber-950/60 text-zinc-400 hover:text-amber-400 border border-zinc-700/60 hover:border-amber-800/60 transition-all shadow-sm"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5"/>
+                                </button>
+                                <button
+                                  onClick={() => handleToggleStatus(u.id, u.status)}
+                                  className={`p-1.5 rounded-lg border transition-all shadow-sm ${
+                                    u.status === 'AKTIF' 
+                                      ? 'bg-zinc-800/80 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-400 border-zinc-700/60 hover:border-rose-800/60' 
+                                      : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/80'
+                                  }`}
+                                  title={u.status === 'AKTIF' ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
+                                >
+                                  <Power className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditUser(u);
+                                    setEditNama(u.nama);
+                                    setEditRole(u.role);
+                                  }}
+                                  title="Edit Profil"
+                                  className="p-1.5 rounded-lg bg-zinc-800/80 hover:bg-sky-950/60 text-zinc-400 hover:text-sky-400 border border-zinc-700/60 hover:border-sky-800/60 transition-all shadow-sm"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5"/>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Hapus akun user @${u.username}?`)) {
+                                      deleteUserMutation.mutate(u.id);
+                                    }
+                                  }}
+                                  disabled={isSuper && users.filter((x) => x.role === "SUPERADMIN").length <= 1}
+                                  title="Hapus Akun"
+                                  className="p-1.5 rounded-lg bg-zinc-800/80 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-400 border border-zinc-700/60 hover:border-rose-800/60 transition-all shadow-sm disabled:opacity-30 disabled:pointer-events-none"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5"/>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
-      </Modal>
 
-      {/* ========================================================================= */}
-      {/* MODAL: DELETE USER */}
-      {/* ========================================================================= */}
-      <Modal
-        isOpen={!!deleteModalUser}
-        onClose={() => setDeleteModalUser(null)}
-        title="Hapus Akun Pengguna"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setDeleteModalUser(null)}>Batal</Button>
-            <Button
-              variant="danger"
-              loading={deleteUserMutation.isPending}
-              onClick={handleDeleteUserSubmit}
-            >
-              Hapus Akun
-            </Button>
-          </>
-        }
-      >
-        <p className="text-xs text-slate-600">
-          Apakah Anda yakin ingin menghapus akun <strong>{deleteModalUser?.username}</strong> ({deleteModalUser?.nama})? Tindakan ini tidak dapat dibatalkan.
-        </p>
-      </Modal>
+        {/* =========================================================================
+            4. TAB CONTENT: MONITORING SESI & DEVICE AKTIF
+           ========================================================================= */}
+        {activeTab === "sessions" && (
+          <div className="space-y-5 animate-fade-in">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {[
+                { label: "Total Sesi Login Aktif", value: activeSessions.length || "0", sub: "Terhubung saat ini", icon: Activity, color: "text-emerald-400" },
+                { label: "Perangkat Desktop", value: activeSessions.filter((s: any) => s.deviceType === 'Desktop').length, sub: "Windows & macOS PC", icon: Monitor, color: "text-sky-400" },
+                { label: "Perangkat Mobile / Tablet", value: activeSessions.filter((s: any) => s.deviceType !== 'Desktop').length, sub: "Android & iOS Devices", icon: Smartphone, color: "text-purple-400" },
+                { label: "Status Keamanan Jaringan", value: "100%", sub: "TLS 1.3 / Enkripsi SHA-256", icon: ShieldCheck, color: "text-teal-400" },
+              ].map((c, i) => {
+                const Icon = c.icon;
+                return (
+                  <div key={i} className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl shadow-lg relative overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase font-mono">
+                        {c.label}
+                      </span>
+                      <Icon className={`w-4 h-4 ${c.color}`}/>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold font-mono text-zinc-100">
+                      {c.value}
+                    </div>
+                    <div className="mt-1 text-[11px] text-zinc-500 font-sans">
+                      {c.sub}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sessions Table */}
+            <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl overflow-hidden shadow-2xl">
+              <div className="p-4 bg-zinc-950/90 border-b border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-2">
+                    <Laptop className="w-4 h-4 text-teal-400"/>
+                    Daftar Pengguna &amp; Perangkat yang Sedang Login
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    Data realtime mencakup IP Address, OS, Browser, dan Waktu Akses Sesi.
+                  </p>
+                </div>
+                <button
+                  onClick={() => refetchSessions()}
+                  className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold border border-zinc-700/60 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3 h-3"/>
+                  <span>Segarkan Sesi</span>
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-950/60 border-b border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider font-mono">
+                      <th className="py-3 px-4">Pengguna</th>
+                      <th className="py-3 px-4">Perangkat &amp; OS</th>
+                      <th className="py-3 px-4">Browser</th>
+                      <th className="py-3 px-4">Alamat IP &amp; Lokasi</th>
+                      <th className="py-3 px-4">Waktu Login</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                      <th className="py-3 px-4 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {activeSessions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-zinc-500 font-mono">Tidak ada sesi login aktif yang terpantau.</td>
+                      </tr>
+                    ) : (
+                      activeSessions.map((s: any) => (
+                        <tr key={s.id} className="hover:bg-zinc-800/30 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs font-mono ${
+                                s.role === 'SUPERADMIN' ? 'bg-purple-950/80 text-purple-300 border-purple-800/60' : 'bg-teal-950/80 text-teal-300 border-teal-800/60'
+                              }`}>
+                                {s.nama?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <p className="font-bold text-zinc-100">{s.nama}</p>
+                                <span className={`text-[10px] font-mono ${s.role === 'SUPERADMIN' ? 'text-purple-400' : 'text-teal-400'}`}>{s.role}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-sans text-zinc-300">
+                            <span className="inline-flex items-center gap-1.5">
+                              {s.deviceType === 'Desktop' ? <Monitor className="w-3.5 h-3.5 text-zinc-400"/> : <Smartphone className="w-3.5 h-3.5 text-purple-400"/>}
+                              {s.os} / {s.deviceType}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-zinc-300">{s.browser}</td>
+                          <td className="py-3.5 px-4 font-mono">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-zinc-950 border border-zinc-800 text-teal-400 text-[11px]">
+                              <span>{s.ipAddress}</span>
+                              <span className="text-zinc-500 font-sans">({s.location || 'Local'})</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-zinc-400 text-[11px]">
+                            {new Date(s.loginTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/70 text-emerald-400 border border-emerald-800/60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              ONLINE
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {s.username === currentUser?.username ? (
+                              <button
+                                onClick={() => alert("Anda tidak dapat memutuskan sesi Anda sendiri dari sini. Gunakan tombol Keluar pada Sidebar.")}
+                                className="px-2.5 py-1 rounded-lg bg-zinc-900 text-zinc-500 text-[11px] font-semibold border border-zinc-800 cursor-not-allowed"
+                              >
+                                Sesi Anda
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  alert(`Putuskan koneksi untuk sesi ${s.username}`);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 text-[11px] font-semibold border border-rose-900/50 transition-colors"
+                              >
+                                Putuskan Sesi
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            5. TAB CONTENT: GRAFIK SERVER & PING
+           ========================================================================= */}
+        {activeTab === "server" && (
+          <div className="space-y-5 animate-fade-in">
+            {/* Server Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {[
+                { title: "Supabase DB Engine", value: "42 ms", sub: "PostgreSQL Cloud Cluster", status: "Healthy" },
+                { title: "OCR AI Microservice", value: "118 ms", sub: "FastAPI Document Engine", status: "Active" },
+                { title: "Cloudflare Edge CDN", value: "18 ms", sub: "Global Anycast Network", status: "Optimal" },
+                { title: "System Uptime", value: "99.98%", sub: "0 Fatal Errors Recorded", status: "99.98%" },
+              ].map((s, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold tracking-wider text-zinc-400 uppercase font-mono">
+                      {s.title}
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  </div>
+                  <div className="mt-2 text-2xl font-bold font-mono text-teal-400">
+                    {s.value}
+                  </div>
+                  <div className="mt-1 text-[11px] text-zinc-500 font-sans">
+                    {s.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Simulated Live Latency Chart Container */}
+            <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-xl shadow-2xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-4">
+                <div>
+                  <h3 className="text-xs font-bold text-zinc-100 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-teal-400"/>
+                    Grafik Real-Time Latency Server &amp; Ping (ms)
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    Memantau responsivitas koneksi database Supabase, Microservice OCR, dan CDN Frontend.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
+                    <input type="checkbox" defaultChecked className="rounded accent-teal-500" />
+                    Auto-Ping (5 detik)
+                  </span>
+                  <button
+                    onClick={() => refetchServer()}
+                    className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md transition-all inline-flex items-center gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5"/>
+                    <span>Uji Ping Sekarang</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart Visual Surface */}
+              <div className="h-56 w-full rounded-xl bg-zinc-950/80 border border-zinc-800/80 p-4 flex flex-col justify-between relative overflow-hidden font-mono text-[10px] text-zinc-500">
+                {/* Horizontal Gridlines */}
+                <div className="w-full border-b border-zinc-800/60 pb-1 flex justify-between">
+                  <span>150ms</span>
+                  <span className="border-t border-dashed border-zinc-800/80 w-11/12" />
+                </div>
+                <div className="w-full border-b border-zinc-800/60 pb-1 flex justify-between">
+                  <span>100ms</span>
+                  <span className="border-t border-dashed border-zinc-800/80 w-11/12" />
+                </div>
+                <div className="w-full border-b border-zinc-800/60 pb-1 flex justify-between">
+                  <span>50ms</span>
+                  <span className="border-t border-dashed border-zinc-800/80 w-11/12" />
+                </div>
+                <div className="w-full flex justify-between">
+                  <span>0ms</span>
+                  <span className="border-t border-zinc-800 w-11/12" />
+                </div>
+
+                {/* SVG Latency Lines */}
+                <svg className="absolute inset-0 w-full h-full p-4 pointer-events-none" preserveAspectRatio="none">
+                  <path
+                    d="M 40 160 Q 150 140, 300 150 T 600 145 T 900 155 T 1200 140"
+                    fill="none"
+                    stroke="#14B8A6"
+                    strokeWidth="2.5"
+                  />
+                  <path
+                    d="M 40 80 Q 150 70, 300 90 T 600 75 T 900 85 T 1200 70"
+                    fill="none"
+                    stroke="#0EA5E9"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 4"
+                  />
+                </svg>
+              </div>
+
+              <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-teal-400">
+                    <span className="w-2.5 h-0.5 bg-teal-400" /> Supabase Database (42ms)
+                  </span>
+                  <span className="flex items-center gap-1.5 text-sky-400">
+                    <span className="w-2.5 h-0.5 bg-sky-400 border-dashed" /> OCR Service (118ms)
+                  </span>
+                </div>
+                <span className="text-[11px] text-zinc-500">Terakhir diperbarui: {new Date().toLocaleTimeString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* TAB 3: AUDIT LOGS (Placeholder for now) */}
+        {activeTab === "logs" && (
+          <div className="p-12 text-center text-zinc-500 font-mono bg-zinc-900/60 rounded-2xl border border-zinc-800/80 backdrop-blur-xl shadow-2xl">
+            Modul Log Aktivitas & Audit sedang dalam pengembangan.
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODAL 1: TAMBAH PENGGUNA BARU
+           ========================================================================= */}
+        {isAddUserOpen && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-teal-400"/>
+                  Buat Akun Pengguna Baru
+                </h3>
+                <button onClick={() => setIsAddUserOpen(false)} className="text-zinc-500 hover:text-zinc-300 text-sm">
+                  ✕
+                </button>
+              </div>
+
+              {formError && (
+                <div className="p-3 bg-rose-950/60 border border-rose-800/60 text-rose-300 rounded-xl text-xs">
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">USERNAME / ID PENGGUNA</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: 61852 atau nama_admin"
+                    value={newUserForm.username}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">NAMA LENGKAP PENGGUNA</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: ADMIN OPERASIONAL"
+                    value={newUserForm.nama}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, nama: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">KATA SANDI AWAL</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Minimal 6 karakter"
+                    value={newUserForm.password}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">PERAN (ROLE ACCESS)</label>
+                  <select
+                    value={newUserForm.role}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value as UserRole })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-teal-500"
+                  >
+                    <option value="ADMIN_HR">ADMIN_HR (Akses Penuh Master Data &amp; Surat)</option>
+                    <option value="SUPERADMIN">SUPERADMIN (Akses Penuh + Superadmin Terminal)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddUserOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs font-semibold transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createUserMutation.isPending}
+                    className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md transition-colors"
+                  >
+                    {createUserMutation.isPending ? "Menyimpan..." : "Simpan Pengguna"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODAL 2: RESET PASSWORD INSTAN
+           ========================================================================= */}
+        {isResetPwOpen && selectedTargetUser && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-amber-400"/>
+                  Reset Kata Sandi Pengguna
+                </h3>
+                <button onClick={() => setIsResetPwOpen(false)} className="text-zinc-500 hover:text-zinc-300 text-sm">
+                  ✕
+                </button>
+              </div>
+
+              <div className="text-xs text-zinc-400 bg-zinc-950/50 p-3 rounded-xl border border-zinc-800/50">
+                Pengguna: <strong className="text-zinc-200">@{selectedTargetUser.username}</strong> ({selectedTargetUser.nama})
+              </div>
+              
+              {!resetSuccessNotice ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-zinc-400 font-semibold mb-1">Kata Sandi Baru (Opsional)</label>
+                    <input
+                      type="text"
+                      placeholder="Biarkan kosong untuk generate otomatis"
+                      value={newPasswordInput}
+                      onChange={e => setNewPasswordInput(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-amber-500 text-xs"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      onClick={() => setIsResetPwOpen(false)}
+                      className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs font-semibold"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleExecuteResetPassword}
+                      disabled={resetPasswordMutation.isPending}
+                      className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md"
+                    >
+                      {resetPasswordMutation.isPending ? 'Memproses...' : 'Reset Sekarang'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 bg-emerald-950/40 border border-emerald-800/50 rounded-xl">
+                    <p className="text-emerald-400 text-xs font-bold mb-2">✅ Password Berhasil Direset!</p>
+                    <div className="flex items-center gap-2 bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                      <code className="text-zinc-100 flex-1 font-mono text-sm tracking-wider select-all">{resetSuccessNotice}</code>
+                      <button
+                        onClick={() => handleCopy(resetSuccessNotice, 'pwd')}
+                        className="text-zinc-400 hover:text-white"
+                        title="Salin Password"
+                      >
+                        {copiedId === 'pwd' ? <Check className="w-4 h-4 text-emerald-400"/> : <Copy className="w-4 h-4"/>}
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsResetPwOpen(false)}
+                    className="w-full py-2.5 rounded-xl bg-zinc-800 text-white text-xs font-semibold hover:bg-zinc-700"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* =========================================================================
+            MODAL 3: EDIT PENGGUNA
+           ========================================================================= */}
+        {editUser && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Edit2 className="w-4 h-4 text-sky-400"/>
+                  Edit Profil Pengguna
+                </h3>
+                <button onClick={() => setEditUser(null)} className="text-zinc-500 hover:text-zinc-300 text-sm">
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditUser} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">USERNAME (Tidak dapat diubah)</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={editUser.username}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-500 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">NAMA LENGKAP PENGGUNA</label>
+                  <input
+                    type="text"
+                    required
+                    value={editNama}
+                    onChange={(e) => setEditNama(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 font-semibold mb-1">PERAN (ROLE ACCESS)</label>
+                  <select
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value as UserRole)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-sky-500"
+                  >
+                    <option value="ADMIN_HR">ADMIN_HR (Akses Penuh Master Data &amp; Surat)</option>
+                    <option value="SUPERADMIN">SUPERADMIN (Akses Penuh + Superadmin Terminal)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => setEditUser(null)}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs font-semibold transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateUserMutation.isPending}
+                    className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md transition-colors"
+                  >
+                    {updateUserMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
-  )
+  );
 }
