@@ -5,7 +5,7 @@ import {
   CalendarOff, Settings, FileText, ChevronDown,
   ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck, ShieldAlert
 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { authService } from '../../lib/authService'
 import { recordUserLogout } from '../../lib/sessionTracker'
 
 const navItems = [
@@ -52,17 +52,13 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   }, [location.pathname])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      const email = (user?.email || '').toLowerCase()
-      const role = (user?.user_metadata?.role || '').toLowerCase()
-      setIsSuperadmin(email.includes('superadmin') || role === 'superadmin')
-    })
+    const user = authService.getSession()
+    setIsSuperadmin(user?.role === 'SUPERADMIN')
   }, [])
 
   const handleLogout = async () => {
     await recordUserLogout().catch(console.error)
-    localStorage.removeItem('phris_authenticated_user')
-    await supabase.auth.signOut()
+    authService.logout()
     navigate('/login')
   }
 
