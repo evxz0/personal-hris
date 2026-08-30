@@ -239,7 +239,7 @@ export default function SuratPgsPage() {
                 value={
                   isManualMemperhatikan
                     ? 'MANUAL'
-                    : ['Keputusan Area Head - W09.', 'Keputusan Area Business Support - W09.', 'Keputusan Area Head', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '')
+                    : ['Keputusan Area Head - W09.', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '')
                     ? formData.memperhatikan
                     : 'MANUAL'
                 }
@@ -254,18 +254,16 @@ export default function SuratPgsPage() {
                 }}
                 className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 bg-white font-medium"
               >
-                <option value="Keputusan Area Head - W09.">1. Keputusan Area Head - W09. (Default)</option>
-                <option value="Keputusan Area Business Support - W09.">2. Keputusan Area Business Support - W09.</option>
-                <option value="Keputusan Area Head">3. Keputusan Area Head</option>
-                <option value="Keputusan Area Business Support">4. Keputusan Area Business Support</option>
+                <option value="Keputusan Area Head - W09.">1. Keputusan Area Head - W09.</option>
+                <option value="Keputusan Area Business Support">2. Keputusan Area Business Support</option>
                 <option value="MANUAL">✍️ Isi Manual / Kustom...</option>
               </select>
 
-              {(isManualMemperhatikan || (!['Keputusan Area Head - W09.', 'Keputusan Area Business Support - W09.', 'Keputusan Area Head', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '') && formData.memperhatikan)) && (
+              {(isManualMemperhatikan || (!['Keputusan Area Head - W09.', 'Keputusan Area Business Support'].includes(formData.memperhatikan || '') && formData.memperhatikan)) && (
                 <div className="pt-1 space-y-1">
                   <input
                     type="text"
-                    placeholder="Ketik teks keputusan di sini (contoh: Keputusan Area Business Support - W09.)"
+                    placeholder="Ketik dasar keputusan kustom di sini..."
                     value={formData.memperhatikan || ''}
                     onChange={e => setFormData({ ...formData, memperhatikan: e.target.value })}
                     className="w-full px-3 py-1.5 text-xs border border-teal-300 bg-teal-50/40 rounded-xl focus:outline-none focus:border-teal-500 font-medium"
