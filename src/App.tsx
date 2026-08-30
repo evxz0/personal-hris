@@ -80,7 +80,7 @@ export default function App() {
             <span className="text-white font-black text-2xl">P</span>
           </div>
           <div className="w-8 h-8 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin" />
-          <p className="text-sm text-[#64748B] font-medium">Memuat P-HRIS...</p>
+          <p className="text-sm text-[#64748B] font-medium">Memuat TALOS...</p>
         </div>
       </div>
     )

@@ -20,7 +20,7 @@ describe('04. Superadmin Control & Realtime Monitoring Center Testing', () => {
 
   it('Harus dapat beralih ke tab Manajemen Akun User dan membuka Modal Tambah Pengguna', () => {
     cy.contains('button', 'Manajemen Akun User').click()
-    cy.contains('Daftar Pengguna P-HRIS').should('be.visible')
+    cy.contains('Daftar Pengguna').should('be.visible')
     cy.contains('button', 'Tambah Pengguna').click()
     cy.contains('Buat Akun Pengguna Baru').should('be.visible')
     cy.contains('button', 'Batal').click()

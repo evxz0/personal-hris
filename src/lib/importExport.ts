@@ -32,7 +32,7 @@ export function exportToPDF(
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
-  doc.text('P-HRIS | Sistem Informasi SDM', 14, 10)
+  doc.text('TALOS | Sistem Informasi SDM', 14, 10)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.text(title, 14, 17)

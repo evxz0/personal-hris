@@ -90,7 +90,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
             <div className="flex items-center gap-2.5 animate-fade-in max-w-[190px]">
               <img src="/logo-bni.png" alt="BNI Logo" className="h-8 w-auto object-contain shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-base font-extrabold tracking-wide leading-none text-white">P-HRIS</p>
+                <p className="text-base font-extrabold tracking-wide leading-none text-white">TALOS</p>
                 <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
               </div>
             </div>
@@ -98,10 +98,11 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
             <div
               onClick={() => setCollapsed(false)}
               className="cursor-pointer hover:scale-105 transition-transform flex flex-col items-center gap-1 py-1"
-              title="P-HRIS (Klik untuk memperluas sidebar)"
+              title="TALOS (Klik untuk memperluas sidebar)"
             >
-              <img src="/logo-bni.png" alt="BNI Logo" className="h-6 w-auto object-contain" />
-              <span className="text-white font-extrabold text-[10px] tracking-tight">P-HRIS</span>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:shadow-teal-500/25 transition-all">
+                <span className="text-white font-extrabold text-[10px] tracking-tight">TALOS</span>
+              </div>
             </div>
           )}
 

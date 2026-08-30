@@ -23,7 +23,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo-bni.png" alt="BNI Logo" className="h-7 w-auto object-contain" />
-            <span className="text-sm font-extrabold tracking-wide">P-HRIS</span>
+            <span className="text-sm font-extrabold tracking-wide">TALOS</span>
           </div>
         </div>
       </header>

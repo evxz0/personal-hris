@@ -177,7 +177,7 @@ export default function LoginPage() {
 
     try {
       // With custom DB Auth, we don't send emails. We just tell them to contact superadmin.
-      setInfoMessage(`P-HRIS kini menggunakan autentikasi internal. Harap hubungi Superadmin / IT Support untuk melakukan reset kata sandi akun ${email}.`)
+      setInfoMessage(`TALOS kini menggunakan autentikasi internal. Harap hubungi Superadmin / IT Support untuk melakukan reset kata sandi akun ${email}.`)
     } catch (err: unknown) {
       setError('Gagal memproses permintaan.')
     } finally {
@@ -246,7 +246,7 @@ export default function LoginPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-1">
               <img src="/logo-bni.png" alt="BNI Logo" className="h-8 w-auto object-contain bg-white/95 px-2 py-1 rounded-xl shadow-md" />
-              <h1 className="text-2xl font-black tracking-wide text-white">P-HRIS</h1>
+              <h1 className="text-2xl font-black tracking-wide text-white">TALOS</h1>
             </div>
             <p className="text-xs text-teal-200 mt-1 font-medium">PT Bank Negara Indonesia (Persero) Tbk</p>
           </div>
@@ -300,7 +300,7 @@ export default function LoginPage() {
             <div className="lg:hidden flex items-center gap-3 mb-6">
               <img src="/logo-bni.png" alt="BNI Logo" className="h-7 w-auto object-contain bg-white p-1 rounded-lg border border-gray-100 shadow-xs" />
               <div>
-                <h1 className="text-lg font-extrabold text-[#2B3440] leading-none">P-HRIS</h1>
+                <h1 className="text-lg font-extrabold text-[#2B3440] leading-none">TALOS</h1>
                 <p className="text-[11px] text-[#64748B] mt-0.5">Personal Human Resource Information System</p>
               </div>
             </div>
@@ -494,7 +494,7 @@ export default function LoginPage() {
                     <Lock size={13} className="text-amber-700 shrink-0" /> Kebijakan Keamanan 1 Akun = 1 Perangkat
                   </p>
                   <p className="text-[10.5px]">
-                    Sistem P-HRIS melarang login ganda demi keamanan perbankan. Silakan <strong>Keluar (Logout)</strong> dari perangkat di atas terlebih dahulu untuk masuk di perangkat ini.
+                    Sistem TALOS melarang login ganda demi keamanan perbankan. Silakan <strong>Keluar (Logout)</strong> dari perangkat di atas terlebih dahulu untuk masuk di perangkat ini.
                   </p>
                 </div>
 
@@ -754,7 +754,7 @@ export default function LoginPage() {
               <Shield size={13} />
               <span>Proteksi Data Terenkripsi</span>
             </div>
-            <span>© 2026 P-HRIS</span>
+            <span>© 2026 TALOS</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-describe('01. Authentication & Security Testing (P-HRIS)', () => {
+describe('01. Authentication & Security Testing (TALOS)', () => {
   beforeEach(() => {
     cy.clearLocalStorage()
     cy.clearCookies()
@@ -6,7 +6,7 @@ describe('01. Authentication & Security Testing (P-HRIS)', () => {
 
   it('Harus menampilkan halaman login dengan elemen lengkap dan branding BNI', () => {
     cy.visit('/login')
-    cy.contains('h1', 'P-HRIS').should('be.visible')
+    cy.contains('h1', 'TALOS').should('be.visible')
     cy.contains('Selamat Datang').should('be.visible')
     cy.get('#userId').should('be.visible').and('have.attr', 'placeholder', 'Masukkan ID Pengguna')
     cy.get('#password').should('be.visible')

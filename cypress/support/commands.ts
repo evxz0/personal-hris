@@ -3,7 +3,7 @@
 declare namespace Cypress {
   interface Chainable {
     /**
-     * Custom command to login to P-HRIS
+     * Custom command to login to TALOS
      * @example cy.login('superadmin', 'password')
      */
     login(username?: string, password?: string): Chainable<void>

@@ -6,7 +6,7 @@ export function DashboardHeroBanner() {
       {/* Panoramic Background Image */}
       <img
         src="/bg-home-hero.avif"
-        alt="BNI P-HRIS Hero"
+        alt="BNI TALOS Hero"
         className="absolute inset-0 w-full h-full object-cover object-center"
       />
 
@@ -19,7 +19,7 @@ export function DashboardHeroBanner() {
           <LayoutDashboard size={16} className="text-teal-300" />
           <span>Dashboard</span>
           <span className="text-white/60">/</span>
-          <span className="text-white/90">Personal Human Resource Information System (P-HRIS)</span>
+          <span className="text-white/90">Talent Administration & Legal Operations System (TALOS)</span>
         </div>
       </div>
 
