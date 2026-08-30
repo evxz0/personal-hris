@@ -242,13 +242,21 @@ export default function LoginPage() {
           <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Top Brand Header */}
+          {/* Top Brand Header (Sisi Kiri: Hero Banner Login) */}
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-1">
-              <img src="/logo-bni.png" alt="BNI Logo" className="h-8 w-auto object-contain bg-white/95 px-2 py-1 rounded-xl shadow-md" />
-              <h1 className="text-2xl font-black tracking-wide text-white">TALOS</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E85022] flex items-center justify-center shadow-md">
+                <img src="/logo-bni.png" alt="TALOS" className="w-7 h-7 object-contain" />
+              </div>
+              <div>
+                <h1 className="text-xl font-black tracking-wider text-white leading-none">
+                  TALOS
+                </h1>
+                <p className="text-[10px] text-teal-100/90 mt-1 font-medium">
+                  Talent Administration &amp; Legal Operations System
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-teal-200 mt-1 font-medium">PT Bank Negara Indonesia (Persero) Tbk</p>
           </div>
 
           {/* Middle Content Showcase */}
@@ -286,10 +294,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Bottom Footer Info */}
-          <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-teal-200/70">
-            <span>Regional Office 09 · Kalimantan Barat</span>
-            <span>v2.5 Enterprise</span>
+          {/* Footer Hak Cipta */}
+          <div className="relative z-10 flex items-center justify-between text-[11px] text-teal-200/70 pt-4 border-t border-white/10">
+            <span>Regional Office 09 - Kalimantan Barat</span>
+            <span>© 2026 TALOS v2.5 Enterprise</span>
           </div>
         </div>
 
