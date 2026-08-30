@@ -301,7 +301,7 @@ export default function LoginPage() {
               <img src="/logo-bni.png" alt="BNI Logo" className="h-7 w-auto object-contain bg-white p-1 rounded-lg border border-gray-100 shadow-xs" />
               <div>
                 <h1 className="text-lg font-extrabold text-[#2B3440] leading-none">TALOS</h1>
-                <p className="text-[11px] text-[#64748B] mt-0.5">Personal Human Resource Information System</p>
+                <p className="text-[11px] text-[#64748B] mt-0.5">Talent Administration &amp; Legal Operations System</p>
               </div>
             </div>
 

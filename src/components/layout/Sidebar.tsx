@@ -82,12 +82,26 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
       `}>
         {/* Logo & Toggle Header */}
         <div className={`flex items-center ${collapsed ? 'flex-col gap-2.5 py-4 px-2' : 'justify-between px-4 py-5'} border-b border-teal-600/50 transition-all`}>
+          {/* Header Logo & Subtitle Sidebar */}
           {!collapsed ? (
-            <div className="flex items-center gap-2.5 animate-fade-in max-w-[190px]">
-              <img src="/logo-bni.png" alt="BNI Logo" className="h-8 w-auto object-contain shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-extrabold tracking-wide leading-none text-white">TALOS</p>
-                <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium">Personal Human Resource Information System</p>
+            <div className="flex items-center gap-3 animate-fade-in max-w-[190px]">
+              <div className="w-10 h-10 rounded-xl bg-[#E85022] flex items-center justify-center shadow-md shrink-0">
+                <img
+                  src="/logo-bni.png"
+                  alt="TALOS"
+                  className="w-7 h-7 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
+              </div>
+              <div className="overflow-hidden">
+                <h2 className="text-base font-black tracking-wider text-white leading-none">
+                  TALOS
+                </h2>
+                <p className="text-[9px] text-teal-200/90 mt-1 leading-tight font-medium line-clamp-2">
+                  Talent Administration &amp; Legal Operations System
+                </p>
               </div>
             </div>
           ) : (
@@ -96,8 +110,8 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               className="cursor-pointer hover:scale-105 transition-transform flex flex-col items-center gap-1 py-1"
               title="TALOS (Klik untuk memperluas sidebar)"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:shadow-teal-500/25 transition-all">
-                <span className="text-white font-extrabold text-[10px] tracking-tight">TALOS</span>
+              <div className="w-10 h-10 rounded-xl bg-[#E85022] flex items-center justify-center shadow-md mx-auto">
+                <span className="text-white font-black text-xs tracking-tighter">TALOS</span>
               </div>
             </div>
           )}
