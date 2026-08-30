@@ -3,7 +3,7 @@
 
 ---
 
-## 1. Ringkasan Executif
+## 1. Ringkasan Eksekutif
 Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk aplikasi Sistem Informasi SDM (HRIS) berbasis web. Sistem ini dirancang untuk menyelesaikan masalah administrasi manual (berbasis Excel) dengan menyediakan platform terpusat untuk mengelola Master Data yang terisolasi secara modular (Halaman Karyawan, Halaman Terpisah Bina, Halaman Magang), Laporan Harian, absensi (Sakit/Cuti), penugasan Pgs, serta pengajuan (Naik Level & Pinpad). Sistem dioptimalkan untuk efisiensi input data, waktu pemrosesan cepat, pemisahan halaman arsitektur UI yang jelas, fleksibilitas manajemen opsi referensi (dinamis), dan standar keamanan tingkat tinggi (Maximum Security).
 
 ---
