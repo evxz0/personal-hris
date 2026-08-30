@@ -409,17 +409,13 @@ export default function SuratPgsPage() {
                     setFormData(prev => ({
                       ...prev,
                       penandatangan: { nama: 'UCOK PARLINDUNGAN SIANIPAR', jabatan: 'Area Business Support Team Leader' },
-                      memperhatikan: !isManualMemperhatikan && (prev.memperhatikan === 'Keputusan Area Head - W09.' || !prev.memperhatikan)
-                        ? 'Keputusan Area Business Support - W09.'
-                        : prev.memperhatikan
+                      memperhatikan: !isManualMemperhatikan ? 'Keputusan Area Business Support' : prev.memperhatikan
                     }))
                   } else if (val === 'NOVACHRISTO') {
                     setFormData(prev => ({
                       ...prev,
                       penandatangan: { nama: 'NOVACHRISTO JOSEPH SILANGEN', jabatan: 'AREA HEAD' },
-                      memperhatikan: !isManualMemperhatikan && (prev.memperhatikan === 'Keputusan Area Business Support - W09.' || !prev.memperhatikan)
-                        ? 'Keputusan Area Head - W09.'
-                        : prev.memperhatikan
+                      memperhatikan: !isManualMemperhatikan ? 'Keputusan Area Head - W09.' : prev.memperhatikan
                     }))
                   } else {
                     setFormData(prev => ({
