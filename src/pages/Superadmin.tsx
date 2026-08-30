@@ -4,7 +4,7 @@ import {
   ShieldAlert, Users, Laptop, Activity, Server, RefreshCw, Plus,
   Search, KeyRound, Trash2, Edit2, CheckCircle2,
   Wifi, Globe, Smartphone, Monitor, ShieldCheck,
-  ExternalLink, Copy, Check, Zap, Download
+  ExternalLink, Copy, Check, Zap, Download, PowerOff, Eye, EyeOff, Shield
 } from 'lucide-react'
 import { useUsers, useCreateUser, useUpdateUser, useResetPassword, useDeleteUser, useActiveSessions, useServerPing, type UserRole, type UserStatus, type UserAccount } from '../hooks/useSuperadmin'
 import { supabase } from '../lib/supabase'
@@ -130,6 +130,17 @@ export default function SuperadminPage() {
     }
   }
 
+  const handleToggleStatus = async (userId: string, currentStatus: UserStatus) => {
+    try {
+      await updateUserMutation.mutateAsync({
+        id: userId,
+        status: currentStatus === 'AKTIF' ? 'NONAKTIF' : 'AKTIF'
+      })
+    } catch (e: any) {
+      alert(e?.message || 'Gagal mengubah status user')
+    }
+  }
+
   const handleExecuteResetPassword = async () => {
     if (!resetModalUser) return
     try {
@@ -164,7 +175,7 @@ export default function SuperadminPage() {
     const matchSearch =
       u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
       u.nama.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase())
+      (u.email?.toLowerCase().includes(userSearch.toLowerCase()) ?? false)
     const matchRole = userRoleFilter === 'ALL' || u.role === userRoleFilter
     return matchSearch && matchRole
   })
@@ -541,6 +552,17 @@ export default function SuperadminPage() {
                               title="Reset Kata Sandi"
                             >
                               <KeyRound size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(u.id, u.status)}
+                              className={`p-1.5 rounded-lg border text-white ${
+                                u.status === 'AKTIF' 
+                                  ? 'bg-rose-500 hover:bg-rose-600 border-rose-600' 
+                                  : 'bg-emerald-500 hover:bg-emerald-600 border-emerald-600'
+                              }`}
+                              title={u.status === 'AKTIF' ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
+                            >
+                              <PowerOff size={13} />
                             </button>
                             <button
                               onClick={() => setEditUser(u)}

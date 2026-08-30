@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { supabase } from './lib/supabase'
-import type { Session } from '@supabase/supabase-js'
+import { authService, type AppUser } from './lib/authService'
 import { useIdleTimeout } from './hooks/useIdleTimeout'
 import { Layout } from './components/layout/Layout'
 import LoginPage from './pages/Login'
@@ -19,26 +18,21 @@ import SuratKeteranganKerjaPage from './pages/surat/SuratKeteranganKerja'
 import SuratCustomPage from './pages/surat/SuratCustom'
 import SuperadminPage from './pages/Superadmin'
 
-function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
+function ProtectedRoute({ session, children }: { session: AppUser | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
   return <Layout>{children}</Layout>
 }
 
-function SuperadminRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
+function SuperadminRoute({ session, children }: { session: AppUser | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login?redirect=/superadmin" replace />
-  const email = (session.user?.email || '').toLowerCase()
-  const role = (session.user?.user_metadata?.role || '').toLowerCase()
-  const isSuperadmin = email.includes('superadmin') || role === 'superadmin'
-
-  if (!isSuperadmin) return <Navigate to="/" replace />
+  
+  if (session.role !== 'SUPERADMIN') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
-function LoginRoute({ session }: { session: Session | null }) {
-  if (session?.user) {
-    const email = (session.user.email || '').toLowerCase()
-    const role = (session.user.user_metadata?.role || '').toLowerCase()
-    if (email.includes('superadmin') || role === 'superadmin') {
+function LoginRoute({ session }: { session: AppUser | null }) {
+  if (session) {
+    if (session.role === 'SUPERADMIN') {
       return <Navigate to="/superadmin" replace />
     }
     return <Navigate to="/" replace />
@@ -49,30 +43,33 @@ function LoginRoute({ session }: { session: Session | null }) {
 import { initRealtimeSessionTracker } from './lib/sessionTracker'
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Attach 1-hour idle timeout listener when session is active
   useIdleTimeout(!!session)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-      if (session?.user) {
-        initRealtimeSessionTracker(session.user)
+    const checkSession = () => {
+      const userSession = authService.getSession()
+      setSession(userSession)
+      if (userSession) {
+        initRealtimeSessionTracker(userSession)
       }
-    })
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setLoading(false)
-      if (session?.user) {
-        initRealtimeSessionTracker(session.user)
+    checkSession()
+    setLoading(false)
+
+    const handleStorageChange = (e: StorageEvent) => {
+      // Re-check session if auth storage keys change
+      if (e.key === 'phris_custom_session' || e.key === 'phris_authenticated_user' || e.key === null) {
+        checkSession()
       }
-    })
+    }
 
-    return () => subscription.unsubscribe()
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
   if (loading) {

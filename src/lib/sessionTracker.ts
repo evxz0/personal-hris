@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { authService } from './authService'
 
 export interface UserSession {
   id: string
@@ -334,9 +335,7 @@ export function initRealtimeSessionTracker(user?: {
       (targetUsername && targetUsername === myUsername) ||
       (targetSessionId && (targetSessionId === `sess_${myUsername}` || targetSessionId === myUsername))
     ) {
-      try {
-        await supabase.auth.signOut()
-      } catch {}
+      authService.logout();
       localStorage.removeItem('phris_authenticated_user')
       localStorage.removeItem('phris_current_user_name')
       localStorage.removeItem('phris_login_time')
@@ -573,9 +572,7 @@ export async function terminateTargetSession(sessionIdOrUsername: string) {
 
   // If terminating own session, immediately logout and redirect
   if (!cleanTarget || cleanTarget === myUsername || cleanTarget === 'superadmin') {
-    try {
-      await supabase.auth.signOut()
-    } catch {}
+    authService.logout();
     localStorage.removeItem('phris_authenticated_user')
     localStorage.removeItem('phris_current_user_name')
     localStorage.removeItem('phris_login_time')

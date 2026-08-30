@@ -24,6 +24,27 @@ const KATEGORI_CONFIG: { key: KategoriReferensi; label: string; color: string; d
     badge: 'Khusus Surat Keterangan',
     isSk: true,
   },
+  { 
+    key: 'JENJANG', 
+    label: 'Master Jenjang', 
+    color: 'bg-blue-50 border-blue-200 text-blue-700', 
+    desc: 'Daftar jenjang karir (VP, AVP, MGR, AMGR, ASST, dll) untuk karyawan',
+    badge: 'Master Karyawan',
+  },
+  { 
+    key: 'JABATAN_KARYAWAN', 
+    label: 'Master Jabatan Karyawan', 
+    color: 'bg-amber-50 border-amber-200 text-amber-700', 
+    desc: 'Daftar standar jabatan untuk dropdown karyawan FTE dan TAD',
+    badge: 'Master Karyawan',
+  },
+  { 
+    key: 'JABATAN_BINA', 
+    label: 'Master Jabatan Bina', 
+    color: 'bg-emerald-50 border-emerald-200 text-emerald-700', 
+    desc: 'Daftar standar jabatan khusus untuk program BINA',
+    badge: 'Master Bina',
+  },
 ]
 
 function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori: KategoriReferensi; label: string; color: string; desc: string; badge: string; isSk?: boolean }) {
@@ -74,7 +95,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
           <div className="flex items-center gap-2">
             <Tag size={16} className={color.split(' ')[2]} />
             <h3 className={`font-bold text-base ${color.split(' ')[2]}`}>{label}</h3>
-            <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${color}`}>{data.length} Outlet</span>
+            <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${color}`}>{data.length} Item</span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-[#475569]">
               {badge}
             </span>
@@ -94,7 +115,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
             </Button>
           )}
           <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={() => setAddOpen(true)}>
-            Tambah Outlet
+            Tambah
           </Button>
         </div>
       </div>
@@ -109,7 +130,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
           </div>
         ) : data.length === 0 ? (
           <div className="py-8 text-center text-sm text-[#64748B] space-y-2">
-            <p>Belum ada data outlet khusus di bagian ini.</p>
+            <p>Belum ada data referensi di bagian ini.</p>
             {isSk && (
               <Button 
                 variant="outline" 
@@ -118,7 +139,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
                 onClick={handleCloneFromMaster}
                 className="text-teal-700 border-teal-200"
               >
-                Salin 17 Data dari Master Outlet Sekarang
+                Salin Data dari Master Outlet Sekarang
               </Button>
             )}
           </div>
@@ -132,14 +153,14 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
                 <span className={`text-sm font-semibold ${color.split(' ')[2]}`}>{item.nama_referensi}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
                   <button
-                    title="Ubah nama outlet"
+                    title="Ubah nama referensi"
                     onClick={() => setEditItem({ id: item.id, name: item.nama_referensi })}
                     className={`p-1 rounded-md hover:bg-white/80 ${color.split(' ')[2]} hover:text-teal-600 transition-colors`}
                   >
                     <Edit2 size={12} />
                   </button>
                   <button
-                    title="Hapus outlet"
+                    title="Hapus referensi"
                     onClick={() => setDeleteId(item.id)}
                     className={`p-1 rounded-md hover:bg-white/80 ${color.split(' ')[2]} hover:text-red-500 transition-colors`}
                   >
@@ -161,15 +182,15 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
         footer={
           <>
             <Button variant="ghost" onClick={() => { setAddOpen(false); setNewValue('') }}>Batal</Button>
-            <Button variant="primary" loading={addMutation.isPending} onClick={handleAdd}>Tambah Outlet</Button>
+            <Button variant="primary" loading={addMutation.isPending} onClick={handleAdd}>Tambah Item</Button>
           </>
         }
       >
         <Input
-          label={`Nama ${label}`}
+          label={`Nama ${label.replace('Master ', '')}`}
           value={newValue}
           onChange={e => setNewValue(e.target.value)}
-          placeholder="Contoh: KCU PONTIANAK / KCP KUBURAYA"
+          placeholder="Ketik nilai baru..."
           onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
         />
       </Modal>
@@ -200,7 +221,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
       <Modal 
         isOpen={!!deleteId} 
         onClose={() => setDeleteId(null)} 
-        title="Hapus Referensi Outlet" 
+        title="Hapus Referensi" 
         size="sm"
         footer={
           <>
@@ -209,7 +230,7 @@ function ReferensiCard({ kategori, label, color, desc, badge, isSk }: { kategori
           </>
         }
       >
-        <p className="text-sm text-[#64748B]">Apakah Anda yakin ingin menghapus outlet ini? Data karyawan yang sudah ada tidak akan terhapus, namun opsi outlet ini tidak akan muncul lagi di pilihan dropdown baru.</p>
+        <p className="text-sm text-[#64748B]">Apakah Anda yakin ingin menghapus item ini? Data karyawan yang sudah ada tidak akan terhapus, namun opsi ini tidak akan muncul lagi di pilihan dropdown baru.</p>
       </Modal>
     </div>
   )

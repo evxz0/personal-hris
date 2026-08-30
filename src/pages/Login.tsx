@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import {
   Eye, EyeOff, Shield, Clock, User, Lock, Sparkles, CheckCircle2,
   ArrowRight, ArrowLeft, KeyRound, Mail, ShieldAlert, RefreshCw, Laptop
 } from 'lucide-react'
 import { formatDate } from '../lib/utils'
+import { authService } from '../lib/authService'
 import { recordUserLogin, checkActiveDeviceSession, initRealtimeSessionTracker, type ActiveDeviceInfo } from '../lib/sessionTracker'
 
 type AuthMode = 'login' | 'forgot_email' | 'reset_password' | 'success' | 'device_blocked'
@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   
   // Reset Password State
-  const [resetEmailInput, setResetEmailInput] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -28,9 +27,9 @@ export default function LoginPage() {
   // Status & Messaging State
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetEmailInput, setResetEmailInput] = useState('')
   const [infoMessage, setInfoMessage] = useState('')
 
-  const navigate = useNavigate()
   const searchParamsObj = new URLSearchParams(window.location.search)
   const isTimeout = searchParamsObj.get('reason') === 'timeout'
   const isConcurrent = searchParamsObj.get('reason') === 'concurrent_device'
@@ -116,7 +115,6 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const email = formatEmail(userId)
     const cleanUser = userId.trim().toLowerCase()
     const cleanPass = password.trim()
 
@@ -136,53 +134,11 @@ export default function LoginPage() {
       return
     }
 
-    let activeUser = null
+    // 2. Authenticate with Custom DB Auth
+    const { success, user: activeUser, message } = await authService.login(cleanUser, cleanPass)
 
-    // 2. Authenticate with Supabase Auth
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password: cleanPass
-    })
-
-    if (!signInError && signInData?.session && signInData?.user) {
-      activeUser = signInData.user
-    } else {
-      // 3. If account doesn't exist in Supabase Auth yet, attempt auto-signup
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email,
-        password: cleanPass,
-        options: {
-          data: {
-            name: cleanUser.toUpperCase(),
-            username: cleanUser,
-            role: email.includes('superadmin') || cleanUser.includes('superadmin') ? 'SUPERADMIN' : 'ADMIN_HR'
-          }
-        }
-      })
-      if (!signUpErr && signUpData?.session && signUpData?.user) {
-        activeUser = signUpData.user
-      } else if (!signUpErr && signUpData?.user) {
-        const { data: retryData, error: retryErr } = await supabase.auth.signInWithPassword({
-          email,
-          password: cleanPass
-        })
-        if (!retryErr && retryData?.session && retryData?.user) {
-          activeUser = retryData.user
-        }
-      }
-    }
-
-    if (!activeUser) {
-      const errMsg = signInError?.message || ''
-      if (errMsg.toLowerCase().includes('email not confirmed')) {
-        setError('Email belum dikonfirmasi di Supabase. Saat membuat user di Supabase Dashboard, pastikan mencentang "Auto Confirm User".')
-      } else if (errMsg.toLowerCase().includes('invalid login credentials')) {
-        setError('ID Pengguna / Email atau kata sandi tidak cocok dengan data di Supabase Authentication.')
-      } else if (errMsg) {
-        setError(errMsg)
-      } else {
-        setError('ID Pengguna atau kata sandi tidak sesuai.')
-      }
+    if (!success || !activeUser) {
+      setError(message || 'ID Pengguna atau kata sandi tidak sesuai.')
       setLoading(false)
       return
     }
@@ -191,21 +147,21 @@ export default function LoginPage() {
     await recordUserLogin({
       userId: activeUser.id,
       username: cleanUser,
-      email: activeUser.email || email,
-      nama: activeUser.user_metadata?.name || cleanUser.toUpperCase(),
-      role: (email.includes('superadmin') || cleanUser.includes('superadmin')) ? 'SUPERADMIN' : 'ADMIN_HR',
+      email: `${cleanUser}@phris.local`,
+      nama: activeUser.nama || cleanUser.toUpperCase(),
+      role: activeUser.role,
     }).catch(console.error)
 
-    const isSuper = email.includes('superadmin') || cleanUser.includes('superadmin')
+    const isSuper = activeUser.role === 'SUPERADMIN'
     const searchParams = new URLSearchParams(window.location.search)
     const redirectParam = searchParams.get('redirect')
 
     if (redirectParam && (redirectParam !== '/superadmin' || isSuper)) {
-      navigate(redirectParam, { replace: true })
+      window.location.href = redirectParam
     } else if (isSuper) {
-      navigate('/superadmin', { replace: true })
+      window.location.href = '/superadmin'
     } else {
-      navigate('/', { replace: true })
+      window.location.href = '/'
     }
     setLoading(false)
   }
@@ -220,31 +176,10 @@ export default function LoginPage() {
     const email = formatEmail(resetEmailInput)
 
     try {
-      // Pass explicit redirectTo parameter matching active site origin
-      const redirectUrl = `${window.location.origin}/login`
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      })
-
-      if (resetErr) {
-        if (
-          resetErr.status === 429 ||
-          resetErr.message?.toLowerCase().includes('rate limit') ||
-          resetErr.message?.toLowerCase().includes('over_email_send_rate_limit')
-        ) {
-          setError('Batas pengiriman email terlampaui (Rate Limit). Supabase membatasi pengiriman email berulang dalam rentang waktu singkat. Silakan periksa inbox/spam email Anda yang telah terkirim sebelumnya, atau tunggu 1 - 2 menit.')
-          setLoading(false)
-          return
-        }
-        setError(resetErr.message || 'Gagal mengirimkan email pemulihan.')
-        setLoading(false)
-        return
-      }
-
-      setInfoMessage(`Tautan reset password telah dikirimkan ke email ${email}. Silakan periksa inbox atau folder spam email Anda dan klik tombol 'Reset password' untuk membuat kata sandi baru.`)
+      // With custom DB Auth, we don't send emails. We just tell them to contact superadmin.
+      setInfoMessage(`P-HRIS kini menggunakan autentikasi internal. Harap hubungi Superadmin / IT Support untuk melakukan reset kata sandi akun ${email}.`)
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Gagal mengirimkan email reset password. Silakan coba lagi.'
-      setError(errMsg)
+      setError('Gagal memproses permintaan.')
     } finally {
       setLoading(false)
     }
@@ -269,22 +204,9 @@ export default function LoginPage() {
     }
 
     try {
-      const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
-      if (updateErr) {
-        console.warn('Update password notice:', updateErr.message)
-      }
-
-      setAuthMode('success')
-      setInfoMessage('Kata sandi Anda telah berhasil diperbarui. Silakan masuk menggunakan kata sandi baru Anda.')
-
-      // Auto redirect to login mode after 4 seconds
-      setTimeout(() => {
-        setAuthMode('login')
-        setError('')
-        setInfoMessage('')
-        // Clear hash URL
-        window.history.replaceState(null, '', window.location.pathname)
-      }, 4000)
+      // Feature disabled for custom auth flow without email links
+      setError('Fitur ini dinonaktifkan. Hubungi Superadmin.')
+      setLoading(false)
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Gagal memperbarui kata sandi. Silakan coba lagi.'
       setError(errMsg)
@@ -672,13 +594,6 @@ export default function LoginPage() {
                       <div className="flex items-center gap-2 font-bold text-red-800">
                         <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
                         <span>{error}</span>
-                      </div>
-                      <div className="text-[11px] text-red-600/90 pl-4 space-y-1">
-                        <p className="font-semibold text-red-800">Mengapa tautan email bisa kadaluarsa dalam waktu singkat?</p>
-                        <ul className="list-disc pl-3 space-y-0.5">
-                          <li><strong>Pemindai Keamanan Email / Antivirus:</strong> Gmail/Outlook/Antivirus kantor sering memindai link otomatis di latar belakang saat email diterima. Karena link bersifat 1x pakai (single-use), link langsung terpakai sebelum Anda mengekliknya.</li>
-                          <li><strong>Perangkat / Browser Berbeda:</strong> Tautan dibuka di browser berbeda dari tempat Anda menekan tombol reset.</li>
-                        </ul>
                       </div>
                     </div>
                   )}

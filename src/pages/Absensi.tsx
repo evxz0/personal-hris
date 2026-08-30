@@ -11,7 +11,7 @@ import { DataTable } from '../components/ui/DataTable'
 import { Button } from '../components/ui/Button'
 import { Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
-import { formatDate, calculateDays } from '../lib/utils'
+import { formatDate, calculateDays, calculateWorkingDays } from '../lib/utils'
 
 const EMPTY: AbsensiInsert = {
   npp: '', jenis: 'SAKIT', tanggal_mulai: '', tanggal_selesai: '', keterangan: ''
@@ -102,7 +102,7 @@ export default function AbsensiPage() {
     exportToXLSX(data.map(a => ({
       NPP: a.npp, Nama: getNama(a.npp), Jenis: a.jenis, 
       'Tgl Mulai': formatDate(a.tanggal_mulai), 'Tgl Selesai': formatDate(a.tanggal_selesai),
-      'Durasi': calculateDays(a.tanggal_mulai, a.tanggal_selesai),
+      'Durasi': a.jenis === 'CUTI' ? calculateWorkingDays(a.tanggal_mulai || '', a.tanggal_selesai || '') : calculateDays(a.tanggal_mulai || '', a.tanggal_selesai || ''),
       'Sisa Cuti': a.jenis === 'CUTI' ? getSisaCuti(a.npp) : '-',
       Keterangan: a.keterangan || '-'
     })), 'Data_Absensi')
@@ -143,7 +143,9 @@ export default function AbsensiPage() {
     return '-'
   }
 
-  const jumlahHari = calculateDays(form.tanggal_mulai, form.tanggal_selesai)
+  const jumlahHari = form.jenis === 'CUTI' 
+    ? calculateWorkingDays(form.tanggal_mulai || '', form.tanggal_selesai || '') 
+    : calculateDays(form.tanggal_mulai || '', form.tanggal_selesai || '')
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -230,7 +232,9 @@ export default function AbsensiPage() {
           { key: 'tanggal_mulai', header: 'Tgl Mulai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_mulai))}</span> },
           { key: 'tanggal_selesai', header: 'Tgl Selesai', render: r => <span className="whitespace-nowrap">{formatDate(String(r.tanggal_selesai))}</span> },
           { key: 'durasi', header: 'Durasi', render: r => {
-            const d = calculateDays(String(r.tanggal_mulai), String(r.tanggal_selesai))
+            const d = String(r.jenis) === 'CUTI' 
+              ? calculateWorkingDays(String(r.tanggal_mulai), String(r.tanggal_selesai)) 
+              : calculateDays(String(r.tanggal_mulai), String(r.tanggal_selesai))
             return <span className="font-bold text-teal-700">{d} hari</span>
           }},
           { key: 'sisa_cuti', header: 'Sisa Cuti', render: r => {

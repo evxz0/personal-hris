@@ -179,3 +179,32 @@ CREATE TABLE IF NOT EXISTS public.riwayat_surat (
 
 ALTER TABLE public.riwayat_surat ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public all access on riwayat_surat" ON public.riwayat_surat FOR ALL USING (true) WITH CHECK (true);
+
+-- --------------------------------------------------------
+-- 9. APP USERS (Custom Database Authentication)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.app_users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  nama TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('SUPERADMIN', 'ADMIN_HR', 'OPERATOR', 'VIEWER')),
+  status_aktif BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to app_users" ON public.app_users FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated full access to app_users" ON public.app_users FOR ALL USING (true) WITH CHECK (true);
+
+-- Seed Initial Superadmin (Password: Superadmin09908)
+-- Note: password_hash below is the SHA-256 hash of "Superadmin09908"
+INSERT INTO public.app_users (username, nama, password_hash, role, status_aktif)
+VALUES (
+  'superadmin',
+  'Super Administrator BNI',
+  '03cfaeb5fcbc23602fc5f03d2740203f1917b2b8d54c1cc8f921473fb114d7ff',
+  'SUPERADMIN',
+  true
+) ON CONFLICT DO NOTHING;

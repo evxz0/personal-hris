@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { authService } from '../lib/authService'
 
-// Default idle timeout: 25 Minutes (25 minutes = 1,500,000 ms)
-const IDLE_TIMEOUT_MS = 25 * 60 * 1000
+// Default idle timeout: 1 Hour (60 minutes = 3,600,000 ms)
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000
 
 export function useIdleTimeout(enabled: boolean = true) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      authService.logout()
     } catch (e) {
       console.error('Failed to sign out on idle timeout', e)
     } finally {

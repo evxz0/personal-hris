@@ -647,11 +647,11 @@ export function DataTable<T extends Record<string, unknown>>({
       )}
 
       {/* Main Table */}
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-teal-600 text-white select-none">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm flex flex-col">
+        <div className="overflow-auto max-h-[70vh] custom-scrollbar">
+          <table className="w-full text-xs relative">
+            <thead className="sticky top-0 z-20">
+              <tr className="bg-teal-600 text-white select-none shadow-sm">
                 {selectable && showSelectColumn && (
                   <th className="px-3 py-2 text-center text-[11px] font-semibold w-10">
                     <input
@@ -701,7 +701,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   )
                 })}
                 {actions && (
-                  <th className="sticky right-0 z-20 px-3 py-2 text-center text-[11px] font-semibold w-28 bg-teal-600 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.18)] whitespace-nowrap">
+                  <th className="sticky right-0 z-30 px-3 py-2 text-center text-[11px] font-semibold w-28 bg-teal-600 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.18)] whitespace-nowrap">
                     Aksi
                   </th>
                 )}

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { logAudit } from '../lib/utils'
+import { authService } from '../lib/authService'
 import {
   subscribeToRealtimeSessions,
   terminateTargetSession,
@@ -16,7 +17,7 @@ export interface UserAccount {
   id: string
   username: string
   nama: string
-  email: string
+  email?: string
   password?: string
   role: UserRole
   status: UserStatus
@@ -26,76 +27,28 @@ export interface UserAccount {
   department?: string
 }
 
-const USERS_STORAGE_KEY = 'phris_managed_users_v1'
-
-const INITIAL_USERS: UserAccount[] = [
-  {
-    id: 'usr_superadmin_01',
-    username: 'superadmin',
-    nama: 'SUPER ADMINISTRATOR BNI',
-    email: 'superadmin@phris.local',
-    password: 'superadmin123',
-    role: 'SUPERADMIN',
-    status: 'AKTIF',
-    created_at: '2025-01-01T00:00:00.000Z',
-    last_login: new Date().toISOString(),
-    department: 'HC & IT Regional Office 09'
-  },
-  {
-    id: 'usr_admin_02',
-    username: 'admin',
-    nama: 'ADMINISTRATOR HR',
-    email: 'admin@phris.local',
-    password: 'admin123',
-    role: 'ADMIN_HR',
-    status: 'AKTIF',
-    created_at: '2025-01-15T00:00:00.000Z',
-    last_login: new Date(Date.now() - 3600000).toISOString(),
-    department: 'Human Capital RO 09'
-  },
-  {
-    id: 'usr_operator_03',
-    username: 'operator',
-    nama: 'STAFF OPERATOR SURAT & ABSENSI',
-    email: 'operator@phris.local',
-    password: 'operator123',
-    role: 'OPERATOR',
-    status: 'AKTIF',
-    created_at: '2025-02-01T00:00:00.000Z',
-    last_login: new Date(Date.now() - 86400000).toISOString(),
-    department: 'Operasional & Layanan'
-  }
-]
-
-export function getLocalUsers(): UserAccount[] {
-  try {
-    const raw = localStorage.getItem(USERS_STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch (e) {
-    console.error('Failed to load users from storage', e)
-  }
-  return INITIAL_USERS
-}
-
-export function saveLocalUsers(users: UserAccount[]): void {
-  try {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users))
-  } catch (e) {
-    console.error('Failed to save users to storage', e)
-  }
-}
-
 export function useUsers() {
   return useQuery({
     queryKey: ['superadmin-users'],
-    queryFn: () => getLocalUsers(),
+    queryFn: async () => {
+      const users = await authService.getAllUsers();
+      return users.map(u => ({
+        id: u.id,
+        username: u.username,
+        nama: u.nama,
+        email: `${u.username}@phris.local`,
+        role: u.role as UserRole,
+        status: u.status_aktif ? 'AKTIF' : 'NONAKTIF',
+        created_at: u.created_at || new Date().toISOString(),
+      })) as UserAccount[];
+    },
   })
 }
 
 export function useManageUsers() {
   const query = useUsers()
   return {
-    users: query.data ?? INITIAL_USERS,
+    users: query.data ?? [],
     isLoading: query.isLoading,
   }
 }
@@ -104,29 +57,24 @@ export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (newUser: Omit<UserAccount, 'id' | 'created_at' | 'status'>) => {
-      const users = getLocalUsers()
-      if (users.some(u => u.username.toLowerCase() === newUser.username.toLowerCase())) {
-        throw new Error('Username sudah digunakan. Silakan pilih username lain.')
-      }
+      const { success, message } = await authService.createUser({
+        username: newUser.username,
+        nama: newUser.nama,
+        passwordPlain: newUser.password || 'Bni12345!',
+        role: newUser.role
+      });
 
-      const created: UserAccount = {
-        ...newUser,
-        id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        status: 'AKTIF',
-        created_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
+      if (!success) {
+        throw new Error(message || 'Gagal membuat user.');
       }
-
-      users.unshift(created)
-      saveLocalUsers(users)
 
       await logAudit(
         'CREATE_USER',
-        `Membuat user baru: ${created.username} (${created.nama}) dengan role ${created.role}`,
+        `Membuat user baru: ${newUser.username} (${newUser.nama}) dengan role ${newUser.role}`,
         'superadmin'
       )
 
-      return created
+      return newUser;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
   })
@@ -136,20 +84,21 @@ export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (updated: Partial<UserAccount> & { id: string }) => {
-      const users = getLocalUsers()
-      const idx = users.findIndex(u => u.id === updated.id)
-      if (idx === -1) throw new Error('User tidak ditemukan')
+      const payload: any = {};
+      if (updated.nama) payload.nama = updated.nama;
+      if (updated.role) payload.role = updated.role;
+      if (updated.status !== undefined) payload.status_aktif = updated.status === 'AKTIF';
 
-      users[idx] = { ...users[idx], ...updated }
-      saveLocalUsers(users)
+      const ok = await authService.updateUser(updated.id, payload);
+      if (!ok) throw new Error('Gagal memperbarui user.');
 
       await logAudit(
         'UPDATE_USER',
-        `Memperbarui profil user: ${users[idx].username}`,
+        `Memperbarui profil user ID: ${updated.id}`,
         'superadmin'
       )
 
-      return users[idx]
+      return updated
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
   })
@@ -159,25 +108,18 @@ export function useResetPassword() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ userId, newPassword }: { userId: string; newPassword?: string }) => {
-      const users = getLocalUsers()
-      const idx = users.findIndex(u => u.id === userId)
-      if (idx === -1) throw new Error('User tidak ditemukan')
-
       const generatedPassword = newPassword || `BNI${Math.floor(100000 + Math.random() * 900000)}!`
-      users[idx].password = generatedPassword
-      saveLocalUsers(users)
-
-      try {
-        await supabase.auth.updateUser({ password: generatedPassword })
-      } catch {}
+      
+      const success = await authService.resetPassword(userId, generatedPassword);
+      if (!success) throw new Error('Gagal mereset kata sandi.')
 
       await logAudit(
         'RESET_PASSWORD',
-        `Mereset kata sandi akun: ${users[idx].username}`,
+        `Mereset kata sandi akun ID: ${userId}`,
         'superadmin'
       )
 
-      return { user: users[idx], generatedPassword }
+      return { generatedPassword }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-users'] }),
   })
@@ -187,18 +129,12 @@ export function useDeleteUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const users = getLocalUsers()
-      const userToDelete = users.find(u => u.id === id)
-      if (userToDelete?.role === 'SUPERADMIN' && users.filter(u => u.role === 'SUPERADMIN').length <= 1) {
-        throw new Error('Tidak dapat menghapus satu-satunya akun Superadmin utama.')
-      }
-
-      const filtered = users.filter(u => u.id !== id)
-      saveLocalUsers(filtered)
+      const success = await authService.deleteUser(id);
+      if (!success) throw new Error('Gagal menghapus user.')
 
       await logAudit(
         'DELETE_USER',
-        `Menghapus akun user: ${userToDelete?.username || id}`,
+        `Menghapus akun user ID: ${id}`,
         'superadmin'
       )
     },

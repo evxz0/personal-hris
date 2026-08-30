@@ -486,7 +486,7 @@ export default function BinaPage() {
             label="Jabatan"
             value={form.jabatan || ''}
             onChange={e => setForm(f => ({ ...f, jabatan: e.target.value }))}
-            options={jabatansBina.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+            options={dynamicJabatanOptions}
             placeholder="-- Pilih Jabatan --"
           />
 
@@ -598,7 +598,7 @@ export default function BinaPage() {
               label="Jabatan Baru"
               value={mutasiForm.jabatan}
               onChange={e => setMutasiForm(f => ({ ...f, jabatan: e.target.value }))}
-              options={jabatansBina.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
+              options={dynamicJabatanOptions}
               placeholder="-- Pilih Jabatan Baru --"
             />
           </div>

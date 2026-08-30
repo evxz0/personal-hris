@@ -29,6 +29,24 @@ export function calculateDays(start: string, end: string): number {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1)
 }
 
+export function calculateWorkingDays(start: string, end: string): number {
+  if (!start || !end) return 0
+  const s = new Date(start)
+  const e = new Date(end)
+  if (e < s) return 0
+  
+  let count = 0
+  const current = new Date(s)
+  while (current <= e) {
+    const dayOfWeek = current.getDay()
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 is Sunday, 6 is Saturday
+      count++
+    }
+    current.setDate(current.getDate() + 1)
+  }
+  return count
+}
+
 export function clsx(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ')
 }

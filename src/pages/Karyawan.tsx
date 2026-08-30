@@ -159,6 +159,7 @@ export default function KaryawanPage() {
   const { data: rawData = [], isLoading } = useKaryawan(search)
   const { data: outlets = [] } = useReferensi('OUTLET')
   const { data: jabatans = [] } = useReferensi('JABATAN_KARYAWAN')
+  const { data: jenjangs = [] } = useReferensi('JENJANG')
 
   const addMutation      = useAddKaryawan()
   const updateMutation   = useUpdateKaryawan()
@@ -936,22 +937,17 @@ export default function KaryawanPage() {
               label="Jenjang"
               value={form.jenjang || ''}
               onChange={e => setForm(f => ({ ...f, jenjang: e.target.value || null }))}
-              options={[
-                { value: 'VP', label: 'VP' },
-                { value: 'AVP', label: 'AVP' },
-                { value: 'MGR', label: 'MGR' },
-                { value: 'AMGR', label: 'AMGR' },
-                { value: 'ASST', label: 'ASST' },
-              ]}
+              options={jenjangs.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
               placeholder="-- Pilih Jenjang --"
             />
           )}
 
-          <Input
+          <Select
             label="Jabatan"
             value={form.jabatan || ''}
             onChange={e => setForm(f => ({ ...f, jabatan: e.target.value }))}
-            placeholder="Masukkan jabatan..."
+            options={dynamicJabatanOptions}
+            placeholder="-- Pilih Jabatan --"
           />
 
           {(form.kategori === 'BINA' || filterKategori.length === 0) && (
@@ -1092,11 +1088,12 @@ export default function KaryawanPage() {
               options={outlets.map(o => ({ value: o.nama_referensi, label: o.nama_referensi }))}
               placeholder="-- Pilih Outlet Baru --"
             />
-            <Input
+            <Select
               label="Jabatan Baru"
               value={mutasiForm.jabatan}
               onChange={e => setMutasiForm(f => ({ ...f, jabatan: e.target.value }))}
-              placeholder="Masukkan jabatan baru..."
+              options={dynamicJabatanOptions}
+              placeholder="-- Pilih Jabatan Baru --"
             />
           </div>
 
@@ -1105,13 +1102,7 @@ export default function KaryawanPage() {
               label="Jenjang Baru"
               value={mutasiForm.jenjang}
               onChange={e => setMutasiForm(f => ({ ...f, jenjang: e.target.value }))}
-              options={[
-                { value: 'VP', label: 'VP' },
-                { value: 'AVP', label: 'AVP' },
-                { value: 'MGR', label: 'MGR' },
-                { value: 'AMGR', label: 'AMGR' },
-                { value: 'ASST', label: 'ASST' },
-              ]}
+              options={jenjangs.map(j => ({ value: j.nama_referensi, label: j.nama_referensi }))}
               placeholder="-- Pilih Jenjang Baru --"
             />
             <Select
