@@ -4,7 +4,7 @@ import {
   ShieldAlert, Users, Laptop, Activity, Server, RefreshCw, Plus,
   Search, KeyRound, Trash2, Edit2, CheckCircle2,
   Wifi, Globe, Smartphone, Monitor, ShieldCheck,
-  ExternalLink, Copy, Check, Zap, Download, PowerOff, Eye, EyeOff, Shield
+  ExternalLink, Copy, Check, Zap, Download, PowerOff
 } from 'lucide-react'
 import { useUsers, useCreateUser, useUpdateUser, useResetPassword, useDeleteUser, useActiveSessions, useServerPing, type UserRole, type UserStatus, type UserAccount } from '../hooks/useSuperadmin'
 import { supabase } from '../lib/supabase'
