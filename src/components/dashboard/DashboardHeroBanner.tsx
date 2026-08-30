@@ -19,7 +19,14 @@ export function DashboardHeroBanner() {
           <LayoutDashboard size={16} className="text-teal-300" />
           <span>Dashboard</span>
           <span className="text-white/60">/</span>
-          <span className="text-white/90">Talent Administration & Legal Operations System (TALOS)</span>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+              TALOS
+            </span>
+            <span className="text-xs text-white/90 font-medium">
+              Talent Administration &amp; Legal Operations System
+            </span>
+          </div>
         </div>
       </div>
 
