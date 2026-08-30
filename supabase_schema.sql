@@ -198,13 +198,36 @@ ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access to app_users" ON public.app_users FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated full access to app_users" ON public.app_users FOR ALL USING (true) WITH CHECK (true);
 
--- Seed Initial Superadmin (Password: Superadmin09908)
--- Note: password_hash below is the SHA-256 hash of "Superadmin09908"
+-- Seed Initial Users
+-- Passwords are SHA-256 hashed
 INSERT INTO public.app_users (username, nama, password_hash, role, status_aktif)
-VALUES (
+VALUES 
+(
   'superadmin',
-  'Super Administrator BNI',
-  '03cfaeb5fcbc23602fc5f03d2740203f1917b2b8d54c1cc8f921473fb114d7ff',
+  'Super Administrator',
+  '03cfaeb5fcbc23602fc5f03d2740203f1917b2b8d54c1cc8f921473fb114d7ff', -- Superadmin09908
   'SUPERADMIN',
   true
-) ON CONFLICT DO NOTHING;
+),
+(
+  'oric',
+  'ADMIN ORIC',
+  '80c540282d8e72a7b5d9e45a5efcd7455f896948d1ead9b9b8a3c00062ae4524', -- Oric2026**
+  'ADMIN_HR',
+  true
+),
+(
+  '61852',
+  'ADMIN 61852',
+  '827408e6380ed7771e2b1732513a7f51e3ce7e15686e81658f7f904280dd3c46', -- Celine2026**
+  'ADMIN_HR',
+  true
+),
+(
+  '54806',
+  'ADMIN 54806',
+  'cf5aface12ff4e2dfde17f9ecbb33441b00f74265f34c809a81b580df568bf9e', -- Bosku2026**
+  'ADMIN_HR',
+  true
+)
+ON CONFLICT (username) DO NOTHING;
