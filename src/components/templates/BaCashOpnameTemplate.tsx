@@ -23,6 +23,7 @@ export interface BaCashOpnameData {
   valasSgd?: CashData;
   vaultEnquirySgd?: number;
   catatanSelisih?: string;
+  kotaPengesahan: string;
 }
 
 interface Props { data: BaCashOpnameData; }
@@ -191,7 +192,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
       <div className="mb-2">
         Terbilang fisik:<br/>
         <i>== {grandTotal === 0 ? "Nol" : terbilang(grandTotal)} Rupiah ==</i><br/><br/>
-        Saldo tersebut <span className="font-bold">{selisih === 0 ? 'sesuai/cocok' : 'tidak sesuai/tidak cocok'}</span> dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">Rp{grandTotal.toLocaleString('id-ID')},-</span>.
+        Saldo tersebut <span className="font-bold">{selisih === 0 ? 'sesuai/cocok' : 'tidak sesuai/tidak cocok'}</span> dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">Rp{data.vaultEnquiry.toLocaleString('id-ID')},-</span>.
       </div>
 
       {selisih !== 0 && data.catatanSelisih && (
@@ -230,7 +231,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             <div className="mb-3 ml-4 text-[9.5px]">
               <span className="font-bold underline">Terbilang :</span><br/>
               <i>== {totalUsd === 0 ? "Zero" : terbilangEn(totalUsd)} Dollars ==</i><br/>
-              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {totalUsd.toLocaleString('id-ID')},-</span>
+              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {data.vaultEnquiryUsd.toLocaleString('id-ID')},-</span>
             </div>
 
             <div className="font-bold ml-4 mb-1">B. Dollar – SGD</div>
@@ -256,7 +257,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             <div className="mb-2 ml-4 text-[9.5px]">
               <span className="font-bold underline">Terbilang :</span><br/>
               <i>== {totalSgd === 0 ? "Nol" : terbilang(totalSgd)} Dolar Singapura ==</i><br/>
-              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas SGD dan Branch Totals Combined SGD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">SGD {totalSgd.toLocaleString('id-ID')},-</span>
+              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas SGD dan Branch Totals Combined SGD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">SGD {(data.vaultEnquirySgd || 0).toLocaleString('id-ID')},-</span>
             </div>
           </div>
         )}
@@ -280,7 +281,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             ))}
           </div>
           <div className="w-[40%]">
-            <p className="text-right mb-2">Pontianak, {dt.raw}</p>
+            <p className="text-right mb-2">{data.kotaPengesahan}, {dt.raw}</p>
             <p className="mb-16">Yang Memeriksa,</p>
             <div className="text-left flex justify-between items-end">
                <div>

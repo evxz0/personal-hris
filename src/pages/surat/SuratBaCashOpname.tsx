@@ -128,7 +128,8 @@ export default function SuratBaCashOpnamePage() {
     ],
     uleBesar: {}, uleKecil: {}, utleBesar: {}, utleKecil: {},
     valasUsd: {}, vaultEnquiryUsd: 0,
-    valasSgd: {}, vaultEnquirySgd: 0, catatanSelisih: ''
+    valasSgd: {}, vaultEnquirySgd: 0, catatanSelisih: '',
+    kotaPengesahan: 'PONTIANAK'
   });
 
   const handlePrint = useReactToPrint({ contentRef: printRef });
@@ -203,6 +204,15 @@ export default function SuratBaCashOpnamePage() {
               <option value="sedang jam layanan operasional">Sedang jam layanan operasional</option>
               <option value="sesudah jam layanan operasional">Sesudah jam layanan operasional</option>
             </select>
+            
+            <div className="col-span-2 mt-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Kota Pengesahan (Tanda Tangan)</label>
+              <select value={formData.kotaPengesahan} onChange={e => setFormData({...formData, kotaPengesahan: e.target.value})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                {outletOptions.map(outlet => (
+                  <option key={outlet} value={outlet}>{outlet}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
