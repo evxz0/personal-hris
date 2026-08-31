@@ -7,6 +7,7 @@ export interface CashData {
 
 export interface BaCashOpnameData {
   nomorSurat: string;
+  jenisCabang: string;
   kcp: string;
   tanggal: string;
   waktu: string;
@@ -64,42 +65,41 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
   );
 
   return (
-    <div ref={ref} className="bg-white text-black px-8 pt-4 pb-8 font-serif text-[11px] leading-snug mx-auto max-w-[210mm]">
+    <div ref={ref} className="bg-white text-black px-8 pt-4 pb-8 font-serif text-[10px] leading-snug mx-auto max-w-[210mm]">
       <style>{`
         @media print { 
           @page { size: A4 portrait; margin: 10mm 15mm 15mm 15mm; } 
-          .page-break { page-break-before: always; padding-top: 15mm; }
+          .page-break { page-break-before: always; padding-top: 5mm; }
         }
-        .tbl-kas td, .tbl-kas th { border: 1px solid black; padding: 2px 4px; }
+        .tbl-kas td, .tbl-kas th { border: 1px solid black; padding: 1px 3px; font-size: 9px; }
         .tbl-kas th { font-weight: bold; text-align: center; background-color: #f3f4f6; }
       `}</style>
       
-      {/* 1. Header Kop Surat BNI (Diangkat ke atas dengan -mt-2) */}
-      <div className="w-full flex items-end justify-between mb-8 -mt-2">
-        <img src="/logo-kop-bni.jpg" alt="Kop BNI" className="h-8 object-contain" />
-        <div className="text-[10px] text-gray-500 font-sans tracking-wide pb-1">
-          BA. STOCK OPNAME <span className="font-bold">KCP {data.kcp.toUpperCase()}</span> HALAMAN <span className="font-bold">1</span>
+      {/* 1. Header Kop Surat BNI */}
+      <div className="w-full flex items-end justify-between mb-4 -mt-2">
+        <img src="/logo-kop-bni.jpg" alt="Kop BNI" className="h-6 object-contain" />
+        <div className="text-[9px] text-gray-500 font-sans tracking-wide pb-1">
+          BA. STOCK OPNAME <span className="font-bold">{data.jenisCabang} {data.kcp.toUpperCase()}</span>
         </div>
       </div>
 
-      {/* 2. Judul Dokumen */}
-      <div className="text-center font-bold text-sm leading-tight mb-6">
+      <div className="text-center font-bold text-xs leading-tight mb-4">
         <p>BERITA ACARA PEMERIKSAAN KAS</p>
         <p>PADA PT BANK NEGARA INDONESIA (PERSERO) TBK</p>
-        <p>KCP {data.kcp.toUpperCase()}</p>
+        <p>{data.jenisCabang} {data.kcp.toUpperCase()}</p>
         <p>No. {data.nomorSurat} Tanggal {dt.raw}</p>
       </div>
 
-      <div className="text-justify mb-4">
-        Pada hari ini <strong>{dt.hari}</strong> tanggal <strong>{dt.tgl}</strong> bulan <strong>{dt.bln}</strong> tahun <strong>{dt.thn} ({dt.raw})</strong> pada saat <strong>{data.waktu}</strong>, telah dilakukan pemeriksaan atas persediaan uang kas Rupiah dan Valas Teller oleh <i>Operational Risk Internal Control</i>, yakni:
+      <div className="text-justify mb-3">
+        Pada hari ini <strong>{dt.hari}</strong> tanggal <strong>{dt.tgl}</strong> bulan <strong>{dt.bln}</strong> tahun <strong>{dt.thn} ({dt.raw})</strong> pada saat <strong>{data.waktu}</strong>, telah dilakukan pemeriksaan atas persediaan uang kas Rupiah dan Valas Teller oleh <strong><i>Operational Risk Internal Control</i></strong>, yakni:
       </div>
 
-      <div className="mb-4 ml-8">
-        - {data.oric.nama} / NPP. {data.oric.npp}
+      <div className="mb-3 ml-8">
+        - {data.oric?.nama ? `${data.oric.nama} / NPP. ${data.oric.npp}` : '- / NPP.'}
       </div>
 
-      <div className="mb-2">Dengan disaksikan oleh:</div>
-      <table className="w-full mb-6 ml-4">
+      <div className="mb-1">Dengan disaksikan oleh:</div>
+      <table className="w-full mb-3 ml-4">
         <tbody>
           {data.saksi.map((s, i) => (
             <tr key={i}>
@@ -116,7 +116,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
       <div className="font-bold mb-1">I. UANG KAS RUPIAH</div>
       <div className="font-bold ml-4 mb-1">A. Uang Layak Edar (ULE)</div>
       
-      <div className="flex gap-4 ml-4 mb-4">
+      <div className="flex gap-4 ml-4 mb-2">
         <table className="tbl-kas w-1/2">
           <thead>
             <tr><th colSpan={4}>Uang Kas Besar</th></tr>
@@ -144,109 +144,109 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
           </tbody>
         </table>
       </div>
-      <div className="page-break mt-6">
-        <div className="font-bold ml-4 mb-1 mt-2">B. Uang Tidak Layak Edar (UTLE)</div>
-        <div className="flex gap-4 ml-4 mb-6">
-          <table className="tbl-kas w-1/2">
-            <thead>
-              <tr><th colSpan={4}>Uang Kas Besar</th></tr>
-              <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
-            </thead>
-            <tbody>
-              {renderTableRows(data.utleBesar)}
-              <tr className="font-bold bg-gray-100">
-                <td colSpan={3} className="text-center">Total Kas Besar</td>
-                <td className="text-right">{totalUtleBesar.toLocaleString('id-ID')}</td>
-              </tr>
-            </tbody>
-          </table>
-          <table className="tbl-kas w-1/2">
-            <thead>
-              <tr><th colSpan={4}>Uang Kas Kecil</th></tr>
-              <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
-            </thead>
-            <tbody>
-              {renderTableRows(data.utleKecil)}
-              <tr className="font-bold bg-gray-100">
-                <td colSpan={3} className="text-center">Total Kas Kecil</td>
-                <td className="text-right">{totalUtleKecil.toLocaleString('id-ID')}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
 
-        <table className="tbl-kas w-2/3 ml-4 mb-4 font-bold">
+      <div className="font-bold ml-4 mb-1 mt-2">B. Uang Tidak Layak Edar (UTLE)</div>
+      <div className="flex gap-4 ml-4 mb-3">
+        <table className="tbl-kas w-1/2">
+          <thead>
+            <tr><th colSpan={4}>Uang Kas Besar</th></tr>
+            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
+          </thead>
           <tbody>
-            <tr><td className="w-2/3">Total Uang Kas (A+B)</td><td className="w-8 text-center">Rp</td><td className="text-right">{grandTotal.toLocaleString('id-ID')}</td></tr>
-            <tr><td>Vault Enquiry (009028)</td><td className="text-center">Rp</td><td className="text-right">{data.vaultEnquiry.toLocaleString('id-ID')}</td></tr>
-            <tr><td>Selisih</td><td className="text-center">Rp</td><td className="text-right">{selisih === 0 ? '-' : selisih.toLocaleString('id-ID')}</td></tr>
+            {renderTableRows(data.utleBesar)}
+            <tr className="font-bold bg-gray-100">
+              <td colSpan={3} className="text-center">Total Kas Besar</td>
+              <td className="text-right">{totalUtleBesar.toLocaleString('id-ID')}</td>
+            </tr>
           </tbody>
         </table>
+        <table className="tbl-kas w-1/2">
+          <thead>
+            <tr><th colSpan={4}>Uang Kas Kecil</th></tr>
+            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
+          </thead>
+          <tbody>
+            {renderTableRows(data.utleKecil)}
+            <tr className="font-bold bg-gray-100">
+              <td colSpan={3} className="text-center">Total Kas Kecil</td>
+              <td className="text-right">{totalUtleKecil.toLocaleString('id-ID')}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <div className="mb-4">
-          Terbilang fisik:<br/>
-          <span className="font-bold italic">== {terbilang(grandTotal)} Rupiah ==</span>
-        </div>
+      <table className="tbl-kas w-2/3 ml-4 mb-3 font-bold">
+        <tbody>
+          <tr><td className="w-2/3">Total Uang Kas (A+B)</td><td className="w-8 text-center">Rp</td><td className="text-right">{grandTotal.toLocaleString('id-ID')}</td></tr>
+          <tr><td>Vault Enquiry (009028)</td><td className="text-center">Rp</td><td className="text-right">{data.vaultEnquiry.toLocaleString('id-ID')}</td></tr>
+          <tr><td>Selisih</td><td className="text-center">Rp</td><td className="text-right">{selisih === 0 ? '-' : selisih.toLocaleString('id-ID')}</td></tr>
+        </tbody>
+      </table>
 
-        <div className="font-bold mb-1 mt-6">II. UANG KAS VALUTA ASING</div>
+      <div className="mb-2">
+        Terbilang fisik:<br/>
+        <i>== {grandTotal === 0 ? "Nol" : terbilang(grandTotal)} Rupiah ==</i><br/><br/>
+        Saldo tersebut sesuai/cocok dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal {dt.raw.replace(/-/g, ' ')}, yaitu sebesar Rp{grandTotal.toLocaleString('id-ID')},-.
+      </div>
+
+      {/* --- HALAMAN 2: VALAS & TTD --- */}
+      <div className="page-break">
+        <div className="font-bold mb-1">II. UANG KAS VALUTA ASING</div>
         <div className="font-bold ml-4 mb-1">Dollar – USA</div>
-        <table className="tbl-kas w-1/2 ml-4 mb-4">
+        <table className="tbl-kas w-1/2 ml-4 mb-3">
           <thead>
             <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (USD)</th><th>Jumlah (USD)</th></tr>
           </thead>
           <tbody>
             {PECAHAN_USD.map(p => (
               <tr key={`usd-${p}`}>
-                <td className="text-right px-1">{data.valasUsd?.[p] || '-'}</td>
+                <td className="text-right px-1">{data.valasUsd[p] || '-'}</td>
                 <td className="text-center px-1">Lembar</td>
-                <td className="text-right px-1">{p.toLocaleString('id-ID')} =</td>
-                <td className="text-right px-1">{(data.valasUsd?.[p] ? data.valasUsd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
+                <td className="text-right px-1">{p} =</td>
+                <td className="text-right px-1">{(data.valasUsd[p] ? data.valasUsd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
               </tr>
             ))}
             <tr className="font-bold bg-gray-100">
-              <td colSpan={3} className="text-center">Total USD</td>
+              <td colSpan={3} className="text-center">Total Kas USD</td>
               <td className="text-right">{totalUsd.toLocaleString('id-ID')}</td>
             </tr>
           </tbody>
         </table>
 
-        <table className="tbl-kas w-2/3 ml-4 mb-4 font-bold">
-          <tbody>
-            <tr><td className="w-2/3">Total Uang Kas</td><td className="w-8 text-center">USD</td><td className="text-right">{totalUsd.toLocaleString('id-ID')}</td></tr>
-            <tr><td>Vault Enquiry (009028)</td><td className="text-center">USD</td><td className="text-right">{data.vaultEnquiryUsd?.toLocaleString('id-ID')}</td></tr>
-            <tr><td>Selisih</td><td className="text-center">USD</td><td className="text-right">{selisihUsd === 0 ? '-' : selisihUsd.toLocaleString('id-ID')}</td></tr>
-          </tbody>
-        </table>
-
-        <div className="mb-6">
-          Terbilang fisik:<br/>
-          <span className="font-bold italic">== {terbilangEn(totalUsd)} Dollars ==</span>
+        <div className="mb-6 ml-4">
+          <span className="font-bold underline">Terbilang :</span><br/>
+          <i>== {totalUsd === 0 ? "Zero" : terbilangEn(totalUsd)} Dollars ==</i><br/><br/>
+          Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {totalUsd.toLocaleString('id-ID')},-</span>
         </div>
 
         <div className="text-justify mb-8">
-          Demikianlah Berita Acara Pemeriksaan Kas PT Bank Negara Indonesia (Persero) Tbk. KCP {data.kcp}, dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.
+          Demikianlah Berita Acara Pemeriksaan Kas PT Bank Negara Indonesia (Persero) Tbk. {data.jenisCabang} {data.kcp}, dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.
         </div>
-      </div>
 
-      <div className="w-full flex justify-between px-8 text-center">
-        <div className="w-1/2">
-          <p className="mb-20">Yang Menyaksikan,</p>
-          {data.saksi.map((s, i) => (
-             <div key={i} className="flex justify-between items-end mb-4 text-left">
-               <div>
-                 <p className="font-bold underline">{s.nama || '__________________'}</p>
-                 <p>NPP. {s.npp}</p>
+        {/* Tabel Tanda Tangan */}
+        <div className="w-full flex justify-between px-4 text-center">
+          <div className="w-[45%]">
+            <p className="mb-16">Yang Menyaksikan,</p>
+            {data.saksi.map((s, i) => (
+               <div key={i} className="flex justify-between items-end mb-4 text-left">
+                 <div>
+                   <p className="font-bold underline">{s.nama || '__________________'}</p>
+                   <p>NPP. {s.npp}</p>
+                 </div>
+                 <div className="w-20 border-b border-black border-dotted"></div>
                </div>
-               <div className="w-16 border-b border-black border-dotted"></div>
-             </div>
-          ))}
-        </div>
-        <div className="w-1/3">
-          <p className="text-right mb-2">Pontianak, {dt.raw}</p>
-          <p className="mb-20">Yang Memeriksa,</p>
-          <div className="text-left">
-             <p className="font-bold underline">{data.oric.nama || '__________________'}</p>
-             <p>NPP. {data.oric.npp}</p>
+            ))}
+          </div>
+          <div className="w-[40%]">
+            <p className="text-right mb-2">Pontianak, {dt.raw}</p>
+            <p className="mb-16">Yang Memeriksa,</p>
+            <div className="text-left flex justify-between items-end">
+               <div>
+                 <p className="font-bold underline">{data.oric.nama || '__________________'}</p>
+                 <p>NPP. {data.oric.npp}</p>
+               </div>
+               <div className="w-20 border-b border-black border-dotted"></div>
+            </div>
           </div>
         </div>
       </div>

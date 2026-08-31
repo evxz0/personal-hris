@@ -23,7 +23,7 @@ export default function SuratBaCashOpnamePage() {
   });
 
   const [formData, setFormData] = useState<BaCashOpnameData>({
-    nomorSurat: '', kcp: 'PONTIANAK', tanggal: new Date().toISOString().slice(0, 10), waktu: 'sebelum jam layanan operasional', vaultEnquiry: 0,
+    nomorSurat: '', jenisCabang: 'KCP', kcp: 'PONTIANAK', tanggal: new Date().toISOString().slice(0, 10), waktu: 'sebelum jam layanan operasional', vaultEnquiry: 0,
     oric: { nama: '', npp: '', jabatan: 'Operational Risk Internal Control' },
     saksi: [
       { nama: '', npp: '', jabatan: 'Teller' },
@@ -71,7 +71,15 @@ export default function SuratBaCashOpnamePage() {
           <p className="text-xs font-bold text-teal-800 uppercase border-l-2 border-teal-600 pl-2">1. Informasi Dasar</p>
           <div className="grid grid-cols-2 gap-3">
             <input type="text" placeholder="Nomor Surat" value={formData.nomorSurat} onChange={e => setFormData({...formData, nomorSurat: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
-            <input type="text" placeholder="Nama KCP" value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+            
+            <div className="flex gap-2">
+              <select value={formData.jenisCabang} onChange={e => setFormData({...formData, jenisCabang: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                <option value="KC">KC</option>
+                <option value="KCP">KCP</option>
+              </select>
+              <input type="text" placeholder="Nama Cabang" value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+            </div>
+
             <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
             <input type="text" placeholder="Waktu (Cth: sebelum jam layanan)" value={formData.waktu} onChange={e => setFormData({...formData, waktu: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
           </div>
