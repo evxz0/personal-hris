@@ -59,7 +59,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         onLoginSuccess();
       }
 
-      if (res.user.role === "SUPERADMIN") {
+      const redirectTarget = searchParams.get("redirect");
+      if (redirectTarget && (redirectTarget !== "/superadmin" || res.user.role === "SUPERADMIN")) {
+        navigate(redirectTarget, { replace: true });
+      } else if (res.user.role === "SUPERADMIN") {
         navigate("/superadmin", { replace: true });
       } else {
         navigate("/", { replace: true });
