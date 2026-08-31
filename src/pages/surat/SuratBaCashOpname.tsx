@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useReactToPrint } from 'react-to-print'
 import { supabase } from '../../lib/supabase'
@@ -9,6 +9,77 @@ import { FileText, Calculator } from 'lucide-react'
 
 const PECAHAN = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
 const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
+const PECAHAN_SGD = [1000, 100, 50, 10, 5, 2, 1];
+
+const SearchableDropdown = ({ options, value, onChange, placeholder }: { options: {value: string, label: string}[], value: string, onChange: (val: string) => void, placeholder: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  const selectedLabel = value === 'MANUAL' ? '-- Isi Manual / Pilih Karyawan --' : options.find(o => o.value === value)?.label || placeholder;
+  const filteredOptions = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()) || o.value.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full text-xs p-2 border rounded-lg bg-white cursor-pointer flex justify-between items-center focus:ring-1 focus:ring-teal-500"
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <span className="text-gray-400 text-[10px]">▼</span>
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 flex flex-col">
+          <div className="p-2 border-b sticky top-0 bg-white rounded-t-lg">
+            <input
+              type="text"
+              placeholder="Cari nama atau NPP..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full text-xs p-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto custom-scrollbar">
+            <div 
+              className="p-2 text-xs cursor-pointer hover:bg-teal-50 text-slate-600 border-b"
+              onClick={() => { onChange('MANUAL'); setIsOpen(false); setSearch(''); }}
+            >
+              -- Isi Manual / Pilih Karyawan --
+            </div>
+            {filteredOptions.length > 0 ? filteredOptions.map((opt) => (
+              <div
+                key={opt.value}
+                className={`p-2 text-xs cursor-pointer hover:bg-teal-50 ${value === opt.value ? 'bg-teal-50 font-bold text-teal-700' : 'text-slate-700'}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                  setSearch('');
+                }}
+              >
+                {opt.label}
+              </div>
+            )) : (
+              <div className="p-2 text-xs text-slate-400 text-center">Tidak ditemukan</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default function SuratBaCashOpnamePage() {
   const printRef = useRef<HTMLDivElement>(null);
@@ -31,7 +102,8 @@ export default function SuratBaCashOpnamePage() {
       { nama: '', npp: '', jabatan: 'Branch Manager' }
     ],
     uleBesar: {}, uleKecil: {}, utleBesar: {}, utleKecil: {},
-    valasUsd: {}, vaultEnquiryUsd: 0
+    valasUsd: {}, vaultEnquiryUsd: 0,
+    valasSgd: {}, vaultEnquirySgd: 0, catatanSelisih: ''
   });
 
   const handlePrint = useReactToPrint({ contentRef: printRef });
@@ -61,6 +133,10 @@ export default function SuratBaCashOpnamePage() {
     }
   };
 
+  const calcTotal = (cash: Record<number, number>) => Object.entries(cash).reduce((sum, [p, jml]) => sum + (parseInt(p) * jml), 0);
+  const totalRupiah = calcTotal(formData.uleBesar) + calcTotal(formData.uleKecil) + calcTotal(formData.utleBesar) + calcTotal(formData.utleKecil);
+  const selisihRupiah = formData.vaultEnquiry - totalRupiah;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-start">
       {/* Editor Panel */}
@@ -81,7 +157,11 @@ export default function SuratBaCashOpnamePage() {
             </div>
 
             <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
-            <input type="text" placeholder="Waktu (Cth: sebelum jam layanan)" value={formData.waktu} onChange={e => setFormData({...formData, waktu: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+            <select value={formData.waktu} onChange={e => setFormData({...formData, waktu: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+              <option value="sebelum jam layanan operasional">Sebelum jam layanan operasional</option>
+              <option value="sedang jam layanan operasional">Sedang jam layanan operasional</option>
+              <option value="sesudah jam layanan operasional">Sesudah jam layanan operasional</option>
+            </select>
           </div>
         </div>
 
@@ -92,13 +172,12 @@ export default function SuratBaCashOpnamePage() {
           {/* ORIC */}
           <div className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
             <label className="text-[10px] font-bold text-slate-500 uppercase">Pemeriksa (ORIC)</label>
-            <select
-              onChange={e => handleSelectPegawai('oric', e.target.value)}
-              className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white"
-            >
-              <option value="MANUAL">-- Isi Manual / Pilih Karyawan --</option>
-              {karyawanList.map(k => <option key={k.npp} value={k.npp}>{k.nama} ({k.npp})</option>)}
-            </select>
+            <SearchableDropdown
+              options={karyawanList.map(k => ({ value: k.npp, label: `${k.nama} (${k.npp})` }))}
+              value={formData.oric.npp || 'MANUAL'}
+              onChange={val => handleSelectPegawai('oric', val)}
+              placeholder="-- Pilih Karyawan --"
+            />
             <div className="flex gap-2 mt-1.5">
               <input type="text" placeholder="Ketik Nama Manual..." value={formData.oric.nama} onChange={e => setFormData({...formData, oric: {...formData.oric, nama: e.target.value}})} className="w-full text-xs p-1.5 border rounded-lg" />
               <input type="text" placeholder="NPP" value={formData.oric.npp} onChange={e => setFormData({...formData, oric: {...formData.oric, npp: e.target.value}})} className="w-24 text-xs p-1.5 border rounded-lg" />
@@ -110,13 +189,12 @@ export default function SuratBaCashOpnamePage() {
           {formData.saksi.map((s, i) => (
             <div key={i} className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <label className="text-[10px] font-bold text-slate-500 uppercase">Saksi {i + 1}</label>
-              <select
-                onChange={e => handleSelectPegawai(i, e.target.value)}
-                className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white"
-              >
-                <option value="MANUAL">-- Isi Manual / Pilih Karyawan --</option>
-                {karyawanList.map(k => <option key={k.npp} value={k.npp}>{k.nama} ({k.npp})</option>)}
-              </select>
+              <SearchableDropdown
+                options={karyawanList.map(k => ({ value: k.npp, label: `${k.nama} (${k.npp})` }))}
+                value={s.npp || 'MANUAL'}
+                onChange={val => handleSelectPegawai(i, val)}
+                placeholder="-- Pilih Karyawan --"
+              />
               <div className="flex gap-2 mt-1.5">
                 <input type="text" placeholder="Ketik Nama Manual..." value={s.nama} onChange={e => { const newS = [...formData.saksi]; newS[i].nama = e.target.value; setFormData({...formData, saksi: newS}); }} className="w-full text-xs p-1.5 border rounded-lg" />
                 <input type="text" placeholder="NPP" value={s.npp} onChange={e => { const newS = [...formData.saksi]; newS[i].npp = e.target.value; setFormData({...formData, saksi: newS}); }} className="w-24 text-xs p-1.5 border rounded-lg" />
@@ -187,35 +265,80 @@ export default function SuratBaCashOpnamePage() {
               <input type="number" min="0" value={formData.vaultEnquiry || ''} onChange={e => setFormData({...formData, vaultEnquiry: parseInt(e.target.value)||0})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 font-mono font-bold" />
             </div>
           </div>
+          
+          {selisihRupiah !== 0 && (
+            <div className="pt-4 border-t border-slate-100 mt-4">
+              <label className="text-[11px] font-bold text-rose-700 block mb-1">Terdapat Selisih! (Rp {selisihRupiah.toLocaleString('id-ID')})</label>
+              <textarea 
+                placeholder="Tuliskan catatan penjelasan selisih kas..." 
+                value={formData.catatanSelisih} 
+                onChange={e => setFormData({...formData, catatanSelisih: e.target.value})} 
+                className="w-full text-xs p-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500 min-h-[60px]"
+              />
+            </div>
+          )}
         </div>
 
-        {/* 6. Rincian Valas USD */}
-        <div className="space-y-3 pt-4 border-t border-slate-200 pb-6">
-          <p className="text-xs font-bold text-sky-800 uppercase border-l-2 border-sky-500 pl-2 flex items-center justify-between">
-            <span>6. Rincian Uang Kas Valas (USD)</span>
-            <Calculator size={14}/>
-          </p>
-          <div className="grid grid-cols-2 gap-4">
-             <div>
-               <p className="text-[10px] font-bold text-center bg-sky-50 text-sky-800 py-1 rounded border border-sky-100">Pecahan USD (Lembar)</p>
-               {PECAHAN_USD.map(p => (
-                 <div key={`usd-${p}`} className="flex items-center gap-2 mt-1">
-                   <span className="w-16 text-[10px] text-right text-slate-600 font-mono">USD {p}</span>
-                   <input type="number" min="0" value={formData.valasUsd[p] || ''} onChange={e => setFormData({...formData, valasUsd: {...formData.valasUsd, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-sky-500 focus:outline-none font-mono" />
+        {/* Valuta Asing (Hanya untuk KC) */}
+        {formData.jenisCabang === 'KC' && (
+          <>
+            {/* 6. Rincian Valas USD */}
+            <div className="space-y-3 pt-4 border-t border-slate-200 pb-4">
+              <p className="text-xs font-bold text-sky-800 uppercase border-l-2 border-sky-500 pl-2 flex items-center justify-between">
+                <span>6. Rincian Uang Kas Valas (USD)</span>
+                <Calculator size={14}/>
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <p className="text-[10px] font-bold text-center bg-sky-50 text-sky-800 py-1 rounded border border-sky-100">Pecahan USD (Lembar)</p>
+                   {PECAHAN_USD.map(p => (
+                     <div key={`usd-${p}`} className="flex items-center gap-2 mt-1">
+                       <span className="w-16 text-[10px] text-right text-slate-600 font-mono">USD {p}</span>
+                       <input type="number" min="0" value={formData.valasUsd[p] || ''} onChange={e => setFormData({...formData, valasUsd: {...formData.valasUsd, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-sky-500 focus:outline-none font-mono" />
+                     </div>
+                   ))}
                  </div>
-               ))}
-             </div>
-             
-             {/* Input Saldo Vault USD */}
-             <div className="pt-6">
-               <label className="text-[11px] font-bold text-slate-700 block mb-1">Saldo Vault Enquiry USD</label>
-               <div className="flex items-center gap-2">
-                 <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">$</span>
-                 <input type="number" min="0" value={formData.vaultEnquiryUsd || ''} onChange={e => setFormData({...formData, vaultEnquiryUsd: parseInt(e.target.value)||0})} className="w-full text-sm p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono font-bold" />
-               </div>
-             </div>
-          </div>
-        </div>
+                 
+                 {/* Input Saldo Vault USD */}
+                 <div className="pt-6">
+                   <label className="text-[11px] font-bold text-slate-700 block mb-1">Saldo Vault Enquiry USD</label>
+                   <div className="flex items-center gap-2">
+                     <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">$</span>
+                     <input type="number" min="0" value={formData.vaultEnquiryUsd || ''} onChange={e => setFormData({...formData, vaultEnquiryUsd: parseInt(e.target.value)||0})} className="w-full text-sm p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono font-bold" />
+                   </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* 7. Rincian Valas SGD */}
+            <div className="space-y-3 pt-4 border-t border-slate-200 pb-6">
+              <p className="text-xs font-bold text-red-800 uppercase border-l-2 border-red-500 pl-2 flex items-center justify-between">
+                <span>7. Rincian Uang Kas Valas (SGD)</span>
+                <Calculator size={14}/>
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <p className="text-[10px] font-bold text-center bg-red-50 text-red-800 py-1 rounded border border-red-100">Pecahan SGD (Lembar)</p>
+                   {PECAHAN_SGD.map(p => (
+                     <div key={`sgd-${p}`} className="flex items-center gap-2 mt-1">
+                       <span className="w-16 text-[10px] text-right text-slate-600 font-mono">SGD {p}</span>
+                       <input type="number" min="0" value={formData.valasSgd?.[p] || ''} onChange={e => setFormData({...formData, valasSgd: {...(formData.valasSgd || {}), [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-red-500 focus:outline-none font-mono" />
+                     </div>
+                   ))}
+                 </div>
+                 
+                 {/* Input Saldo Vault SGD */}
+                 <div className="pt-6">
+                   <label className="text-[11px] font-bold text-slate-700 block mb-1">Saldo Vault Enquiry SGD</label>
+                   <div className="flex items-center gap-2">
+                     <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">S$</span>
+                     <input type="number" min="0" value={formData.vaultEnquirySgd || ''} onChange={e => setFormData({...formData, vaultEnquirySgd: parseInt(e.target.value)||0})} className="w-full text-sm p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-mono font-bold" />
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
 

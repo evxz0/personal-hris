@@ -20,6 +20,9 @@ export interface BaCashOpnameData {
   utleKecil: CashData;
   valasUsd: CashData;
   vaultEnquiryUsd: number;
+  valasSgd?: CashData;
+  vaultEnquirySgd?: number;
+  catatanSelisih?: string;
 }
 
 interface Props { data: BaCashOpnameData; }
@@ -27,6 +30,7 @@ interface Props { data: BaCashOpnameData; }
 const PECAHAN_KERTAS = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000];
 const PECAHAN_KOIN = [1000, 500, 200, 100];
 const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
+const PECAHAN_SGD = [1000, 100, 50, 10, 5, 2, 1];
 
 export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
   const dt = formatTanggalTerbilang(data.tanggal);
@@ -38,9 +42,10 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
   const totalUtleBesar = calcTotal(data.utleBesar);
   const totalUtleKecil = calcTotal(data.utleKecil);
   const totalUsd = calcTotal(data.valasUsd);
+  const totalSgd = calcTotal(data.valasSgd || {});
   
   const grandTotal = totalUleBesar + totalUleKecil + totalUtleBesar + totalUtleKecil;
-  const selisih = grandTotal - data.vaultEnquiry;
+  const selisih = data.vaultEnquiry - grandTotal; // Note: fixed selisih calculation relative to vaultEnquiry
   const selisihUsd = totalUsd - data.vaultEnquiryUsd;
 
   const renderTableRows = (cashData: CashData) => (
@@ -186,40 +191,77 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
       <div className="mb-2">
         Terbilang fisik:<br/>
         <i>== {grandTotal === 0 ? "Nol" : terbilang(grandTotal)} Rupiah ==</i><br/><br/>
-        Saldo tersebut sesuai/cocok dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal {dt.raw.replace(/-/g, ' ')}, yaitu sebesar Rp{grandTotal.toLocaleString('id-ID')},-.
+        Saldo tersebut <span className="font-bold">{selisih === 0 ? 'sesuai/cocok' : 'tidak sesuai/tidak cocok'}</span> dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">Rp{grandTotal.toLocaleString('id-ID')},-</span>.
       </div>
+
+      {selisih !== 0 && data.catatanSelisih && (
+        <div className="mb-2 border border-black p-2 bg-gray-50 text-justify">
+          <span className="font-bold">Catatan Selisih:</span><br/>
+          {data.catatanSelisih}
+        </div>
+      )}
 
       {/* --- HALAMAN 2: VALAS & TTD --- */}
       <div className="page-break">
-        <div className="font-bold mb-1">II. UANG KAS VALUTA ASING</div>
-        <div className="font-bold ml-4 mb-1">Dollar – USA</div>
-        <table className="tbl-kas w-1/2 ml-4 mb-3">
-          <thead>
-            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (USD)</th><th>Jumlah (USD)</th></tr>
-          </thead>
-          <tbody>
-            {PECAHAN_USD.map(p => (
-              <tr key={`usd-${p}`}>
-                <td className="text-right px-1">{data.valasUsd[p] || '-'}</td>
-                <td className="text-center px-1">Lembar</td>
-                <td className="text-right px-1">{p} =</td>
-                <td className="text-right px-1">{(data.valasUsd[p] ? data.valasUsd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
-              </tr>
-            ))}
-            <tr className="font-bold bg-gray-100">
-              <td colSpan={3} className="text-center">Total Kas USD</td>
-              <td className="text-right">{totalUsd.toLocaleString('id-ID')}</td>
-            </tr>
-          </tbody>
-        </table>
+        {data.jenisCabang === 'KC' && (
+          <div className="mb-4">
+            <div className="font-bold mb-1">II. UANG KAS VALUTA ASING</div>
+            
+            <div className="font-bold ml-4 mb-1">A. Dollar – USA</div>
+            <table className="tbl-kas w-1/2 ml-4 mb-2">
+              <thead>
+                <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (USD)</th><th>Jumlah (USD)</th></tr>
+              </thead>
+              <tbody>
+                {PECAHAN_USD.map(p => (
+                  <tr key={`usd-${p}`}>
+                    <td className="text-right px-1">{data.valasUsd[p] || '-'}</td>
+                    <td className="text-center px-1">Lembar</td>
+                    <td className="text-right px-1">{p} =</td>
+                    <td className="text-right px-1">{(data.valasUsd[p] ? data.valasUsd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
+                  </tr>
+                ))}
+                <tr className="font-bold bg-gray-100">
+                  <td colSpan={3} className="text-center">Total Kas USD</td>
+                  <td className="text-right">{totalUsd.toLocaleString('id-ID')}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="mb-3 ml-4 text-[9.5px]">
+              <span className="font-bold underline">Terbilang :</span><br/>
+              <i>== {totalUsd === 0 ? "Zero" : terbilangEn(totalUsd)} Dollars ==</i><br/>
+              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {totalUsd.toLocaleString('id-ID')},-</span>
+            </div>
 
-        <div className="mb-6 ml-4">
-          <span className="font-bold underline">Terbilang :</span><br/>
-          <i>== {totalUsd === 0 ? "Zero" : terbilangEn(totalUsd)} Dollars ==</i><br/><br/>
-          Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {totalUsd.toLocaleString('id-ID')},-</span>
-        </div>
+            <div className="font-bold ml-4 mb-1">B. Dollar – SGD</div>
+            <table className="tbl-kas w-1/2 ml-4 mb-2">
+              <thead>
+                <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (SGD)</th><th>Jumlah (SGD)</th></tr>
+              </thead>
+              <tbody>
+                {PECAHAN_SGD.map(p => (
+                  <tr key={`sgd-${p}`}>
+                    <td className="text-right px-1">{data.valasSgd?.[p] || '-'}</td>
+                    <td className="text-center px-1">Lembar</td>
+                    <td className="text-right px-1">{p} =</td>
+                    <td className="text-right px-1">{(data.valasSgd?.[p] ? data.valasSgd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
+                  </tr>
+                ))}
+                <tr className="font-bold bg-gray-100">
+                  <td colSpan={3} className="text-center">Total Kas SGD</td>
+                  <td className="text-right">{totalSgd.toLocaleString('id-ID')}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="mb-2 ml-4 text-[9.5px]">
+              <span className="font-bold underline">Terbilang :</span><br/>
+              <i>== {totalSgd === 0 ? "Nol" : terbilang(totalSgd)} Dolar Singapura ==</i><br/>
+              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas SGD dan Branch Totals Combined SGD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">SGD {totalSgd.toLocaleString('id-ID')},-</span>
+            </div>
+          </div>
+        )}
 
-        <div className="text-justify mb-8">
+        <div className="text-justify mb-6">
           Demikianlah Berita Acara Pemeriksaan Kas PT Bank Negara Indonesia (Persero) Tbk. {data.jenisCabang} {data.kcp}, dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.
         </div>
 
