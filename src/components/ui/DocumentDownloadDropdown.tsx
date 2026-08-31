@@ -3,13 +3,15 @@ import { Download, ChevronDown, FileText, FileCode } from 'lucide-react'
 
 interface DocumentDownloadDropdownProps {
   onDownloadPDF: () => void | Promise<void>
-  onDownloadWord: () => void | Promise<void>
+  onDownloadWord?: () => void | Promise<void>
+  onPrint?: () => void | Promise<void>
   loading?: boolean
 }
 
 export function DocumentDownloadDropdown({
   onDownloadPDF,
   onDownloadWord,
+  onPrint,
   loading = false,
 }: DocumentDownloadDropdownProps) {
   const [open, setOpen] = useState(false)
@@ -52,17 +54,33 @@ export function DocumentDownloadDropdown({
             <span>Dokumen PDF (.pdf)</span>
           </button>
 
-          <button
-            type="button"
-            onClick={async () => {
-              setOpen(false)
-              await onDownloadWord()
-            }}
-            className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#2B3440] hover:bg-teal-50 hover:text-teal-700 flex items-center gap-2.5 transition-colors cursor-pointer border-t border-gray-50"
-          >
-            <FileCode size={14} className="text-blue-600" />
-            <span>Dokumen Word (.doc)</span>
-          </button>
+          {onDownloadWord && (
+            <button
+              type="button"
+              onClick={async () => {
+                setOpen(false)
+                await onDownloadWord()
+              }}
+              className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#2B3440] hover:bg-teal-50 hover:text-teal-700 flex items-center gap-2.5 transition-colors cursor-pointer border-t border-gray-50"
+            >
+              <FileCode size={14} className="text-blue-600" />
+              <span>Dokumen Word (.docx)</span>
+            </button>
+          )}
+
+          {onPrint && (
+            <button
+              type="button"
+              onClick={async () => {
+                setOpen(false)
+                await onPrint()
+              }}
+              className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#2B3440] hover:bg-teal-50 hover:text-teal-700 flex items-center gap-2.5 transition-colors cursor-pointer border-t border-gray-50"
+            >
+              <FileText size={14} className="text-slate-600" />
+              <span>Cetak Langsung (Print)</span>
+            </button>
+          )}
         </div>
       )}
     </div>

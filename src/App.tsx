@@ -15,6 +15,7 @@ import SuratPgsPage from "./pages/surat/SuratPgs";
 import SuratBalasanCutiPage from "./pages/surat/SuratBalasanCuti";
 import SuratKeteranganKerjaPage from "./pages/surat/SuratKeteranganKerja";
 import SuratCustomPage from "./pages/surat/SuratCustom";
+import SuratBaCashOpnamePage from "./pages/surat/SuratBaCashOpname";
 import SuperadminPage from "./pages/Superadmin";
 import { initRealtimeSessionTracker } from './lib/sessionTracker';
 import { useEffect } from "react";
@@ -111,6 +112,7 @@ function AppRoutes() {
       <Route path="/surat/balasan-cuti" element={<ProtectedRoute><SuratBalasanCutiPage /></ProtectedRoute>} />
       <Route path="/surat/keterangan-kerja" element={<ProtectedRoute><SuratKeteranganKerjaPage /></ProtectedRoute>} />
       <Route path="/surat/custom" element={<ProtectedRoute><SuratCustomPage /></ProtectedRoute>} />
+      <Route path="/surat/ba-cash-opname" element={<ProtectedRoute><SuratBaCashOpnamePage /></ProtectedRoute>} />
 
       <Route path="/riwayat" element={<Navigate replace to="/riwayat/karyawan" />} />
       <Route path="/riwayat/karyawan" element={<ProtectedRoute><RiwayatPage /></ProtectedRoute>} />

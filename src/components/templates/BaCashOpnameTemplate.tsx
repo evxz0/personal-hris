@@ -1,6 +1,5 @@
 import React from 'react';
 import { terbilang, formatTanggalTerbilang } from '../../lib/terbilang';
-import { formatRupiah } from '../../lib/utils';
 
 export interface CashData {
   [pecahan: number]: number; // pecahan -> jumlah lembar/keping
