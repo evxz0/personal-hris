@@ -36,6 +36,13 @@ const outletOptions = [
   "UNIVERSITAS TANJUNGPURA"
 ];
 
+const toTitleCase = (str: string) => {
+  return str.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
+  );
+};
+
 const SearchableDropdown = ({ options, value, onChange, placeholder }: { options: {value: string, label: string}[], value: string, onChange: (val: string) => void, placeholder: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -209,7 +216,7 @@ export default function SuratBaCashOpnamePage() {
               <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Kota Pengesahan (Tanda Tangan)</label>
               <select value={formData.kotaPengesahan} onChange={e => setFormData({...formData, kotaPengesahan: e.target.value})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
                 {outletOptions.map(outlet => (
-                  <option key={outlet} value={outlet}>{outlet}</option>
+                  <option key={outlet} value={toTitleCase(outlet)}>{toTitleCase(outlet)}</option>
                 ))}
               </select>
             </div>
