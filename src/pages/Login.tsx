@@ -17,12 +17,14 @@ import {
   Shield,
 } from "lucide-react";
 import { authService } from "../lib/authService";
+import { useAuth } from "../context/AuthContext";
 
 interface LoginPageProps {
   onLoginSuccess?: () => void;
 }
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +47,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setError("");
 
     try {
-      const res = await authService.login(username, password);
+      const res = await login(username, password);
       setLoading(false);
 
       if (!res.success || !res.user) {

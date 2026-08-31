@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { authService, type AppUser } from './lib/authService'
+import { type AppUser } from './lib/authService'
 import { useIdleTimeout } from './hooks/useIdleTimeout'
+import { useAuth } from './context/AuthContext'
 import { Layout } from './components/layout/Layout'
 import LoginPage from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -43,34 +44,16 @@ function LoginRoute({ session }: { session: AppUser | null }) {
 import { initRealtimeSessionTracker } from './lib/sessionTracker'
 
 export default function App() {
-  const [session, setSession] = useState<AppUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user: session, isLoading: loading } = useAuth()
 
   // Attach 1-hour idle timeout listener when session is active
   useIdleTimeout(!!session)
 
   useEffect(() => {
-    const checkSession = () => {
-      const userSession = authService.getSession()
-      setSession(userSession)
-      if (userSession) {
-        initRealtimeSessionTracker(userSession)
-      }
+    if (session) {
+      initRealtimeSessionTracker(session)
     }
-
-    checkSession()
-    setLoading(false)
-
-    const handleStorageChange = (e: StorageEvent) => {
-      // Re-check session if auth storage keys change
-      if (e.key === 'phris_custom_session' || e.key === 'phris_authenticated_user' || e.key === null) {
-        checkSession()
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
-  }, [])
+  }, [session])
 
   if (loading) {
     return (

@@ -5,8 +5,8 @@ import {
   CalendarOff, Settings, FileText, ChevronDown,
   ChevronLeft, LogOut, X, ArrowRightLeft, UserCheck, ShieldAlert
 } from 'lucide-react'
-import { authService } from '../../lib/authService'
 import { recordUserLogout } from '../../lib/sessionTracker'
+import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
   { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
@@ -38,8 +38,9 @@ interface SidebarProps {
 export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
-
-  const [isSuperadmin, setIsSuperadmin] = useState(false)
+  
+  const { user, logout } = useAuth()
+  const isSuperadmin = user?.role === 'SUPERADMIN'
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
@@ -51,14 +52,9 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
     if (isRiwayatActive) setRiwayatOpen(true)
   }, [location.pathname])
 
-  useEffect(() => {
-    const user = authService.getSession()
-    setIsSuperadmin(user?.role === 'SUPERADMIN')
-  }, [])
-
   const handleLogout = async () => {
     await recordUserLogout().catch(console.error)
-    authService.logout()
+    logout()
     navigate('/login')
   }
 
