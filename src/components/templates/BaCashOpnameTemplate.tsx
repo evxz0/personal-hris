@@ -64,7 +64,15 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
         .tbl-kas td, .tbl-kas th { border: 1px solid black; padding: 2px 4px; }
         .tbl-kas th { font-weight: bold; text-align: center; background-color: #f3f4f6; }
       `}</style>
-      
+      {/* 1. Header Kop Surat BNI */}
+      <div className="w-full flex items-center justify-between mb-8 pb-4">
+        <img src="/logo-kop-bni.jpg" alt="Kop BNI" className="h-8 object-contain" />
+        <div className="text-[10px] text-gray-500 font-sans tracking-wide">
+          BA. STOCK OPNAME <span className="font-bold">KCP {data.kcp.toUpperCase()}</span>
+        </div>
+      </div>
+
+      {/* 2. Judul Dokumen */}
       <div className="text-center font-bold text-sm leading-tight mb-6">
         <p>BERITA ACARA PEMERIKSAAN KAS</p>
         <p>PADA PT BANK NEGARA INDONESIA (PERSERO) TBK</p>
