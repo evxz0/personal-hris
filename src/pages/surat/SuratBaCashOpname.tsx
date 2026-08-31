@@ -7,7 +7,20 @@ import { DocumentDownloadDropdown } from '../../components/ui/DocumentDownloadDr
 import { exportElementToPDF } from '../../lib/documentExport'
 import { FileText, Calculator } from 'lucide-react'
 
-const PECAHAN = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
+const pecahanRupiah = [
+  { nominal: 100000, satuan: "Lembar" },
+  { nominal: 75000, satuan: "Lembar" },
+  { nominal: 50000, satuan: "Lembar" },
+  { nominal: 20000, satuan: "Lembar" },
+  { nominal: 10000, satuan: "Lembar" },
+  { nominal: 5000, satuan: "Lembar" },
+  { nominal: 2000, satuan: "Lembar" },
+  { nominal: 1000, satuan: "Lembar" },
+  { nominal: 1000, satuan: "Keping" },
+  { nominal: 500, satuan: "Keping" },
+  { nominal: 200, satuan: "Keping" },
+  { nominal: 100, satuan: "Keping" }
+];
 const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
 const PECAHAN_SGD = [1000, 100, 50, 10, 5, 2, 1];
 
@@ -276,50 +289,62 @@ export default function SuratBaCashOpnamePage() {
           </p>
           <div className="grid grid-cols-2 gap-4">
              <div>
-               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS BESAR (Lbr/Keping)</p>
-               {PECAHAN.map(p => (
-                 <div key={`ule-bsr-${p}`} className="flex items-center gap-2 mt-1">
-                   <span className="w-16 text-[10px] text-right text-slate-600 font-mono">{p.toLocaleString('id-ID')}</span>
-                   <input type="number" min="0" value={formData.uleBesar[p] || ''} onChange={e => setFormData({...formData, uleBesar: {...formData.uleBesar, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
-                 </div>
-               ))}
+               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS BESAR</p>
+               {pecahanRupiah.map(p => {
+                 const key = `${p.nominal}_${p.satuan}`;
+                 return (
+                   <div key={`ule-bsr-${key}`} className="flex items-center gap-2 mt-1">
+                     <span className="w-20 text-[10px] text-right text-slate-600 font-mono">{p.nominal.toLocaleString('id-ID')} ({p.satuan === 'Lembar' ? 'Lbr' : 'Kpg'})</span>
+                     <input type="number" min="0" value={formData.uleBesar[key] || ''} onChange={e => setFormData({...formData, uleBesar: {...formData.uleBesar, [key]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
+                   </div>
+                 );
+               })}
              </div>
              <div>
-               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS KECIL (Lbr/Keping)</p>
-               {PECAHAN.map(p => (
-                 <div key={`ule-kcl-${p}`} className="flex items-center gap-2 mt-1">
-                   <span className="w-16 text-[10px] text-right text-slate-600 font-mono">{p.toLocaleString('id-ID')}</span>
-                   <input type="number" min="0" value={formData.uleKecil[p] || ''} onChange={e => setFormData({...formData, uleKecil: {...formData.uleKecil, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
-                 </div>
-               ))}
+               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS KECIL</p>
+               {pecahanRupiah.map(p => {
+                 const key = `${p.nominal}_${p.satuan}`;
+                 return (
+                   <div key={`ule-kcl-${key}`} className="flex items-center gap-2 mt-1">
+                     <span className="w-20 text-[10px] text-right text-slate-600 font-mono">{p.nominal.toLocaleString('id-ID')} ({p.satuan === 'Lembar' ? 'Lbr' : 'Kpg'})</span>
+                     <input type="number" min="0" value={formData.uleKecil[key] || ''} onChange={e => setFormData({...formData, uleKecil: {...formData.uleKecil, [key]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
+                   </div>
+                 );
+               })}
              </div>
           </div>
         </div>
 
         {/* 4. Rincian Uang Kas UTLE (Tidak Layak Edar) */}
         <div className="space-y-3 pb-2">
-          <p className="text-xs font-bold text-rose-800 uppercase border-l-2 border-rose-600 pl-2 flex items-center justify-between">
+          <p className="text-xs font-bold text-teal-800 uppercase border-l-2 border-teal-600 pl-2 flex items-center justify-between">
             <span>4. Rincian Uang Kas UTLE (Tidak Layak)</span>
-            <Calculator size={14} className="text-rose-600"/>
+            <Calculator size={14}/>
           </p>
           <div className="grid grid-cols-2 gap-4">
              <div>
-               <p className="text-[10px] font-bold text-center bg-rose-50 text-rose-800 py-1 rounded border border-rose-100">KAS BESAR (Lbr/Keping)</p>
-               {PECAHAN.map(p => (
-                 <div key={`utle-bsr-${p}`} className="flex items-center gap-2 mt-1">
-                   <span className="w-16 text-[10px] text-right text-slate-600 font-mono">{p.toLocaleString('id-ID')}</span>
-                   <input type="number" min="0" value={formData.utleBesar[p] || ''} onChange={e => setFormData({...formData, utleBesar: {...formData.utleBesar, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border border-rose-200 rounded text-right focus:ring-1 focus:ring-rose-500 focus:outline-none font-mono" />
-                 </div>
-               ))}
+               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS BESAR</p>
+               {pecahanRupiah.map(p => {
+                 const key = `${p.nominal}_${p.satuan}`;
+                 return (
+                   <div key={`utle-bsr-${key}`} className="flex items-center gap-2 mt-1">
+                     <span className="w-20 text-[10px] text-right text-slate-600 font-mono">{p.nominal.toLocaleString('id-ID')} ({p.satuan === 'Lembar' ? 'Lbr' : 'Kpg'})</span>
+                     <input type="number" min="0" value={formData.utleBesar[key] || ''} onChange={e => setFormData({...formData, utleBesar: {...formData.utleBesar, [key]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
+                   </div>
+                 );
+               })}
              </div>
              <div>
-               <p className="text-[10px] font-bold text-center bg-rose-50 text-rose-800 py-1 rounded border border-rose-100">KAS KECIL (Lbr/Keping)</p>
-               {PECAHAN.map(p => (
-                 <div key={`utle-kcl-${p}`} className="flex items-center gap-2 mt-1">
-                   <span className="w-16 text-[10px] text-right text-slate-600 font-mono">{p.toLocaleString('id-ID')}</span>
-                   <input type="number" min="0" value={formData.utleKecil[p] || ''} onChange={e => setFormData({...formData, utleKecil: {...formData.utleKecil, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border border-rose-200 rounded text-right focus:ring-1 focus:ring-rose-500 focus:outline-none font-mono" />
-                 </div>
-               ))}
+               <p className="text-[10px] font-bold text-center bg-teal-50 text-teal-800 py-1 rounded border border-teal-100">KAS KECIL</p>
+               {pecahanRupiah.map(p => {
+                 const key = `${p.nominal}_${p.satuan}`;
+                 return (
+                   <div key={`utle-kcl-${key}`} className="flex items-center gap-2 mt-1">
+                     <span className="w-20 text-[10px] text-right text-slate-600 font-mono">{p.nominal.toLocaleString('id-ID')} ({p.satuan === 'Lembar' ? 'Lbr' : 'Kpg'})</span>
+                     <input type="number" min="0" value={formData.utleKecil[key] || ''} onChange={e => setFormData({...formData, utleKecil: {...formData.utleKecil, [key]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border rounded text-right focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono" />
+                   </div>
+                 );
+               })}
              </div>
           </div>
           <div className="pt-6 border-t border-slate-100 mt-4">

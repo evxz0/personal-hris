@@ -2,7 +2,7 @@ import React from 'react';
 import { terbilang, terbilangEn, formatTanggalTerbilang } from '../../lib/terbilang';
 
 export interface CashData {
-  [pecahan: number]: number; // pecahan -> jumlah lembar/keping
+  [key: string]: number;
 }
 
 export interface BaCashOpnameData {
@@ -28,15 +28,30 @@ export interface BaCashOpnameData {
 
 interface Props { data: BaCashOpnameData; }
 
-const PECAHAN_KERTAS = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000];
-const PECAHAN_KOIN = [1000, 500, 200, 100];
+const PECAHAN_RUPIAH = [
+  { nominal: 100000, satuan: "Lembar" },
+  { nominal: 75000, satuan: "Lembar" },
+  { nominal: 50000, satuan: "Lembar" },
+  { nominal: 20000, satuan: "Lembar" },
+  { nominal: 10000, satuan: "Lembar" },
+  { nominal: 5000, satuan: "Lembar" },
+  { nominal: 2000, satuan: "Lembar" },
+  { nominal: 1000, satuan: "Lembar" },
+  { nominal: 1000, satuan: "Keping" },
+  { nominal: 500, satuan: "Keping" },
+  { nominal: 200, satuan: "Keping" },
+  { nominal: 100, satuan: "Keping" }
+];
 const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
 const PECAHAN_SGD = [1000, 100, 50, 10, 5, 2, 1];
 
 export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
   const dt = formatTanggalTerbilang(data.tanggal);
   
-  const calcTotal = (cash: CashData) => Object.entries(cash).reduce((acc, [pecahan, lembar]) => acc + (Number(pecahan) * lembar), 0);
+  const calcTotal = (cash: CashData) => Object.entries(cash).reduce((acc, [key, count]) => {
+    const nominal = Number(key.split('_')[0]);
+    return acc + (nominal * count);
+  }, 0);
   
   const totalUleBesar = calcTotal(data.uleBesar);
   const totalUleKecil = calcTotal(data.uleKecil);
@@ -51,22 +66,18 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
 
   const renderTableRows = (cashData: CashData) => (
     <>
-      {PECAHAN_KERTAS.map(p => (
-        <tr key={p}>
-          <td className="text-right px-1">{cashData[p] || '-'}</td>
-          <td className="text-center px-1">Lembar</td>
-          <td className="text-right px-1">{p.toLocaleString('id-ID')} =</td>
-          <td className="text-right px-1">{(cashData[p] ? cashData[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
-        </tr>
-      ))}
-      {PECAHAN_KOIN.map(p => (
-        <tr key={p}>
-          <td className="text-right px-1">{cashData[p] || '-'}</td>
-          <td className="text-center px-1">Keping</td>
-          <td className="text-right px-1">{p.toLocaleString('id-ID')} =</td>
-          <td className="text-right px-1">{(cashData[p] ? cashData[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
-        </tr>
-      ))}
+      {PECAHAN_RUPIAH.map((p) => {
+        const key = `${p.nominal}_${p.satuan}`;
+        const amount = cashData[key] || 0;
+        return (
+          <tr key={key}>
+            <td className="text-right px-1">{amount || '-'}</td>
+            <td className="text-center px-1">{p.satuan}</td>
+            <td className="text-right px-1">{p.nominal.toLocaleString('id-ID')} =</td>
+            <td className="text-right px-1">{amount ? (amount * p.nominal).toLocaleString('id-ID') : '-'}</td>
+          </tr>
+        );
+      })}
     </>
   );
 
