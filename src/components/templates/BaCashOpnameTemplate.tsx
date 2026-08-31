@@ -58,17 +58,20 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
   );
 
   return (
-    <div ref={ref} className="bg-white text-black p-8 font-serif text-[11px] leading-snug mx-auto max-w-[210mm]">
+    <div ref={ref} className="bg-white text-black px-8 pt-4 pb-8 font-serif text-[11px] leading-snug mx-auto max-w-[210mm]">
       <style>{`
-        @media print { @page { size: A4 portrait; margin: 15mm; } }
+        @media print { 
+          @page { size: A4 portrait; margin: 10mm 15mm 15mm 15mm; } 
+        }
         .tbl-kas td, .tbl-kas th { border: 1px solid black; padding: 2px 4px; }
         .tbl-kas th { font-weight: bold; text-align: center; background-color: #f3f4f6; }
       `}</style>
-      {/* 1. Header Kop Surat BNI */}
-      <div className="w-full flex items-center justify-between mb-8 pb-4">
+      
+      {/* 1. Header Kop Surat BNI (Diangkat ke atas dengan -mt-2) */}
+      <div className="w-full flex items-end justify-between mb-8 -mt-2">
         <img src="/logo-kop-bni.jpg" alt="Kop BNI" className="h-8 object-contain" />
-        <div className="text-[10px] text-gray-500 font-sans tracking-wide">
-          BA. STOCK OPNAME <span className="font-bold">KCP {data.kcp.toUpperCase()}</span>
+        <div className="text-[10px] text-gray-500 font-sans tracking-wide pb-1">
+          BA. STOCK OPNAME <span className="font-bold">KCP {data.kcp.toUpperCase()}</span> HALAMAN <span className="font-bold">1</span>
         </div>
       </div>
 
