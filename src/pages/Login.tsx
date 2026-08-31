@@ -120,36 +120,11 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             </div>
 
             {/* Main Value Proposition Title */}
-            <div className="space-y-2.5">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
-                Kelola Data Pegawai &amp; Penerbitan SK Secara Efisien.
+            <div className="space-y-2.5 pt-4">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white">
+                Kelola Data Pegawai &amp;<br />
+                Penerbitan SK Secara Efisien.
               </h2>
-              <p className="text-xs sm:text-sm text-teal-100/80 leading-relaxed font-normal">
-                Platform terintegrasi untuk pengelolaan administrasi kepegawaian, cetak otomatis SK PGS, Cuti, dan Keterangan Kerja dengan enkripsi perbankan.
-              </p>
-            </div>
-
-            {/* Feature Badges */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-white/[0.07] border border-white/10 backdrop-blur-md space-y-1">
-                <div className="flex items-center gap-2 text-teal-300">
-                  <FileCheck2 className="w-4 h-4 text-teal-400 shrink-0"/>
-                  <span className="text-xs font-bold text-white">Cetak Dokumen Presisi</span>
-                </div>
-                <p className="text-[11px] text-teal-100/70 leading-normal">
-                  Generate berkas SK PDF &amp; Word 1 halaman siap cetak.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-white/[0.07] border border-white/10 backdrop-blur-md space-y-1">
-                <div className="flex items-center gap-2 text-teal-300">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0"/>
-                  <span className="text-xs font-bold text-white">Enkripsi &amp; Proteksi</span>
-                </div>
-                <p className="text-[11px] text-teal-100/70 leading-normal">
-                  Autentikasi aman dengan isolasi sesi perangkat.
-                </p>
-              </div>
             </div>
           </div>
 
@@ -172,9 +147,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 <h3 className="text-xl font-bold text-slate-900 tracking-tight">
                   Selamat Datang
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Silakan masukkan akun ID Pengguna dan kata sandi Anda.
-                </p>
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
