@@ -11,6 +11,11 @@ const PECAHAN = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200,
 const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
 const PECAHAN_SGD = [1000, 100, 50, 10, 5, 2, 1];
 
+const oricOptions = [
+  { nama: "Adirama Chrisna Putra", npp: "P060320", jabatan: "Operational Risk Internal Control" },
+  { nama: "Nurmayanti", npp: "P050190", jabatan: "Operational Risk Internal Control" }
+];
+
 const SearchableDropdown = ({ options, value, onChange, placeholder }: { options: {value: string, label: string}[], value: string, onChange: (val: string) => void, placeholder: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -133,6 +138,17 @@ export default function SuratBaCashOpnamePage() {
     }
   };
 
+  const handleOricSelection = (npp: string) => {
+    if (npp === 'MANUAL' || npp === '') {
+      setFormData({ ...formData, oric: { nama: '', npp: '', jabatan: 'Operational Risk Internal Control' } });
+      return;
+    }
+    const emp = oricOptions.find(o => o.npp === npp);
+    if (emp) {
+      setFormData({ ...formData, oric: { nama: emp.nama, npp: emp.npp, jabatan: emp.jabatan } });
+    }
+  };
+
   const calcTotal = (cash: Record<number, number>) => Object.entries(cash).reduce((sum, [p, jml]) => sum + (parseInt(p) * jml), 0);
   const totalRupiah = calcTotal(formData.uleBesar) + calcTotal(formData.uleKecil) + calcTotal(formData.utleBesar) + calcTotal(formData.utleKecil);
   const selisihRupiah = formData.vaultEnquiry - totalRupiah;
@@ -172,12 +188,18 @@ export default function SuratBaCashOpnamePage() {
           {/* ORIC */}
           <div className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
             <label className="text-[10px] font-bold text-slate-500 uppercase">Pemeriksa (ORIC)</label>
-            <SearchableDropdown
-              options={karyawanList.map(k => ({ value: k.npp, label: `${k.nama} (${k.npp})` }))}
-              value={formData.oric.npp || 'MANUAL'}
-              onChange={val => handleSelectPegawai('oric', val)}
-              placeholder="-- Pilih Karyawan --"
-            />
+            <select 
+              value={formData.oric.npp || ''}
+              onChange={(e) => handleOricSelection(e.target.value)}
+              className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white"
+            >
+              <option value="">-- Isi Manual / Pilih Karyawan --</option>
+              {oricOptions.map((oric) => (
+                <option key={oric.npp} value={oric.npp}>
+                  {oric.nama} - {oric.npp}
+                </option>
+              ))}
+            </select>
             <div className="flex gap-2 mt-1.5">
               <input type="text" placeholder="Ketik Nama Manual..." value={formData.oric.nama} onChange={e => setFormData({...formData, oric: {...formData.oric, nama: e.target.value}})} className="w-full text-xs p-1.5 border rounded-lg" />
               <input type="text" placeholder="NPP" value={formData.oric.npp} onChange={e => setFormData({...formData, oric: {...formData.oric, npp: e.target.value}})} className="w-24 text-xs p-1.5 border rounded-lg" />
