@@ -152,6 +152,8 @@ export default function SuratBaCashOpnamePage() {
     kotaPengesahan: 'Pontianak'
   });
 
+  const [showSaksi4, setShowSaksi4] = useState(false);
+
   const handlePrint = useReactToPrint({ contentRef: printRef });
   const handleDownloadPDF = async () => { if (printRef.current) await exportElementToPDF(printRef.current, `BA_Cash_Opname_${formData.kcp}`); };
 
@@ -262,9 +264,22 @@ export default function SuratBaCashOpnamePage() {
             <input type="text" placeholder="Jabatan" value={formData.oric.jabatan} onChange={e => setFormData({...formData, oric: {...formData.oric, jabatan: e.target.value}})} className="w-full text-xs p-1.5 border rounded-lg mt-1" />
           </div>
 
-          {/* SAKSI 1-3 */}
+          {/* SAKSI */}
           {formData.saksi.map((s, i) => (
-            <div key={i} className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+            <div key={i} className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100 relative">
+              {i === 3 && (
+                <button 
+                  onClick={() => {
+                    const newS = [...formData.saksi];
+                    newS.pop();
+                    setFormData({...formData, saksi: newS});
+                    setShowSaksi4(false);
+                  }}
+                  className="absolute top-2.5 right-2.5 text-[10px] font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200"
+                >
+                  Hapus
+                </button>
+              )}
               <label className="text-[10px] font-bold text-slate-500 uppercase">Saksi {i + 1}</label>
               <SearchableDropdown
                 options={karyawanList.map(k => ({ value: k.npp, label: `${k.nama} (${k.npp})` }))}
@@ -279,6 +294,17 @@ export default function SuratBaCashOpnamePage() {
               <input type="text" placeholder="Jabatan" value={s.jabatan} onChange={e => { const newS = [...formData.saksi]; newS[i].jabatan = e.target.value; setFormData({...formData, saksi: newS}); }} className="w-full text-xs p-1.5 border rounded-lg mt-1" />
             </div>
           ))}
+          {!showSaksi4 && (
+            <button 
+              onClick={() => {
+                setFormData({...formData, saksi: [...formData.saksi, { nama: '', npp: '', jabatan: 'Penyelia Teller' }]});
+                setShowSaksi4(true);
+              }} 
+              className="w-full py-2 border border-dashed border-teal-500 text-teal-600 text-xs rounded-xl hover:bg-teal-50 font-bold"
+            >
+              + Tambah Saksi 4
+            </button>
+          )}
         </div>
 
         {/* 3. Rincian Uang Kas ULE (Layak Edar) */}

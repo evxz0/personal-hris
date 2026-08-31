@@ -280,9 +280,9 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
         {/* Tabel Tanda Tangan */}
         <div className="w-full flex justify-between px-4 text-center">
           <div className="w-[45%]">
-            <p className="mb-16">Yang Menyaksikan,</p>
+            <p className={data.saksi.length > 3 ? "mb-6" : "mb-16"}>Yang Menyaksikan,</p>
             {data.saksi.map((s, i) => (
-               <div key={i} className="flex justify-between items-end mb-4 text-left">
+               <div key={i} className={`flex justify-between items-end ${data.saksi.length > 3 ? "mb-2" : "mb-4"} text-left`}>
                  <div>
                    <p className="font-bold underline">{s.nama || '__________________'}</p>
                    <p>NPP. {s.npp}</p>
