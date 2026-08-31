@@ -55,7 +55,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const handleLogout = async () => {
     await recordUserLogout().catch(console.error)
     logout()
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
   return (
