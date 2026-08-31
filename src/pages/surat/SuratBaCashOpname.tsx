@@ -136,7 +136,7 @@ export default function SuratBaCashOpnamePage() {
     uleBesar: {}, uleKecil: {}, utleBesar: {}, utleKecil: {},
     valasUsd: {}, vaultEnquiryUsd: 0,
     valasSgd: {}, vaultEnquirySgd: 0, catatanSelisih: '',
-    kotaPengesahan: 'PONTIANAK'
+    kotaPengesahan: 'Pontianak'
   });
 
   const handlePrint = useReactToPrint({ contentRef: printRef });
