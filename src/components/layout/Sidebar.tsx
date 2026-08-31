@@ -70,7 +70,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full z-50 flex flex-col
+        fixed top-0 left-0 h-screen z-50 flex flex-col
         bg-gradient-to-b from-teal-700 to-teal-900 text-white
         transition-all duration-300 ease-in-out shadow-2xl
         ${collapsed ? 'w-16' : 'w-64'}
