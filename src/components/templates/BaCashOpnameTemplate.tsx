@@ -1,5 +1,5 @@
 import React from 'react';
-import { terbilang, formatTanggalTerbilang } from '../../lib/terbilang';
+import { terbilang, terbilangEn, formatTanggalTerbilang } from '../../lib/terbilang';
 
 export interface CashData {
   [pecahan: number]: number; // pecahan -> jumlah lembar/keping
@@ -17,12 +17,15 @@ export interface BaCashOpnameData {
   uleKecil: CashData;
   utleBesar: CashData;
   utleKecil: CashData;
+  valasUsd: CashData;
+  vaultEnquiryUsd: number;
 }
 
 interface Props { data: BaCashOpnameData; }
 
 const PECAHAN_KERTAS = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000];
 const PECAHAN_KOIN = [1000, 500, 200, 100];
+const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
 
 export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
   const dt = formatTanggalTerbilang(data.tanggal);
@@ -33,8 +36,11 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
   const totalUleKecil = calcTotal(data.uleKecil);
   const totalUtleBesar = calcTotal(data.utleBesar);
   const totalUtleKecil = calcTotal(data.utleKecil);
+  const totalUsd = calcTotal(data.valasUsd);
+  
   const grandTotal = totalUleBesar + totalUleKecil + totalUtleBesar + totalUtleKecil;
   const selisih = grandTotal - data.vaultEnquiry;
+  const selisihUsd = totalUsd - data.vaultEnquiryUsd;
 
   const renderTableRows = (cashData: CashData) => (
     <>
@@ -62,6 +68,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
       <style>{`
         @media print { 
           @page { size: A4 portrait; margin: 10mm 15mm 15mm 15mm; } 
+          .page-break { page-break-before: always; padding-top: 15mm; }
         }
         .tbl-kas td, .tbl-kas th { border: 1px solid black; padding: 2px 4px; }
         .tbl-kas th { font-weight: bold; text-align: center; background-color: #f3f4f6; }
@@ -137,56 +144,88 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
           </tbody>
         </table>
       </div>
+      <div className="page-break mt-6">
+        <div className="font-bold ml-4 mb-1 mt-2">B. Uang Tidak Layak Edar (UTLE)</div>
+        <div className="flex gap-4 ml-4 mb-6">
+          <table className="tbl-kas w-1/2">
+            <thead>
+              <tr><th colSpan={4}>Uang Kas Besar</th></tr>
+              <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
+            </thead>
+            <tbody>
+              {renderTableRows(data.utleBesar)}
+              <tr className="font-bold bg-gray-100">
+                <td colSpan={3} className="text-center">Total Kas Besar</td>
+                <td className="text-right">{totalUtleBesar.toLocaleString('id-ID')}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table className="tbl-kas w-1/2">
+            <thead>
+              <tr><th colSpan={4}>Uang Kas Kecil</th></tr>
+              <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
+            </thead>
+            <tbody>
+              {renderTableRows(data.utleKecil)}
+              <tr className="font-bold bg-gray-100">
+                <td colSpan={3} className="text-center">Total Kas Kecil</td>
+                <td className="text-right">{totalUtleKecil.toLocaleString('id-ID')}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div className="font-bold ml-4 mb-1 mt-4">B. Uang Tidak Layak Edar (UTLE)</div>
-      <div className="flex gap-4 ml-4 mb-6">
-        <table className="tbl-kas w-1/2">
+        <table className="tbl-kas w-2/3 ml-4 mb-4 font-bold">
+          <tbody>
+            <tr><td className="w-2/3">Total Uang Kas (A+B)</td><td className="w-8 text-center">Rp</td><td className="text-right">{grandTotal.toLocaleString('id-ID')}</td></tr>
+            <tr><td>Vault Enquiry (009028)</td><td className="text-center">Rp</td><td className="text-right">{data.vaultEnquiry.toLocaleString('id-ID')}</td></tr>
+            <tr><td>Selisih</td><td className="text-center">Rp</td><td className="text-right">{selisih === 0 ? '-' : selisih.toLocaleString('id-ID')}</td></tr>
+          </tbody>
+        </table>
+
+        <div className="mb-4">
+          Terbilang fisik:<br/>
+          <span className="font-bold italic">== {terbilang(grandTotal)} Rupiah ==</span>
+        </div>
+
+        <div className="font-bold mb-1 mt-6">II. UANG KAS VALUTA ASING</div>
+        <div className="font-bold ml-4 mb-1">Dollar – USA</div>
+        <table className="tbl-kas w-1/2 ml-4 mb-4">
           <thead>
-            <tr><th colSpan={4}>Uang Kas Besar</th></tr>
-            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
+            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (USD)</th><th>Jumlah (USD)</th></tr>
           </thead>
           <tbody>
-            {renderTableRows(data.utleBesar)}
+            {PECAHAN_USD.map(p => (
+              <tr key={`usd-${p}`}>
+                <td className="text-right px-1">{data.valasUsd?.[p] || '-'}</td>
+                <td className="text-center px-1">Lembar</td>
+                <td className="text-right px-1">{p.toLocaleString('id-ID')} =</td>
+                <td className="text-right px-1">{(data.valasUsd?.[p] ? data.valasUsd[p] * p : 0).toLocaleString('id-ID') || '-'}</td>
+              </tr>
+            ))}
             <tr className="font-bold bg-gray-100">
-              <td colSpan={3} className="text-center">Total Kas Besar</td>
-              <td className="text-right">{totalUtleBesar.toLocaleString('id-ID')}</td>
+              <td colSpan={3} className="text-center">Total USD</td>
+              <td className="text-right">{totalUsd.toLocaleString('id-ID')}</td>
             </tr>
           </tbody>
         </table>
-        <table className="tbl-kas w-1/2">
-          <thead>
-            <tr><th colSpan={4}>Uang Kas Kecil</th></tr>
-            <tr><th>Jml Lbr</th><th>Satuan</th><th>Pecahan (Rp)</th><th>Jumlah (Rp)</th></tr>
-          </thead>
+
+        <table className="tbl-kas w-2/3 ml-4 mb-4 font-bold">
           <tbody>
-            {renderTableRows(data.utleKecil)}
-            <tr className="font-bold bg-gray-100">
-              <td colSpan={3} className="text-center">Total Kas Kecil</td>
-              <td className="text-right">{totalUtleKecil.toLocaleString('id-ID')}</td>
-            </tr>
+            <tr><td className="w-2/3">Total Uang Kas</td><td className="w-8 text-center">USD</td><td className="text-right">{totalUsd.toLocaleString('id-ID')}</td></tr>
+            <tr><td>Vault Enquiry (009028)</td><td className="text-center">USD</td><td className="text-right">{data.vaultEnquiryUsd?.toLocaleString('id-ID')}</td></tr>
+            <tr><td>Selisih</td><td className="text-center">USD</td><td className="text-right">{selisihUsd === 0 ? '-' : selisihUsd.toLocaleString('id-ID')}</td></tr>
           </tbody>
         </table>
-      </div>
 
-      <table className="tbl-kas w-2/3 ml-4 mb-4 font-bold">
-        <tbody>
-          <tr><td className="w-2/3">Total Uang Kas (A+B)</td><td className="w-8 text-center">Rp</td><td className="text-right">{grandTotal.toLocaleString('id-ID')}</td></tr>
-          <tr><td>Vault Enquiry (009028)</td><td className="text-center">Rp</td><td className="text-right">{data.vaultEnquiry.toLocaleString('id-ID')}</td></tr>
-          <tr><td>Selisih</td><td className="text-center">Rp</td><td className="text-right">{selisih === 0 ? '-' : selisih.toLocaleString('id-ID')}</td></tr>
-        </tbody>
-      </table>
+        <div className="mb-6">
+          Terbilang fisik:<br/>
+          <span className="font-bold italic">== {terbilangEn(totalUsd)} Dollars ==</span>
+        </div>
 
-      <div className="mb-4">
-        Terbilang fisik:<br/>
-        <i>{terbilang(grandTotal)} Rupiah.</i><br/><br/>
-        Saldo tersebut sesuai/cocok dengan Register Kas Rupiah dan Branch Total Combined Rupiah per tanggal {dt.raw.replace(/-/g, ' ')}, yaitu sebesar Rp{grandTotal.toLocaleString('id-ID')},-.
-      </div>
-
-      <div className="font-bold mb-1">II. UANG KAS VALUTA ASING</div>
-      <div className="mb-6 ml-4">Dollar – USA<br/>Terbilang :<br/><i>0 US Dollar.</i><br/>Saldo tersebut sesuai/cocok dengan Register Kas USD dan Branch Totals Combined USD per tanggal {dt.raw.replace(/-/g, ' ')}, yaitu sebesar USD 0,-</div>
-
-      <div className="text-justify mb-8">
-        Demikianlah Berita Acara Pemeriksaan Kas PT Bank Negara Indonesia (Persero) Tbk. KCP {data.kcp}, dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.
+        <div className="text-justify mb-8">
+          Demikianlah Berita Acara Pemeriksaan Kas PT Bank Negara Indonesia (Persero) Tbk. KCP {data.kcp}, dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.
+        </div>
       </div>
 
       <div className="w-full flex justify-between px-8 text-center">

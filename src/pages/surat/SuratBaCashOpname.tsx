@@ -8,6 +8,7 @@ import { exportElementToPDF } from '../../lib/documentExport'
 import { FileText, Calculator } from 'lucide-react'
 
 const PECAHAN = [100000, 75000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
+const PECAHAN_USD = [100, 50, 20, 10, 5, 2, 1];
 
 export default function SuratBaCashOpnamePage() {
   const printRef = useRef<HTMLDivElement>(null);
@@ -29,7 +30,8 @@ export default function SuratBaCashOpnamePage() {
       { nama: '', npp: '', jabatan: 'Branch Banking Officer' },
       { nama: '', npp: '', jabatan: 'Branch Manager' }
     ],
-    uleBesar: {}, uleKecil: {}, utleBesar: {}, utleKecil: {}
+    uleBesar: {}, uleKecil: {}, utleBesar: {}, utleKecil: {},
+    valasUsd: {}, vaultEnquiryUsd: 0
   });
 
   const handlePrint = useReactToPrint({ contentRef: printRef });
@@ -170,11 +172,39 @@ export default function SuratBaCashOpnamePage() {
                ))}
              </div>
           </div>
-          <div className="pt-6 border-t border-slate-100 mt-4">
-            <label className="text-[11px] font-bold text-slate-700">Saldo Vault Enquiry (Pembanding)</label>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">Rp</span>
-              <input type="number" min="0" value={formData.vaultEnquiry || ''} onChange={e => setFormData({...formData, vaultEnquiry: parseInt(e.target.value)||0})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 font-mono font-bold" />
+          <div className="pt-6 border-t border-slate-100 mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[11px] font-bold text-slate-700">Saldo Vault Enquiry (Pembanding Rupiah)</label>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">Rp</span>
+                <input type="number" min="0" value={formData.vaultEnquiry || ''} onChange={e => setFormData({...formData, vaultEnquiry: parseInt(e.target.value)||0})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 font-mono font-bold" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-slate-700">Saldo Vault Enquiry (Pembanding Valas)</label>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border">USD</span>
+                <input type="number" min="0" value={formData.vaultEnquiryUsd || ''} onChange={e => setFormData({...formData, vaultEnquiryUsd: parseInt(e.target.value)||0})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 font-mono font-bold" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Rincian Uang Kas Valas (USD) */}
+        <div className="space-y-3 pb-6 border-t border-slate-100 pt-4">
+          <p className="text-xs font-bold text-blue-800 uppercase border-l-2 border-blue-600 pl-2 flex items-center justify-between">
+            <span>5. Rincian Uang Kas Valas (USD)</span>
+            <Calculator size={14} className="text-blue-600"/>
+          </p>
+          <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <p className="text-[10px] font-bold text-center bg-blue-100 text-blue-800 py-1.5 rounded border border-blue-200 mb-3">DENOMINASI VALAS USD</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {PECAHAN_USD.map(p => (
+                <div key={`usd-${p}`} className="flex items-center gap-2 mt-1">
+                  <span className="w-16 text-[10px] text-right text-slate-600 font-mono flex-shrink-0">USD {p}</span>
+                  <input type="number" min="0" value={formData.valasUsd[p] || ''} onChange={e => setFormData({...formData, valasUsd: {...formData.valasUsd, [p]: parseInt(e.target.value)||0}})} className="w-full text-xs p-1.5 border border-blue-200 rounded text-right focus:ring-1 focus:ring-blue-500 focus:outline-none font-mono" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 export function terbilang(angka: number): string {
+  if (angka === 0) return "Nol";
   const bilangan = [
     "", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"
   ];
@@ -21,6 +22,24 @@ export function terbilang(angka: number): string {
     hasil = terbilang(Math.floor(angka / 1000000)) + " Juta " + terbilang(angka % 1000000);
   } else if (angka < 1000000000000) {
     hasil = terbilang(Math.floor(angka / 1000000000)) + " Miliar " + terbilang(angka % 1000000000);
+  }
+  return hasil.trim();
+}
+
+export function terbilangEn(angka: number): string {
+  if (angka === 0) return "Zero";
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  
+  let hasil = "";
+  if (angka < 20) {
+    hasil = ones[angka];
+  } else if (angka < 100) {
+    hasil = tens[Math.floor(angka / 10)] + (angka % 10 !== 0 ? " " + ones[angka % 10] : "");
+  } else if (angka < 1000) {
+    hasil = ones[Math.floor(angka / 100)] + " Hundred" + (angka % 100 !== 0 ? " and " + terbilangEn(angka % 100) : "");
+  } else if (angka < 1000000) {
+    hasil = terbilangEn(Math.floor(angka / 1000)) + " Thousand" + (angka % 1000 !== 0 ? " " + terbilangEn(angka % 1000) : "");
   }
   return hasil.trim();
 }
