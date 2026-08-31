@@ -73,11 +73,11 @@ export default function SuratBaCashOpnamePage() {
             <input type="text" placeholder="Nomor Surat" value={formData.nomorSurat} onChange={e => setFormData({...formData, nomorSurat: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
             
             <div className="flex gap-2">
-              <select value={formData.jenisCabang} onChange={e => setFormData({...formData, jenisCabang: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+              <select value={formData.jenisCabang} onChange={e => setFormData({...formData, jenisCabang: e.target.value})} className="text-xs p-2 border rounded-lg bg-white w-1/3">
                 <option value="KC">KC</option>
                 <option value="KCP">KCP</option>
               </select>
-              <input type="text" placeholder="Nama Cabang" value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="w-full text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              <input type="text" placeholder="Nama Cabang" value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="w-2/3 text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
             </div>
 
             <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
