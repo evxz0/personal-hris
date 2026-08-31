@@ -16,6 +16,26 @@ const oricOptions = [
   { nama: "Nurmayanti", npp: "P050190", jabatan: "Operational Risk Internal Control" }
 ];
 
+const outletOptions = [
+  "GAJAH MADA",
+  "JERUJU",
+  "KUALA DUA",
+  "KUBU RAYA",
+  "M YAMIN",
+  "MEGA MALL",
+  "MEMPAWAH",
+  "NGABANG",
+  "PANGLIMA AIM",
+  "PASAR SIANTAN",
+  "PONTIANAK",
+  "REGIONAL OFFICE 09",
+  "SEI PINYUH",
+  "SULTAN ABDURAHMAN",
+  "SULTAN MUHAMMAD",
+  "SUNGAI JAWI",
+  "UNIVERSITAS TANJUNGPURA"
+];
+
 const SearchableDropdown = ({ options, value, onChange, placeholder }: { options: {value: string, label: string}[], value: string, onChange: (val: string) => void, placeholder: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -169,7 +189,12 @@ export default function SuratBaCashOpnamePage() {
                 <option value="KC">KC</option>
                 <option value="KCP">KCP</option>
               </select>
-              <input type="text" placeholder="Nama Cabang" value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="w-2/3 text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              <select value={formData.kcp} onChange={e => setFormData({...formData, kcp: e.target.value})} className="w-2/3 text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                <option value="">-- Pilih Outlet --</option>
+                {outletOptions.map(outlet => (
+                  <option key={outlet} value={outlet}>{outlet}</option>
+                ))}
+              </select>
             </div>
 
             <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} className="text-xs p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
