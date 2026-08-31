@@ -63,6 +63,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
   const grandTotal = totalUleBesar + totalUleKecil + totalUtleBesar + totalUtleKecil;
   const selisih = data.vaultEnquiry - grandTotal; // Note: fixed selisih calculation relative to vaultEnquiry
   const selisihUsd = totalUsd - data.vaultEnquiryUsd;
+  const selisihSgd = totalSgd - (data.vaultEnquirySgd || 0);
 
   const renderTableRows = (cashData: CashData) => (
     <>
@@ -96,7 +97,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
       <div className="w-full flex items-end justify-between mb-4 -mt-2">
         <img src="/logo-kop-bni.jpg" alt="Kop BNI" className="h-6 object-contain" />
         <div className="text-[9px] text-gray-500 font-sans tracking-wide pb-1">
-          BA. STOCK OPNAME <span className="font-bold">{data.jenisCabang} {data.kcp.toUpperCase()}</span>
+          BA. CASH OPNAME <span className="font-bold">{data.jenisCabang} {data.kcp.toUpperCase()}</span>
         </div>
       </div>
 
@@ -213,6 +214,8 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
         </div>
       )}
 
+      <div className="w-full text-right text-[9px] mt-8 mb-2 font-sans">Halaman 1/2</div>
+
       {/* --- HALAMAN 2: VALAS & TTD --- */}
       <div className="page-break">
         {data.jenisCabang === 'KC' && (
@@ -241,8 +244,8 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             </table>
             <div className="mb-3 ml-4 text-[9.5px]">
               <span className="font-bold underline">Terbilang :</span><br/>
-              <i>== {totalUsd === 0 ? "Zero" : terbilangEn(totalUsd)} Dollars ==</i><br/>
-              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {data.vaultEnquiryUsd.toLocaleString('id-ID')},-</span>
+              <i>== {totalUsd === 0 ? "Nol" : terbilang(totalUsd)} Dolar Amerika Serikat ==</i><br/>
+              Saldo tersebut <span className="font-bold">{selisihUsd === 0 ? 'sesuai/cocok' : `tidak sesuai/tidak cocok (selisih sebesar USD ${Math.abs(selisihUsd).toLocaleString('id-ID')})`}</span> dengan Register Kas USD dan Branch Totals Combined USD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">USD {data.vaultEnquiryUsd.toLocaleString('id-ID')},-</span>
             </div>
 
             <div className="font-bold ml-4 mb-1">B. Dollar – SGD</div>
@@ -268,7 +271,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             <div className="mb-2 ml-4 text-[9.5px]">
               <span className="font-bold underline">Terbilang :</span><br/>
               <i>== {totalSgd === 0 ? "Nol" : terbilang(totalSgd)} Dolar Singapura ==</i><br/>
-              Saldo tersebut <span className="font-bold">sesuai/cocok</span> dengan Register Kas SGD dan Branch Totals Combined SGD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">SGD {(data.vaultEnquirySgd || 0).toLocaleString('id-ID')},-</span>
+              Saldo tersebut <span className="font-bold">{selisihSgd === 0 ? 'sesuai/cocok' : `tidak sesuai/tidak cocok (selisih sebesar SGD ${Math.abs(selisihSgd).toLocaleString('id-ID')})`}</span> dengan Register Kas SGD dan Branch Totals Combined SGD per tanggal <span className="font-bold">{dt.raw.replace(/-/g, ' ')}</span>, yaitu sebesar <span className="font-bold">SGD {(data.vaultEnquirySgd || 0).toLocaleString('id-ID')},-</span>
             </div>
           </div>
         )}
@@ -303,6 +306,7 @@ export const BaCashOpnameTemplate = React.forwardRef<HTMLDivElement, Props>(({ d
             </div>
           </div>
         </div>
+        <div className="w-full text-right text-[9px] mt-8 font-sans">Halaman 2/2</div>
       </div>
     </div>
   );
