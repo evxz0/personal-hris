@@ -49,12 +49,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
-  const filteredMenu = isOric 
-    ? navItems.slice(0, 5).filter(item => 
-        item.label?.includes('Surat Keterangan') || 
-        item.to?.includes('surat')
-      )
-    : navItems.slice(0, 5);
+
 
   const [suratOpen, setSuratOpen] = useState(isSuratActive)
   const [riwayatOpen, setRiwayatOpen] = useState(isRiwayatActive)
@@ -144,7 +139,53 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll py-4 px-2 space-y-1.5 overflow-x-hidden">
-          {filteredMenu.map((item, index) => (
+          {isOric ? (
+            /* =========================================
+               TAMPILAN KHUSUS ORIC (HANYA SURAT KETERANGAN)
+               ========================================= */
+            <>
+              {!collapsed && (
+                <div className="px-3 py-2 text-[11px] font-bold text-teal-300 uppercase tracking-wider mb-2">
+                  Surat Keterangan
+                </div>
+              )}
+              {suratSubItems.map((sub) => (
+                <NavLink
+                  key={sub.to}
+                  to={sub.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) => `
+                    flex items-center rounded-xl font-medium text-sm
+                    transition-all duration-200 group relative overflow-hidden
+                    ${collapsed ? 'justify-center py-3 px-0' : 'gap-3 px-3 py-2.5'}
+                    ${isActive
+                      ? 'bg-white/20 text-white shadow-sm font-bold border-l-4 border-orange-400'
+                      : 'text-teal-200 hover:bg-white/10 hover:text-white'
+                    }
+                  `}
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className={`shrink-0 ${isActive ? 'text-white' : 'text-teal-300 group-hover:text-white'}`}>
+                        <FileText size={18} />
+                      </span>
+                      {!collapsed && <span className="truncate animate-fade-in">{sub.label}</span>}
+                      {collapsed && (
+                        <div className="absolute left-full ml-3 px-3 py-1.5 bg-teal-900/95 text-white text-xs font-semibold rounded-xl shadow-xl border border-teal-700/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                          {sub.label}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </>
+          ) : (
+            /* =========================================
+               TAMPILAN NORMAL (SEMUA MENU)
+               ========================================= */
+            <>
+              {navItems.map((item, index) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -247,8 +288,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           </div>
 
           {/* Dropdown Riwayat */}
-          {!isOric && (
-            <div className="space-y-1 pt-1 relative group">
+          <div className="space-y-1 pt-1 relative group">
               <button
               type="button"
               onClick={() => setRiwayatOpen(!riwayatOpen)}
@@ -316,12 +356,10 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               </div>
             )}
           </div>
-          )}
 
           {/* Settings */}
-          {!isOric && (
-            <NavLink
-              to="/settings"
+          <NavLink
+            to="/settings"
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) => `
               flex items-center rounded-xl font-medium text-sm
@@ -350,7 +388,6 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               </>
             )}
           </NavLink>
-          )}
 
           {/* Superadmin Control Center (Hanya tampil untuk Superadmin) */}
           {isSuperadmin && (
@@ -389,6 +426,8 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 </>
               )}
             </NavLink>
+          )}
+            </>
           )}
         </nav>
 
