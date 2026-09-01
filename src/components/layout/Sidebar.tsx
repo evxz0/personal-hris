@@ -42,6 +42,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   
   const { user, logout } = useAuth()
   const isSuperadmin = user?.role === 'SUPERADMIN'
+  const isOric = user?.role === 'ORIC'
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
@@ -133,7 +134,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll py-4 px-2 space-y-1.5 overflow-x-hidden">
-          {navItems.slice(0, 5).map(item => (
+          {!isOric && navItems.slice(0, 5).map(item => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -236,8 +237,9 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
           </div>
 
           {/* Dropdown Riwayat */}
-          <div className="space-y-1 pt-1 relative group">
-            <button
+          {!isOric && (
+            <div className="space-y-1 pt-1 relative group">
+              <button
               type="button"
               onClick={() => setRiwayatOpen(!riwayatOpen)}
               className={`w-full flex items-center rounded-xl font-medium text-sm transition-all duration-200 ${
@@ -304,10 +306,12 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               </div>
             )}
           </div>
+          )}
 
           {/* Settings */}
-          <NavLink
-            to="/settings"
+          {!isOric && (
+            <NavLink
+              to="/settings"
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) => `
               flex items-center rounded-xl font-medium text-sm
@@ -336,6 +340,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               </>
             )}
           </NavLink>
+          )}
 
           {/* Superadmin Control Center (Hanya tampil untuk Superadmin) */}
           {isSuperadmin && (

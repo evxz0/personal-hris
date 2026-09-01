@@ -81,7 +81,9 @@ function LoginRoute() {
   }
   
   if (user) {
-    return <Navigate replace to={user.role === "SUPERADMIN" ? "/superadmin" : "/"} />;
+    if (user.role === "SUPERADMIN") return <Navigate replace to="/superadmin" />;
+    if (user.role === "ORIC") return <Navigate replace to="/surat/ba-cash-opname" />;
+    return <Navigate replace to="/" />;
   }
   
   return <LoginPage />;
@@ -89,6 +91,7 @@ function LoginRoute() {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const isOric = user?.role === 'ORIC';
   
   useIdleTimeout(!!user);
   
@@ -101,26 +104,37 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
-
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/karyawan" element={<ProtectedRoute><KaryawanPage /></ProtectedRoute>} />
-      <Route path="/bina" element={<ProtectedRoute><BinaPage /></ProtectedRoute>} />
-      <Route path="/magang" element={<ProtectedRoute><MagangPage /></ProtectedRoute>} />
-      <Route path="/absensi" element={<ProtectedRoute><AbsensiPage /></ProtectedRoute>} />
-
+      {/* Rute Surat Keterangan (Bisa diakses semua termasuk ORIC) */}
       <Route path="/surat/pgs" element={<ProtectedRoute><SuratPgsPage /></ProtectedRoute>} />
       <Route path="/surat/balasan-cuti" element={<ProtectedRoute><SuratBalasanCutiPage /></ProtectedRoute>} />
       <Route path="/surat/keterangan-kerja" element={<ProtectedRoute><SuratKeteranganKerjaPage /></ProtectedRoute>} />
       <Route path="/surat/custom" element={<ProtectedRoute><SuratCustomPage /></ProtectedRoute>} />
       <Route path="/surat/ba-cash-opname" element={<ProtectedRoute><SuratBaCashOpnamePage /></ProtectedRoute>} />
 
-      <Route path="/riwayat" element={<Navigate replace to="/riwayat/karyawan" />} />
-      <Route path="/riwayat/karyawan" element={<ProtectedRoute><RiwayatPage /></ProtectedRoute>} />
-      <Route path="/riwayat/surat" element={<ProtectedRoute><RiwayatSuratPage /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      {/* Redirect khusus ORIC dari root */}
+      {isOric && (
+        <Route path="/" element={<Navigate replace to="/surat/ba-cash-opname" />} />
+      )}
+
+      {/* Rute yang Disembunyikan dari ORIC */}
+      {!isOric && (
+        <>
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/karyawan" element={<ProtectedRoute><KaryawanPage /></ProtectedRoute>} />
+          <Route path="/bina" element={<ProtectedRoute><BinaPage /></ProtectedRoute>} />
+          <Route path="/magang" element={<ProtectedRoute><MagangPage /></ProtectedRoute>} />
+          <Route path="/absensi" element={<ProtectedRoute><AbsensiPage /></ProtectedRoute>} />
+          
+          <Route path="/riwayat" element={<Navigate replace to="/riwayat/karyawan" />} />
+          <Route path="/riwayat/karyawan" element={<ProtectedRoute><RiwayatPage /></ProtectedRoute>} />
+          <Route path="/riwayat/surat" element={<ProtectedRoute><RiwayatSuratPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        </>
+      )}
+
       <Route path="/superadmin" element={<SuperadminRoute><SuperadminPage /></SuperadminRoute>} />
 
-      <Route path="*" element={<Navigate replace to="/" />} />
+      <Route path="*" element={<Navigate replace to={isOric ? "/surat/ba-cash-opname" : "/"} />} />
     </Routes>
   );
 }
