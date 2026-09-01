@@ -4,7 +4,7 @@ export interface AppUser {
   id: string;
   username: string;
   nama: string;
-  role: "SUPERADMIN" | "ADMIN_HR" | "OPERATOR" | "VIEWER";
+  role: "SUPERADMIN" | "ADMIN_HR" | "OPERATOR" | "VIEWER" | "ORIC";
   status_aktif: boolean;
   created_at?: string;
 }
