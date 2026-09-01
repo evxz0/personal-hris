@@ -43,6 +43,10 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const { user, logout } = useAuth()
   const isSuperadmin = user?.role === 'SUPERADMIN'
   const isOric = user?.role?.toUpperCase() === 'ORIC'
+  
+  // Strict Filtering: Kosongkan navItems jika user adalah ORIC
+  const filteredNavItems = isOric ? [] : navItems.slice(0, 5)
+
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
@@ -134,7 +138,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll py-4 px-2 space-y-1.5 overflow-x-hidden">
-          {!isOric && navItems.slice(0, 5).map(item => (
+          {filteredNavItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
