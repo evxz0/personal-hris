@@ -82,7 +82,7 @@ function LoginRoute() {
   
   if (user) {
     if (user.role === "SUPERADMIN") return <Navigate replace to="/superadmin" />;
-    if (user.role === "ORIC") return <Navigate replace to="/surat/ba-cash-opname" />;
+    if (user.role?.toUpperCase() === "ORIC") return <Navigate replace to="/surat/ba-cash-opname" />;
     return <Navigate replace to="/" />;
   }
   
@@ -91,7 +91,7 @@ function LoginRoute() {
 
 function AppRoutes() {
   const { user } = useAuth();
-  const isOric = user?.role === 'ORIC';
+  const isOric = user?.role?.toUpperCase() === 'ORIC';
   
   useIdleTimeout(!!user);
   
