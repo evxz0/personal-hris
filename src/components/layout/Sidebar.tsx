@@ -46,6 +46,13 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
+  const filteredMenu = isOric 
+    ? navItems.slice(0, 5).filter(item => 
+        item.label?.includes('Surat Keterangan') || 
+        item.to?.includes('surat')
+      )
+    : navItems.slice(0, 5);
+
   const [suratOpen, setSuratOpen] = useState(isSuratActive)
   const [riwayatOpen, setRiwayatOpen] = useState(isRiwayatActive)
 
@@ -134,10 +141,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll py-4 px-2 space-y-1.5 overflow-x-hidden">
-          {navItems
-            .slice(0, 5)
-            .filter((item) => isOric ? item.label === 'Surat Keterangan' : true)
-            .map(item => (
+          {filteredMenu.map((item, index) => (
             <NavLink
               key={item.to}
               to={item.to}
