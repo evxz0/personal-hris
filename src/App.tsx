@@ -81,8 +81,13 @@ function LoginRoute() {
   }
   
   if (user) {
+    const isOric = 
+      user.role?.toUpperCase() === 'ORIC' || 
+      user.username?.toLowerCase() === 'oric' ||
+      (user as any).email?.toLowerCase().includes('oric');
+
     if (user.role === "SUPERADMIN") return <Navigate replace to="/superadmin" />;
-    if (user.role?.toUpperCase() === "ORIC") return <Navigate replace to="/surat/ba-cash-opname" />;
+    if (isOric) return <Navigate replace to="/surat/ba-cash-opname" />;
     return <Navigate replace to="/" />;
   }
   
@@ -91,7 +96,10 @@ function LoginRoute() {
 
 function AppRoutes() {
   const { user } = useAuth();
-  const isOric = user?.role?.toUpperCase() === 'ORIC';
+  const isOric = 
+    user?.role?.toUpperCase() === 'ORIC' || 
+    user?.username?.toLowerCase() === 'oric' ||
+    (user as any)?.email?.toLowerCase().includes('oric');
   
   useIdleTimeout(!!user);
   
@@ -112,7 +120,7 @@ function AppRoutes() {
       <Route path="/surat/ba-cash-opname" element={<ProtectedRoute><SuratBaCashOpnamePage /></ProtectedRoute>} />
 
       {/* Proteksi khusus ORIC: tendang dari rute yang dilarang */}
-      {user?.role?.toUpperCase() === 'ORIC' && (
+      {isOric && (
         <>
           <Route path="/" element={<Navigate replace to="/surat/ba-cash-opname" />} />
           <Route path="/dashboard" element={<Navigate replace to="/surat/ba-cash-opname" />} />
@@ -128,7 +136,7 @@ function AppRoutes() {
       )}
 
       {/* Rute normal untuk user selain ORIC */}
-      {user?.role?.toUpperCase() !== 'ORIC' && (
+      {!isOric && (
         <>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

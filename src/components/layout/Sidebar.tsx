@@ -42,7 +42,10 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   
   const { user, logout } = useAuth()
   const isSuperadmin = user?.role === 'SUPERADMIN'
-  const isOric = user?.role?.toUpperCase() === 'ORIC'
+  const isOric = 
+    user?.role?.toUpperCase() === 'ORIC' || 
+    user?.username?.toLowerCase() === 'oric' ||
+    (user as any)?.email?.toLowerCase().includes('oric')
   const isSuratActive = location.pathname.startsWith('/surat')
   const isRiwayatActive = location.pathname.startsWith('/riwayat')
 
